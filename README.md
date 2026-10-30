@@ -2,6 +2,8 @@
 
 <img src="docs/images/banner.png" alt="AION 2 Wingman — AutoHotkey v2 companion for AION 2" width="100%">
 
+### 🧭 Assisted Teleport to any Field Boss · 🎯 HUD overlay · 🛡️ No injection, no bot, no telemetry
+
 [**⬇ Download the latest release**](../../releases/latest)
 
 <br>
@@ -18,7 +20,32 @@
 
 **AION 2 Wingman** is a Windows program written in **AutoHotkey v2** that runs next to AION 2 and gives you a clearer HUD and a few smart helpers.
 
-> **AION 2 Wingman never clicks or presses keys for you in the game.** It only draws on screen, moves the cursor to the right spot and tells you what to do: every click is yours.
+### 🛡️ Safe by design
+
+AION 2 Wingman is a plain **AutoHotkey v2** script: you can open it with Notepad and read every single line.
+
+- ❌ **No injection**: it never touches the game process, its memory or its files, and it loads nothing into the game.
+- ❌ **No packet reading, no bot**: it doesn't read or change network traffic and never plays for you.
+- 👀 **It only looks at the screen, like you do**: map screenshots are read by the built-in Windows OCR, locally on your PC.
+- 🖱️ **Every click is yours**: it moves the cursor to the right spot and, on the map, uses the mouse wheel to scroll the boss list and zoom out. The only automatic click (Hidden Cube) is **off by default**.
+- 🔒 **No telemetry, no data collection**: it sends no game or personal data anywhere. Its only connection is the update check on this GitHub page, which you can turn off (Settings > Updates).
+- 🗂️ **Everything stays on your PC**: your settings are saved in `%AppData%\AION 2 Wingman`.
+
+> ⚠️ Wingman is an unofficial third-party tool. Nobody can promise that an external program is 100% risk-free under a game's rules and anti-cheat, so use it consciously and within the game's terms of service.
+
+### 🧭 Star feature: Assisted Teleport to any Field Boss
+
+Reaching a Field Boss normally means opening the map, going to Exploration and then Field Boss, finding the boss in a long list, looking for the nearest Teleport and flying in the right direction. **Wingman turns all of this into a few guided clicks:**
+
+1. **Open the map** (`M`): the Field Boss panel lists every boss A–Z, with grade, status (active / inactive) and importance.
+2. **Click a boss** in the panel.
+3. Wingman **moves the cursor step by step** to *Exploration*, *Field Boss*, *the boss* and then **the nearest Teleport**, which it finds by itself on the map. A big on-screen instruction and a ring on the exact spot tell you what to click, and the cursor can stay locked there so you can't miss.
+4. **Press `F`** (Travel): an arrow shows the **flight direction** to the boss, for example *NORTH-EAST*.
+5. `Esc` cancels at any time. Inside dungeons the panel stays hidden.
+
+<img src="docs/images/guide-step1.jpg" alt="Assisted Teleport, step 1: click the boss" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Assisted Teleport: click the nearest Teleport" width="100%">
+
 
 ### ✨ Features
 
@@ -35,9 +62,6 @@
 - After Travel, an arrow shows the **flight direction** to the boss.
 - Inside **dungeons** the panel stays hidden: it is detected from the map tabs and from the dungeon name.
 - Uses the Windows OCR, so it reads the English game client.
-
-<img src="docs/images/guide-step1.jpg" alt="Field Boss guide, step 1: click the boss" width="100%">
-<img src="docs/images/guide-teleport.jpg" alt="Field Boss guide: click the nearest Teleport" width="100%">
 
 <details><summary>🖼️ Field Boss panel in three themes</summary>
 
@@ -114,7 +138,32 @@ The keys still reach the game as usual.
 
 **AION 2 Wingman** è un programma per Windows scritto in **AutoHotkey v2**. Gira accanto ad AION 2 e ti dà un HUD più chiaro e qualche aiuto intelligente.
 
-> **AION 2 Wingman non clicca e non preme tasti al posto tuo nel gioco.** Disegna a schermo, porta il cursore sul punto giusto e ti dice cosa fare: ogni click è tuo.
+### 🛡️ Sicuro per come è fatto
+
+AION 2 Wingman è un semplice script **AutoHotkey v2**: puoi aprirlo con il Blocco note e leggerne ogni singola riga.
+
+- ❌ **Nessuna injection**: non tocca mai il processo del gioco, la sua memoria o i suoi file, e non carica niente dentro il gioco.
+- ❌ **Nessuna lettura dei pacchetti, nessun bot**: non legge e non modifica il traffico di rete e non gioca mai al posto tuo.
+- 👀 **Guarda solo lo schermo, come fai tu**: gli screenshot della mappa vengono letti dall'OCR integrato di Windows, in locale sul tuo PC.
+- 🖱️ **Ogni click è tuo**: porta il cursore sul punto giusto e, sulla mappa, usa la rotellina del mouse per scorrere la lista dei boss e fare zoom indietro. L'unico click automatico (Hidden Cube) è **spento di default**.
+- 🔒 **Nessuna telemetria, nessuna raccolta di dati**: non invia da nessuna parte dati del gioco o personali. L'unica connessione è il controllo aggiornamenti su questa pagina GitHub, che puoi disattivare (Impostazioni > Aggiornamenti).
+- 🗂️ **Tutto resta sul tuo PC**: le impostazioni sono salvate in `%AppData%\AION 2 Wingman`.
+
+> ⚠️ Wingman è uno strumento di terze parti non ufficiale. Nessuno può promettere che un programma esterno sia a rischio zero rispetto alle regole e all'anti-cheat di un gioco: usalo consapevolmente e nel rispetto dei termini di servizio del gioco.
+
+### 🧭 La funzione di punta: Teleport assistito verso qualsiasi Field Boss
+
+Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Exploration e poi in Field Boss, cercare il boss in una lunga lista, trovare il Teleport più vicino e volare nella direzione giusta. **Wingman trasforma tutto questo in pochi click guidati:**
+
+1. **Apri la mappa** (`M`): il pannello Field Boss elenca tutti i boss dalla A alla Z, con grado, stato (attivo / non attivo) e importanza.
+2. **Clicca un boss** nel pannello.
+3. Wingman **porta il cursore passo dopo passo** su *Exploration*, *Field Boss*, *il boss* e poi **il Teleport più vicino**, che trova da solo sulla mappa. Un'istruzione grande a schermo e un anello sul punto esatto ti dicono cosa cliccare, e il cursore può restare bloccato lì così non sbagli.
+4. **Premi `F`** (Travel): una freccia indica la **direzione di volo** verso il boss, per esempio *NORD-EST*.
+5. `Esc` annulla in qualsiasi momento. Nei dungeon il pannello resta nascosto.
+
+<img src="docs/images/guide-step1.jpg" alt="Teleport assistito, fase 1: clicca il boss" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Teleport assistito: clicca il Teleport più vicino" width="100%">
+
 
 ### ✨ Funzioni
 
@@ -131,9 +180,6 @@ The keys still reach the game as usual.
 - Dopo il Travel, una freccia indica la **direzione di volo** verso il boss.
 - Nei **dungeon** il pannello resta nascosto: li riconosce dai tab della mappa e dal nome del dungeon.
 - Usa l'OCR di Windows, quindi legge il client del gioco in inglese.
-
-<img src="docs/images/guide-step1.jpg" alt="Guida Field Boss, fase 1: clicca il boss" width="100%">
-<img src="docs/images/guide-teleport.jpg" alt="Guida Field Boss: clicca il Teleport più vicino" width="100%">
 
 <details><summary>🖼️ Il pannello Field Boss in tre temi</summary>
 
@@ -210,7 +256,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman** es un programa para Windows escrito en **AutoHotkey v2**. Funciona junto a AION 2 y te da un HUD más claro y algunas ayudas inteligentes.
 
-> **AION 2 Wingman nunca hace clic ni pulsa teclas por ti en el juego.** Dibuja en pantalla, lleva el cursor al punto correcto y te dice qué hacer: cada clic es tuyo.
+### 🛡️ Seguro por diseño
+
+AION 2 Wingman es un simple script de **AutoHotkey v2**: puedes abrirlo con el Bloc de notas y leer cada línea.
+
+- ❌ **Sin inyección**: nunca toca el proceso del juego, su memoria ni sus archivos.
+- ❌ **Sin lectura de paquetes, sin bot**: no lee ni modifica el tráfico de red y nunca juega por ti.
+- 👀 **Solo mira la pantalla, como tú**: el OCR integrado de Windows lee las capturas del mapa, en local.
+- 🖱️ **Cada clic es tuyo**: mueve el cursor y, en el mapa, usa la rueda del ratón para desplazar la lista y alejar el zoom. El único clic automático (Hidden Cube) está **desactivado por defecto**.
+- 🔒 **Sin telemetría**: no envía datos del juego ni personales. Su única conexión es la comprobación de actualizaciones en esta página de GitHub, que puedes desactivar.
+- 🗂️ **Todo se queda en tu PC** (`%AppData%\AION 2 Wingman`).
+
+> ⚠️ Es una herramienta de terceros no oficial: nadie puede garantizar que un programa externo tenga riesgo cero frente a las reglas y el anti-cheat de un juego. Úsala con conciencia y respetando los términos del juego.
+
+### 🧭 La función estrella: Teleport asistido a cualquier Field Boss
+
+Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego a Field Boss, buscar el jefe en una lista larga, encontrar el Teleport más cercano y volar en la dirección correcta. **Wingman lo convierte en unos pocos clics guiados:**
+
+1. **Abre el mapa** (`M`): el panel muestra todos los jefes de la A a la Z con grado, estado e importancia.
+2. **Haz clic en un jefe** del panel.
+3. Wingman **lleva el cursor paso a paso** a *Exploration*, *Field Boss*, *el jefe* y luego **al Teleport más cercano**, que encuentra solo en el mapa. Una instrucción grande en pantalla y un anillo en el punto exacto te dicen dónde hacer clic.
+4. **Pulsa `F`** (Travel): una flecha indica la **dirección de vuelo** hacia el jefe.
+5. `Esc` cancela en cualquier momento. En las mazmorras el panel se oculta.
+
+<img src="docs/images/guide-step1.jpg" alt="Teleport asistido, paso 1" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Teleport asistido: el Teleport más cercano" width="100%">
+
 
 ### ✨ Funciones
 - **🎯 HUD overlay:**
@@ -252,7 +323,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman** est un programme Windows écrit en **AutoHotkey v2**. Il tourne à côté d'AION 2 et t'offre un HUD plus clair et quelques aides intelligentes.
 
-> **AION 2 Wingman ne clique jamais et n'appuie jamais sur les touches à ta place dans le jeu.** Il dessine à l'écran, place le curseur au bon endroit et te dit quoi faire : chaque clic est le tien.
+### 🛡️ Sûr par conception
+
+AION 2 Wingman est un simple script **AutoHotkey v2** : tu peux l'ouvrir avec le Bloc-notes et en lire chaque ligne.
+
+- ❌ **Aucune injection** : il ne touche jamais au processus du jeu, à sa mémoire ni à ses fichiers.
+- ❌ **Aucune lecture de paquets, aucun bot** : il ne lit ni ne modifie le trafic réseau et ne joue jamais à ta place.
+- 👀 **Il regarde seulement l'écran, comme toi** : l'OCR intégré de Windows lit les captures de la carte, en local.
+- 🖱️ **Chaque clic est le tien** : il déplace le curseur et, sur la carte, utilise la molette pour faire défiler la liste et dézoomer. Le seul clic automatique (Hidden Cube) est **désactivé par défaut**.
+- 🔒 **Aucune télémétrie** : il n'envoie aucune donnée du jeu ni personnelle. Sa seule connexion est la vérification des mises à jour sur cette page GitHub, désactivable.
+- 🗂️ **Tout reste sur ton PC** (`%AppData%\AION 2 Wingman`).
+
+> ⚠️ C'est un outil tiers non officiel : personne ne peut garantir qu'un programme externe soit sans aucun risque face aux règles et à l'anti-triche d'un jeu. Utilise-le en connaissance de cause et dans le respect des conditions du jeu.
+
+### 🧭 La fonction phare : Teleport assisté vers n'importe quel Field Boss
+
+Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Exploration puis Field Boss, de chercher le boss dans une longue liste, de trouver le Teleport le plus proche et de voler dans la bonne direction. **Wingman en fait quelques clics guidés :**
+
+1. **Ouvre la carte** (`M`) : le panneau liste tous les boss de A à Z avec grade, état et importance.
+2. **Clique sur un boss** dans le panneau.
+3. Wingman **guide le curseur étape par étape** vers *Exploration*, *Field Boss*, *le boss* puis **le Teleport le plus proche**, qu'il trouve seul sur la carte. Une grande consigne à l'écran et un anneau sur le point exact te disent où cliquer.
+4. **Appuie sur `F`** (Travel) : une flèche indique la **direction de vol** vers le boss.
+5. `Esc` annule à tout moment. Dans les donjons, le panneau reste masqué.
+
+<img src="docs/images/guide-step1.jpg" alt="Teleport assisté, étape 1" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Teleport assisté : le Teleport le plus proche" width="100%">
+
 
 ### ✨ Fonctions
 - **🎯 HUD overlay :**
@@ -294,7 +390,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman** ist ein Windows-Programm in **AutoHotkey v2**. Es läuft neben AION 2 und bietet ein klareres HUD sowie einige smarte Helfer.
 
-> **AION 2 Wingman klickt und drückt im Spiel niemals Tasten für dich.** Es zeichnet auf den Bildschirm, bringt den Cursor an die richtige Stelle und sagt dir, was zu tun ist: Jeder Klick ist deiner.
+### 🛡️ Sicher durch Bauweise
+
+AION 2 Wingman ist ein einfaches **AutoHotkey-v2**-Skript: Du kannst es mit dem Editor öffnen und jede Zeile lesen.
+
+- ❌ **Keine Injection**: Es greift nie auf den Spielprozess, seinen Speicher oder seine Dateien zu.
+- ❌ **Kein Paketmitlesen, kein Bot**: Es liest oder verändert keinen Netzwerkverkehr und spielt nie für dich.
+- 👀 **Es schaut nur auf den Bildschirm, wie du**: Die Windows-OCR liest Kartenbilder lokal auf deinem PC.
+- 🖱️ **Jeder Klick ist deiner**: Es bewegt den Cursor und scrollt auf der Karte mit dem Mausrad durch die Liste und zoomt heraus. Der einzige automatische Klick (Hidden Cube) ist **standardmäßig aus**.
+- 🔒 **Keine Telemetrie**: Es sendet keine Spiel- oder persönlichen Daten. Die einzige Verbindung ist die abschaltbare Update-Prüfung auf dieser GitHub-Seite.
+- 🗂️ **Alles bleibt auf deinem PC** (`%AppData%\AION 2 Wingman`).
+
+> ⚠️ Es ist ein inoffizielles Drittanbieter-Tool: Niemand kann garantieren, dass ein externes Programm gegenüber den Regeln und dem Anti-Cheat eines Spiels völlig risikofrei ist. Nutze es bewusst und im Rahmen der Nutzungsbedingungen.
+
+### 🧭 Die Hauptfunktion: Assistierter Teleport zu jedem Field Boss
+
+Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration und dann Field Boss gehen, den Boss in einer langen Liste suchen, den nächsten Teleport finden und in die richtige Richtung fliegen. **Wingman macht daraus ein paar geführte Klicks:**
+
+1. **Karte öffnen** (`M`): Das Panel listet alle Bosse von A bis Z mit Grad, Status und Wichtigkeit.
+2. **Einen Boss anklicken** im Panel.
+3. Wingman **führt den Cursor Schritt für Schritt** zu *Exploration*, *Field Boss*, *dem Boss* und dann **zum nächsten Teleport**, den es selbst auf der Karte findet. Eine große Anweisung und ein Ring auf der genauen Stelle zeigen dir, wo du klicken musst.
+4. **`F` drücken** (Travel): Ein Pfeil zeigt die **Flugrichtung** zum Boss.
+5. `Esc` bricht jederzeit ab. In Dungeons bleibt das Panel ausgeblendet.
+
+<img src="docs/images/guide-step1.jpg" alt="Assistierter Teleport, Schritt 1" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Assistierter Teleport: der nächste Teleport" width="100%">
+
 
 ### ✨ Funktionen
 - **🎯 HUD-Overlay:**
@@ -336,7 +457,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman** é um programa para Windows escrito em **AutoHotkey v2**. Ele roda junto com o AION 2 e oferece um HUD mais claro e algumas ajudas inteligentes.
 
-> **O AION 2 Wingman nunca clica nem aperta teclas por você no jogo.** Ele desenha na tela, leva o cursor ao ponto certo e diz o que fazer: cada clique é seu.
+### 🛡️ Seguro por natureza
+
+O AION 2 Wingman é um simples script **AutoHotkey v2**: você pode abri-lo no Bloco de Notas e ler cada linha.
+
+- ❌ **Sem injeção**: nunca mexe no processo do jogo, na memória ou nos arquivos dele.
+- ❌ **Sem leitura de pacotes, sem bot**: não lê nem altera o tráfego de rede e nunca joga por você.
+- 👀 **Só olha a tela, como você**: o OCR do Windows lê as capturas do mapa, localmente.
+- 🖱️ **Cada clique é seu**: move o cursor e, no mapa, usa a roda do mouse para rolar a lista e afastar o zoom. O único clique automático (Hidden Cube) vem **desligado**.
+- 🔒 **Sem telemetria**: não envia dados do jogo nem pessoais. A única conexão é a verificação de atualizações nesta página do GitHub, que pode ser desligada.
+- 🗂️ **Tudo fica no seu PC** (`%AppData%\AION 2 Wingman`).
+
+> ⚠️ É uma ferramenta de terceiros não oficial: ninguém pode garantir que um programa externo tenha risco zero diante das regras e do anti-cheat de um jogo. Use com consciência e respeitando os termos do jogo.
+
+### 🧭 A função principal: Teleport assistido para qualquer Field Boss
+
+Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e depois Field Boss, procurar o chefe numa lista longa, achar o Teleport mais próximo e voar na direção certa. **O Wingman transforma isso em poucos cliques guiados:**
+
+1. **Abra o mapa** (`M`): o painel lista todos os chefes de A a Z com grau, estado e importância.
+2. **Clique num chefe** no painel.
+3. O Wingman **leva o cursor passo a passo** até *Exploration*, *Field Boss*, *o chefe* e depois **o Teleport mais próximo**, que ele encontra sozinho no mapa. Uma instrução grande na tela e um anel no ponto exato mostram onde clicar.
+4. **Aperte `F`** (Travel): uma seta mostra a **direção de voo** até o chefe.
+5. `Esc` cancela a qualquer momento. Nas masmorras o painel fica oculto.
+
+<img src="docs/images/guide-step1.jpg" alt="Teleport assistido, passo 1" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Teleport assistido: o Teleport mais próximo" width="100%">
+
 
 ### ✨ Funções
 - **🎯 HUD overlay:**
@@ -378,7 +524,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman** — программа для Windows на **AutoHotkey v2**. Она работает рядом с AION 2 и добавляет понятный HUD и несколько умных помощников.
 
-> **AION 2 Wingman никогда не кликает и не нажимает клавиши за вас в игре.** Он рисует на экране, переносит курсор в нужную точку и подсказывает, что делать: каждый клик — ваш.
+### 🛡️ Безопасен по устройству
+
+AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его можно открыть Блокнотом и прочитать каждую строку.
+
+- ❌ **Никаких инъекций**: не трогает процесс игры, её память и файлы.
+- ❌ **Не читает пакеты, не бот**: не читает и не меняет сетевой трафик и никогда не играет за вас.
+- 👀 **Только смотрит на экран, как вы**: снимки карты читает встроенный OCR Windows, локально.
+- 🖱️ **Каждый клик — ваш**: двигает курсор, а на карте прокручивает колесом мыши список и отдаляет масштаб. Единственный автоклик (Hidden Cube) **по умолчанию выключен**.
+- 🔒 **Никакой телеметрии**: не отправляет игровые или личные данные. Единственное подключение — проверка обновлений на этой странице GitHub, её можно отключить.
+- 🗂️ **Всё остаётся на вашем ПК** (`%AppData%\AION 2 Wingman`).
+
+> ⚠️ Это неофициальный сторонний инструмент: никто не может гарантировать, что внешняя программа абсолютно безопасна с точки зрения правил и античита игры. Пользуйтесь осознанно и в рамках условий игры.
+
+### 🧭 Главная функция: телепорт с подсказками к любому Field Boss
+
+Обычно, чтобы добраться до Field Boss, нужно открыть карту, перейти в Exploration, затем в Field Boss, найти босса в длинном списке, найти ближайший Teleport и лететь в нужную сторону. **Wingman превращает это в несколько кликов с подсказками:**
+
+1. **Откройте карту** (`M`): панель показывает всех боссов от A до Z с грейдом, статусом и важностью.
+2. **Кликните по боссу** на панели.
+3. Wingman **шаг за шагом подводит курсор** к *Exploration*, *Field Boss*, *боссу* и затем **к ближайшему Teleport**, который сам находит на карте. Крупная подсказка на экране и кольцо на нужной точке показывают, куда кликнуть.
+4. **Нажмите `F`** (Travel): стрелка покажет **направление полёта** к боссу.
+5. `Esc` отменяет в любой момент. В подземельях панель скрыта.
+
+<img src="docs/images/guide-step1.jpg" alt="Телепорт с подсказками, шаг 1" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Телепорт с подсказками: ближайший Teleport" width="100%">
+
 
 ### ✨ Возможности
 - **🎯 HUD-оверлей:**
@@ -420,7 +591,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman**은 **AutoHotkey v2**로 만든 Windows 프로그램입니다. AION 2와 함께 실행되며 더 보기 쉬운 HUD와 몇 가지 똑똑한 보조 기능을 제공합니다.
 
-> **AION 2 Wingman은 게임에서 대신 클릭하거나 키를 누르지 않습니다.** 화면에 표시하고, 커서를 알맞은 위치로 옮기고, 할 일을 알려 줄 뿐입니다. 클릭은 모두 직접 합니다.
+### 🛡️ 구조적으로 안전
+
+AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장으로 열어 모든 줄을 확인할 수 있습니다.
+
+- ❌ **인젝션 없음**: 게임 프로세스, 메모리, 파일을 절대 건드리지 않습니다.
+- ❌ **패킷 읽기 없음, 봇 아님**: 네트워크 트래픽을 읽거나 바꾸지 않으며 대신 플레이하지 않습니다.
+- 👀 **사람처럼 화면만 봅니다**: 지도 화면을 Windows 내장 OCR이 PC에서 로컬로 읽습니다.
+- 🖱️ **클릭은 모두 직접**: 커서를 옮기고, 지도에서는 마우스 휠로 목록을 스크롤하고 축소합니다. 유일한 자동 클릭(Hidden Cube)은 **기본적으로 꺼져 있습니다**.
+- 🔒 **텔레메트리 없음**: 게임 데이터나 개인 정보를 보내지 않습니다. 유일한 연결은 이 GitHub 페이지의 업데이트 확인이며 끌 수 있습니다.
+- 🗂️ **모든 것이 내 PC에** (`%AppData%\AION 2 Wingman`).
+
+> ⚠️ 비공식 서드파티 도구입니다. 외부 프로그램이 게임 규칙과 안티치트에 대해 위험이 전혀 없다고 누구도 보장할 수 없으니, 게임 이용 약관을 지키며 신중하게 사용하세요.
+
+### 🧭 핵심 기능: 모든 Field Boss로 가는 텔레포트 안내
+
+보통 Field Boss에 가려면 지도를 열고, Exploration과 Field Boss로 들어가, 긴 목록에서 보스를 찾고, 가장 가까운 Teleport를 찾은 다음, 올바른 방향으로 날아가야 합니다. **Wingman은 이것을 몇 번의 안내된 클릭으로 바꿉니다:**
+
+1. **지도 열기** (`M`): 패널에 모든 보스가 A–Z 순으로 등급, 상태, 중요도와 함께 표시됩니다.
+2. 패널에서 **보스를 클릭**합니다.
+3. Wingman이 *Exploration*, *Field Boss*, *보스*, 그리고 지도에서 직접 찾은 **가장 가까운 Teleport**까지 **커서를 단계별로 안내**합니다. 화면의 큰 안내문과 정확한 위치의 링이 클릭할 곳을 알려 줍니다.
+4. **`F`를 누르면** (Travel) 화살표가 보스까지의 **비행 방향**을 보여 줍니다.
+5. `Esc`로 언제든 취소할 수 있습니다. 던전에서는 패널이 숨겨집니다.
+
+<img src="docs/images/guide-step1.jpg" alt="텔레포트 안내 1단계" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="텔레포트 안내: 가장 가까운 Teleport" width="100%">
+
 
 ### ✨ 기능
 - **🎯 HUD 오버레이:**
@@ -462,7 +658,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman** 是一个用 **AutoHotkey v2** 编写的 Windows 程序，与 AION 2 同时运行，提供更清晰的 HUD 和一些实用的辅助功能。
 
-> **AION 2 Wingman 绝不会替你在游戏中点击或按键。** 它只在屏幕上显示内容、把光标移到正确位置并提示你该做什么：每一次点击都由你完成。
+### 🛡️ 设计上就安全
+
+AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能打开，逐行查看。
+
+- ❌ **没有注入**：从不触碰游戏进程、内存或文件。
+- ❌ **不读数据包，不是外挂机器人**：不读取也不修改网络流量，从不替你玩游戏。
+- 👀 **只像你一样看屏幕**：地图截图由 Windows 内置 OCR 在本机读取。
+- 🖱️ **每次点击都由你完成**：它移动光标，并在地图上用鼠标滚轮滚动列表和缩小视图。唯一的自动点击（Hidden Cube）**默认关闭**。
+- 🔒 **没有遥测**：不发送任何游戏或个人数据。唯一的联网是在本 GitHub 页面检查更新，可以关闭。
+- 🗂️ **一切都留在你的电脑上**（`%AppData%\AION 2 Wingman`）。
+
+> ⚠️ 这是非官方的第三方工具：没有人能保证外部程序在游戏规则和反作弊面前完全零风险，请在遵守游戏服务条款的前提下谨慎使用。
+
+### 🧭 核心功能：前往任意 Field Boss 的辅助传送
+
+通常要前往 Field Boss，你需要打开地图、进入 Exploration 再进入 Field Boss、在长长的列表中找首领、找到最近的 Teleport，再朝正确方向飞行。**Wingman 把这些变成几次有引导的点击：**
+
+1. **打开地图**（`M`）：面板按 A–Z 列出所有首领，显示品级、状态和重要度。
+2. 在面板中**点击一个首领**。
+3. Wingman **一步步引导光标**到 *Exploration*、*Field Boss*、*首领*，然后是它在地图上自动找到的**最近的 Teleport**。屏幕上的大号提示和目标点上的圆环会告诉你点哪里。
+4. **按 `F`**（Travel）：箭头会显示前往首领的**飞行方向**。
+5. 随时按 `Esc` 取消。在副本中面板会隐藏。
+
+<img src="docs/images/guide-step1.jpg" alt="辅助传送 第 1 步" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="辅助传送：最近的 Teleport" width="100%">
+
 
 ### ✨ 功能
 - **🎯 HUD 叠加层：**
@@ -504,7 +725,32 @@ I tasti arrivano comunque al gioco.
 
 **AION 2 Wingman** は **AutoHotkey v2** で作られた Windows プログラムです。AION 2 と一緒に動き、見やすい HUD と便利な補助機能を追加します。
 
-> **AION 2 Wingman はゲーム内であなたの代わりにクリックやキー入力をしません。** 画面に表示し、カーソルを正しい位置に動かし、やることを案内するだけです。クリックはすべてご自身で。
+### 🛡️ 仕組みからして安全
+
+AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メモ帳で開いて全行を確認できます。
+
+- ❌ **インジェクションなし**：ゲームのプロセス・メモリ・ファイルには一切触れません。
+- ❌ **パケットを読まない、ボットではない**：通信を読み取ったり書き換えたりせず、代わりにプレイすることもありません。
+- 👀 **あなたと同じように画面を見るだけ**：マップの画面は Windows 内蔵 OCR が PC 上でローカルに読み取ります。
+- 🖱️ **クリックはすべてご自身で**：カーソルを動かし、マップではマウスホイールでリストをスクロールしズームアウトします。唯一の自動クリック（Hidden Cube）は**初期状態でオフ**です。
+- 🔒 **テレメトリなし**：ゲームや個人のデータは送信しません。唯一の通信はこの GitHub ページでのアップデート確認で、オフにできます。
+- 🗂️ **すべてあなたの PC に保存**（`%AppData%\AION 2 Wingman`）。
+
+> ⚠️ 非公式のサードパーティ製ツールです。外部プログラムがゲームの規約やアンチチートに対して完全にノーリスクだと保証できる人はいません。利用規約を守り、理解したうえでご利用ください。
+
+### 🧭 目玉機能：どの Field Boss へもテレポートをアシスト
+
+普段は Field Boss に行くために、マップを開き、Exploration から Field Boss へ進み、長いリストからボスを探し、最寄りの Teleport を見つけて正しい方向へ飛ぶ必要があります。**Wingman はこれを数回のガイド付きクリックにします：**
+
+1. **マップを開く**（`M`）：パネルに全ボスが A–Z 順でグレード・状態・重要度とともに表示されます。
+2. パネルで**ボスをクリック**。
+3. Wingman が *Exploration*、*Field Boss*、*ボス*、そしてマップ上で自動で見つけた**最寄りの Teleport** へ、**カーソルを一歩ずつ案内**します。画面の大きな指示と正確な位置のリングがクリックする場所を示します。
+4. **`F` を押す**（Travel）：矢印がボスへの**飛行方向**を示します。
+5. `Esc` でいつでもキャンセル。ダンジョンではパネルは表示されません。
+
+<img src="docs/images/guide-step1.jpg" alt="テレポートアシスト 手順 1" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="テレポートアシスト：最寄りの Teleport" width="100%">
+
 
 ### ✨ 機能
 - **🎯 HUD オーバーレイ：**
