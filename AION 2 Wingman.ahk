@@ -20,7 +20,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.0"                 ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.01"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -114,10 +114,10 @@ global SplashScale    := 1.4           ; dimensione (1.0 = normale)
 ;   (in %AppData%\AION 2 Wingman) restano. Lo script attuale resta come copia "AION 2 Wingman.ahk.bak".
 ; ------------------------------------------------------------------------------
 global UpdateRepo       := "VaLeTecK/AION-2-Wingman"   ; repository GitHub del progetto: "utente/nome-repo"
-global UpdateMode       := "chiedi"    ; "chiedi"     = se c'è una versione nuova te lo chiede (mai mentre giochi)
+global UpdateMode       := "automatico" ; "chiedi"     = se c'è una versione nuova te lo chiede (mai mentre giochi)
                                        ; "automatico" = la installa da solo appena il gioco non è in primo piano
                                        ; "spento"     = nessun controllo automatico (resta il pulsante in Manutenzione)
-global UpdateCheckHours := 12          ; ogni quante ore al massimo controllare (all'avvio dello script)
+global UpdateCheckHours := 1           ; ogni quante ore controllare (all'avvio e poi di continuo mentre lo script è aperto)
 
 ; ------------------------------------------------------------------------------
 ; [TEMA]  Colori di tutta la suite: HUD, pannello Field Boss, istruzioni, leggenda,
@@ -14303,17 +14303,17 @@ ko="chiedi"     = 새 버전이 있으면 물어봅니다 (게임 중에는 절�
 zh="chiedi"     = 有新版本时询问你（游戏中绝不打扰）\n"automatico" = 游戏不在前台时自动安装\n"spento"     = 不自动检查（维护中的按钮仍可用）
 ja="chiedi"     = 新バージョンがあれば確認します（プレイ中は聞きません）\n"automatico" = ゲームが前面にないときに自動でインストール\n"spento"     = 自動確認なし（メンテナンスのボタンは使えます）
 @=UpdateCheckHours
-en=at most how often to check, in hours (when the script starts)
-nap=ogni quanta ore 'o cchiù cuntrullà (quanno parte 'o script)
-bro=ogni quante ore al massimo fare il check (all'avvio dello script)
-es=cada cuántas horas como máximo comprobar (al iniciar el script)
-fr=au maximum toutes les combien d'heures vérifier (au démarrage du script)
-de=höchstens alle wie viele Stunden prüfen (beim Start des Skripts)
-pt=no máximo a cada quantas horas verificar (ao iniciar o script)
-ru=как часто максимум проверять, в часах (при запуске скрипта)
-ko=최대 몇 시간마다 확인할지 (스크립트 시작 시)
-zh=最多每隔多少小时检查一次（在脚本启动时）
-ja=最大で何時間ごとに確認するか（スクリプト起動時）
+en=how often to check, in hours (at startup and then continuously while the script is running)
+nap=ogni quanta ore cuntrullà (quanno parte e po' sempe, mentre 'o script sta apierto)
+bro=ogni quante ore fare il check (all'avvio e poi di continuo mentre lo script è aperto)
+es=cada cuántas horas comprobar (al iniciar y luego continuamente mientras el script está abierto)
+fr=toutes les combien d'heures vérifier (au démarrage puis en continu tant que le script est ouvert)
+de=alle wie viele Stunden prüfen (beim Start und danach laufend, solange das Skript läuft)
+pt=a cada quantas horas verificar (ao iniciar e depois continuamente enquanto o script está aberto)
+ru=как часто проверять, в часах (при запуске и затем постоянно, пока скрипт работает)
+ko=몇 시간마다 확인할지 (시작할 때, 그리고 스크립트가 실행되는 동안 계속)
+zh=每隔多少小时检查一次（启动时以及脚本运行期间持续检查）
+ja=何時間ごとに確認するか（起動時と、スクリプト実行中は継続的に）
 )" "`n"
         return s
     }
@@ -14638,7 +14638,9 @@ class Updater {
         }
     }
 
-    ; all'avvio: avviso "aggiornato" e controllo in background (al massimo ogni UpdateCheckHours ore)
+    ; all'avvio: avviso "aggiornato", poi controllo in background ogni UpdateCheckHours ore
+    ; (anche mentre lo script resta aperto). Il primo controllo parte 20 s dopo l'avvio, oppure
+    ; quando scade l'intervallo se l'ultimo controllo è recente.
     static Startup() {
         done := ""
         try done := IniRead(UserData.File, "Update", "JustUpdated", "")
@@ -14648,16 +14650,23 @@ class Updater {
         }
         if (StrLower(Trim(UpdateMode)) = "spento")
             return
-        last := ""
+        wait := 20000, last := ""
         try last := IniRead(UserData.File, "Update", "LastCheck", "")
         if (last != "") {
-            try if (DateDiff(A_Now, last, "Hours") < Max(1, UpdateCheckHours))
-                return
+            try {
+                left := this.EveryMs() - DateDiff(A_Now, last, "Seconds") * 1000
+                wait := Max(20000, left)
+            }
         }
-        SetTimer(ObjBindMethod(this, "Background"), -20000)
+        SetTimer(ObjBindMethod(this, "Background"), -wait)
     }
 
+    static EveryMs() => Max(1, UpdateCheckHours) * 3600000
+
     static Background() {
+        SetTimer(ObjBindMethod(this, "Background"), -this.EveryMs())   ; prossimo controllo
+        if (StrLower(Trim(UpdateMode)) = "spento" || IsObject(this.Latest))
+            return                                     ; spento, oppure aggiornamento già trovato e in attesa
         info := this.Fetch()
         try IniWrite(A_Now, UserData.File, "Update", "LastCheck")
         if (!IsObject(info) || !this.IsNewer(info.ver) || info.zip = "")   ; zip non ancora allegato: si riprova più tardi
