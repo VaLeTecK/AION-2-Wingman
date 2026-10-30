@@ -44,7 +44,7 @@ jobs:
       - name: Note dal CHANGELOG (solo se la release non ha descrizione)
         if: ${{ github.event.release.body == '' }}
         run: |
-          awk -v tag="## $TAG" '
+          awk -v tag="## v${TAG#v}" '
             $0 == tag {on=1; next}
             on && /^## / {exit}
             on {print}
