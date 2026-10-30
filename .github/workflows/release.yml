@@ -1,0 +1,52 @@
+# Quando pubblichi una release dal sito (Releases > Draft a new release, tag "vX.Y"):
+# controlla che il tag sia uguale ad AppVersion nello script, crea lo zip da distribuire
+# e lo allega alla release. Se la descrizione della release è vuota, usa la sezione
+# "## vX.Y" di CHANGELOG.md.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Tag e versione dello script devono coincidere
+        run: |
+          VER=$(grep -oP '^global AppVersion := "\K[^"]+' "AION 2 Wingman.ahk")
+          echo "Tag: $TAG   AppVersion: $VER"
+          if [ "${TAG#v}" != "$VER" ]; then
+            echo "::error::Il tag $TAG non corrisponde ad AppVersion \"$VER\" nello script. Correggi AppVersion (o il tag) e ripubblica."
+            exit 1
+          fi
+
+      - name: Crea il pacchetto zip
+        run: |
+          mkdir -p "dist/AION 2 Wingman"
+          cp "AION 2 Wingman.ahk" "OCR.ahk" "Setup AION 2 Wingman.bat" "dist/AION 2 Wingman/"
+          cp -r README INFOGRAPHICS "dist/AION 2 Wingman/"
+          cd dist && zip -qr ../AION-2-Wingman.zip "AION 2 Wingman"
+
+      - name: Allega lo zip alla release
+        run: gh release upload "$TAG" AION-2-Wingman.zip --clobber
+
+      - name: Note dal CHANGELOG (solo se la release non ha descrizione)
+        if: ${{ github.event.release.body == '' }}
+        run: |
+          awk -v tag="## $TAG" '
+            $0 == tag {on=1; next}
+            on && /^## / {exit}
+            on {print}
+          ' CHANGELOG.md > notes.md
+          if [ -s notes.md ]; then gh release edit "$TAG" --notes-file notes.md; fi
