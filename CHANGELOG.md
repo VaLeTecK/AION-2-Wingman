@@ -1,3 +1,13 @@
+## v1.01
+
+### 🇬🇧 English
+- Automatic updates are now on by default: Wingman installs new versions by itself (never while you play) and keeps your settings.
+- Updates are checked every hour, also while Wingman stays open (before: only at startup, every 12 hours).
+
+### 🇮🇹 Italiano
+- Aggiornamenti automatici attivi di default: Wingman installa da solo le nuove versioni (mai mentre giochi) e mantiene le tue impostazioni.
+- Controllo degli aggiornamenti ogni ora, anche mentre Wingman resta aperto (prima: solo all'avvio, ogni 12 ore).
+
 ## v1.0
 
 ### 🇬🇧 English
