@@ -14,7 +14,7 @@ COS'È
     script ti guida passo passo fino al Teleport più vicino, poi ti
     indica la direzione di volo.
   - Finestra Impostazioni completa, preset di risoluzione, profili di
-    prestazioni, 12 lingue e 23 temi (8 delle classi, 7 di eventi e
+    prestazioni, 12 lingue e 22 temi (8 delle classi, 7 di eventi e
     festività) più i tuoi temi personalizzati salvati con nome.
 
   Lo script NON clicca e NON preme tasti al posto tuo nel gioco:

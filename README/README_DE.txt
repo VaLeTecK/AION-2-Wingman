@@ -14,7 +14,7 @@ WAS IST DAS
     führt dich Schritt für Schritt zum nächsten Teleport und zeigt dir
     danach die Flugrichtung.
   - Vollständiges Einstellungsfenster, Auflösungs-Presets,
-    Leistungsprofile, 12 Oberflächensprachen und 23 Designs (8 Klassen, 7 Feiertage)
+    Leistungsprofile, 12 Oberflächensprachen und 22 Designs (8 Klassen, 7 Feiertage)
     und eigene Designs.
 
   Das Skript klickt NICHT und drückt KEINE Tasten für dich im Spiel:

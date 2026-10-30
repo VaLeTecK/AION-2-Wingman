@@ -14,7 +14,7 @@ QUÉ ES
     script te guía paso a paso hasta el Teleport más cercano y luego te
     indica la dirección de vuelo.
   - Ventana de Ajustes completa, presets de resolución, perfiles de
-    rendimiento, 12 idiomas de interfaz y 23 temas (8 de clase, 7 festivos)
+    rendimiento, 12 idiomas de interfaz y 22 temas (8 de clase, 7 festivos)
     y temas propios.
 
   El script NO hace clic ni pulsa teclas por ti en el juego: solo mueve

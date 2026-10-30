@@ -1,13 +1,12 @@
 <div align="center">
 
-# AION 2 Wingman
-
-**AutoHotkey v2 companion for AION 2**
-HUD overlay · Field Boss guide · Hidden Cube helper · Themes · Auto-updates
-
-*by VaLeTecK*
+<img src="docs/images/banner.png" alt="AION 2 Wingman — AutoHotkey v2 companion for AION 2" width="100%">
 
 [**⬇ Download the latest release**](../../releases/latest)
+
+<br>
+
+<img src="docs/images/overview.jpg" alt="AION 2 Wingman: Field Boss panel, flight direction, step-by-step guide, HUD icons and the Settings window with live preview" width="100%">
 
 🇬🇧 [English](#-english) · 🇮🇹 [Italiano](#-italiano) · 🇪🇸 [Español](#-español) · 🇫🇷 [Français](#-français) · 🇩🇪 [Deutsch](#-deutsch) · 🇧🇷 [Português](#-português) · 🇷🇺 [Русский](#-русский) · 🇰🇷 [한국어](#-한국어) · 🇨🇳 [简体中文](#-简体中文) · 🇯🇵 [日本語](#-日本語)
 
@@ -28,12 +27,22 @@ HUD overlay · Field Boss guide · Hidden Cube helper · Themes · Auto-updates
 - Each icon has its own shape, size, position, text, emoji, animated effects (pulse, ring, spin, glow) and fade-in/out. It can mirror the other icon automatically.
 - Text and emoji fit inside the icon shape by themselves.
 
+<img src="docs/images/hud.png" alt="HUD overlay in game with the Classic, GTA VI and Halloween themes" width="760">
+
 **👑 Field Boss**
 - When you open the map, a panel lists every field boss (A–Z) with grade colors, active / inactive status and filters.
 - Click a boss and a **step-by-step guide** moves the cursor to Exploration, Field Boss, the boss and the nearest Teleport. Big on-screen instructions tell you what to click.
 - After Travel, an arrow shows the **flight direction** to the boss.
 - Inside **dungeons** the panel stays hidden: it is detected from the map tabs and from the dungeon name.
 - Uses the Windows OCR, so it reads the English game client.
+
+<img src="docs/images/guide-step1.jpg" alt="Field Boss guide, step 1: click the boss" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Field Boss guide: click the nearest Teleport" width="100%">
+
+<details><summary>🖼️ Field Boss panel in three themes</summary>
+
+<img src="docs/images/fieldboss-panels.png" alt="Field Boss panel in the Classic, Halloween and Sorcerer themes" width="760">
+</details>
 
 **🧊 Hidden Cube**
 - When the Hidden Cube window opens, it moves the mouse to "Open with Key" and keeps it there.
@@ -47,11 +56,16 @@ HUD overlay · Field Boss guide · Hidden Cube helper · Themes · Auto-updates
 - **12 languages**: English, Italiano, Español, Français, Deutsch, Português, Русский, 한국어, 简体中文, 日本語, plus two bonus meme languages.
 
 **🎨 Themes**
-- **23 ready-made themes**:
+- **22 ready-made themes**:
   - classics: dark, bright, cuddle, pinkhaze, e-girl and a GTA VI one with a release countdown;
   - **8 AION 2 class themes**, each with its own crosshair and icon shapes, animations, effects and emoji;
   - **7 event themes**: Halloween, Christmas, New Year, Valentine's Day, Carnival, Easter and St. Patrick's Day.
 - **Theme editor**: press *Customize this theme* and you get your own copy ("… Custom"), editable in every detail. Ready-made themes never change.
+
+<details><summary>🎨 See all the themes</summary>
+
+<img src="docs/images/themes.png" alt="All 22 ready-made themes with their colors, icon shapes and emoji" width="100%">
+</details>
 
 **🔄 Updates and personal settings**
 - Checks this repository for new releases and installs them when you agree, or automatically. It never interrupts you while you play.
@@ -109,12 +123,22 @@ The keys still reach the game as usual.
 - Ogni icona ha forma, grandezza, posizione, testi, emoji, effetti animati (pulse, ring, spin, glow) e dissolvenze propri. Può anche essere speculare all'altra.
 - Testi ed emoji si adattano da soli alla forma dell'icona.
 
+<img src="docs/images/hud.png" alt="HUD overlay in gioco con i temi Classic, GTA VI e Halloween" width="760">
+
 **👑 Field Boss**
 - Aprendo la mappa compare un pannello con tutti i field boss (A–Z), colori del grado, stato attivo / non attivo e filtri.
 - Clicchi un boss e una **guida a fasi** porta il cursore su Exploration, Field Boss, il boss e il Teleport più vicino. Istruzioni grandi a schermo ti dicono cosa cliccare.
 - Dopo il Travel, una freccia indica la **direzione di volo** verso il boss.
 - Nei **dungeon** il pannello resta nascosto: li riconosce dai tab della mappa e dal nome del dungeon.
 - Usa l'OCR di Windows, quindi legge il client del gioco in inglese.
+
+<img src="docs/images/guide-step1.jpg" alt="Guida Field Boss, fase 1: clicca il boss" width="100%">
+<img src="docs/images/guide-teleport.jpg" alt="Guida Field Boss: clicca il Teleport più vicino" width="100%">
+
+<details><summary>🖼️ Il pannello Field Boss in tre temi</summary>
+
+<img src="docs/images/fieldboss-panels.png" alt="Pannello Field Boss con i temi Classic, Halloween e Sorcerer" width="760">
+</details>
 
 **🧊 Hidden Cube**
 - Quando si apre la finestra degli Hidden Cube porta il mouse su "Open with Key" e ce lo tiene.
@@ -128,11 +152,16 @@ The keys still reach the game as usual.
 - **12 lingue**: English, Italiano, Español, Français, Deutsch, Português, Русский, 한국어, 简体中文, 日本語, più due lingue bonus meme.
 
 **🎨 Temi**
-- **23 temi pronti**:
+- **22 temi pronti**:
   - classici: dark, bright, cuddle, pinkhaze, e-girl e uno GTA VI con il conto alla rovescia all'uscita;
   - **8 temi delle classi di AION 2**, ognuno con forme di mirino e icone, animazioni, effetti ed emoji propri;
   - **7 temi di eventi**: Halloween, Natale, Capodanno, San Valentino, Carnevale, Pasqua e San Patrizio.
 - **Editor temi**: premi *Personalizza questo tema* e ottieni una tua copia ("… Custom"), modificabile in ogni dettaglio. I temi pronti non cambiano mai.
+
+<details><summary>🎨 Guarda tutti i temi</summary>
+
+<img src="docs/images/themes.png" alt="Tutti i 22 temi pronti con colori, forme delle icone ed emoji" width="100%">
+</details>
 
 **🔄 Aggiornamenti e impostazioni personali**
 - Controlla le nuove release di questa repository e le installa quando sei d'accordo, oppure in automatico. Non ti interrompe mai mentre giochi.
@@ -198,7 +227,7 @@ I tasti arrivano comunque al gioco.
   - menú Mantenimiento y botón **Cerrar Wingman**;
   - **12 idiomas**.
 - **🎨 Temas:**
-  - **23 temas listos**: clásicos, **8 de clase de AION 2** y **7 de eventos** (Halloween, Navidad, Año Nuevo, San Valentín, Carnaval, Pascua y San Patricio);
+  - **22 temas listos**: clásicos, **8 de clase de AION 2** y **7 de eventos** (Halloween, Navidad, Año Nuevo, San Valentín, Carnaval, Pascua y San Patricio);
   - **Editor de temas**: *Personalizar este tema* crea tu copia "… Custom", editable en cada detalle.
 - **🔄 Actualizaciones:** comprueba e instala las nuevas releases sin interrumpirte mientras juegas. Tus ajustes, presets y temas (`%AppData%\AION 2 Wingman`) **se mantienen**.
 
@@ -240,7 +269,7 @@ I tasti arrivano comunque al gioco.
   - menu Maintenance et bouton **Quitter Wingman** ;
   - **12 langues**.
 - **🎨 Thèmes :**
-  - **23 thèmes prêts** : classiques, **8 de classe AION 2** et **7 de fêtes** (Halloween, Noël, Nouvel An, Saint-Valentin, Carnaval, Pâques et Saint-Patrick) ;
+  - **22 thèmes prêts** : classiques, **8 de classe AION 2** et **7 de fêtes** (Halloween, Noël, Nouvel An, Saint-Valentin, Carnaval, Pâques et Saint-Patrick) ;
   - **Éditeur de thèmes** : *Personnaliser ce thème* crée ta copie "… Custom", modifiable dans les moindres détails.
 - **🔄 Mises à jour :** vérifie et installe les nouvelles releases sans jamais te déranger en jeu. Tes paramètres, presets et thèmes (`%AppData%\AION 2 Wingman`) **sont conservés**.
 
@@ -282,7 +311,7 @@ I tasti arrivano comunque al gioco.
   - Wartungsmenü und Knopf **Wingman beenden**;
   - **12 Sprachen**.
 - **🎨 Designs:**
-  - **23 fertige Designs**: Klassiker, **8 AION-2-Klassen** und **7 Feiertage** (Halloween, Weihnachten, Neujahr, Valentinstag, Karneval, Ostern und St. Patrick's Day);
+  - **22 fertige Designs**: Klassiker, **8 AION-2-Klassen** und **7 Feiertage** (Halloween, Weihnachten, Neujahr, Valentinstag, Karneval, Ostern und St. Patrick's Day);
   - **Design-Editor**: *Dieses Design anpassen* erstellt deine eigene Kopie "… Custom", die du in jedem Detail ändern kannst.
 - **🔄 Updates:** prüft und installiert neue Releases, ohne dich beim Spielen zu stören. Einstellungen, Presets und Designs (`%AppData%\AION 2 Wingman`) **bleiben erhalten**.
 
@@ -324,7 +353,7 @@ I tasti arrivano comunque al gioco.
   - menu Manutenção e botão **Encerrar Wingman**;
   - **12 idiomas**.
 - **🎨 Temas:**
-  - **23 temas prontos**: clássicos, **8 de classe do AION 2** e **7 de datas comemorativas** (Halloween, Natal, Ano Novo, Dia dos Namorados, Carnaval, Páscoa e Dia de São Patrício);
+  - **22 temas prontos**: clássicos, **8 de classe do AION 2** e **7 de datas comemorativas** (Halloween, Natal, Ano Novo, Dia dos Namorados, Carnaval, Páscoa e Dia de São Patrício);
   - **Editor de temas**: *Personalizar este tema* cria a sua cópia "… Custom", editável em cada detalhe.
 - **🔄 Atualizações:** verifica e instala as novas releases sem atrapalhar enquanto você joga. Configurações, presets e temas (`%AppData%\AION 2 Wingman`) **são mantidos**.
 
@@ -366,7 +395,7 @@ I tasti arrivano comunque al gioco.
   - меню «Обслуживание» и кнопка **Выйти из Wingman**;
   - **12 языков**.
 - **🎨 Темы:**
-  - **23 готовые темы**: классические, **8 классов AION 2** и **7 праздничных** (Хэллоуин, Рождество, Новый год, День святого Валентина, Карнавал, Пасха и День святого Патрика);
+  - **22 готовые темы**: классические, **8 классов AION 2** и **7 праздничных** (Хэллоуин, Рождество, Новый год, День святого Валентина, Карнавал, Пасха и День святого Патрика);
   - **Редактор тем**: кнопка «Настроить эту тему» создаёт вашу копию «… Custom», которую можно менять до мелочей.
 - **🔄 Обновления:** проверяет и устанавливает новые релизы, не мешая игре. Настройки, пресеты и темы (`%AppData%\AION 2 Wingman`) **сохраняются**.
 
@@ -408,7 +437,7 @@ I tasti arrivano comunque al gioco.
   - 유지 관리 메뉴와 **Wingman 종료** 버튼;
   - **12개 언어**.
 - **🎨 테마:**
-  - **23가지 기본 테마**: 클래식, **AION 2 클래스 8종**, **이벤트 7종**(할로윈, 크리스마스, 새해, 밸런타인데이, 카니발, 부활절, 성 패트릭의 날);
+  - **22가지 기본 테마**: 클래식, **AION 2 클래스 8종**, **이벤트 7종**(할로윈, 크리스마스, 새해, 밸런타인데이, 카니발, 부활절, 성 패트릭의 날);
   - **테마 편집기**: "이 테마 꾸미기"를 누르면 모든 부분을 바꿀 수 있는 "… Custom" 복사본이 만들어집니다.
 - **🔄 업데이트:** 게임 중에는 방해하지 않고 새 릴리스를 확인·설치합니다. 설정, 프리셋, 테마(`%AppData%\AION 2 Wingman`)는 **그대로 유지**됩니다.
 
@@ -450,7 +479,7 @@ I tasti arrivano comunque al gioco.
   - 维护菜单和**退出 Wingman**按钮；
   - **12 种语言**。
 - **🎨 主题：**
-  - **23 个预设主题**：经典主题、**8 个 AION 2 职业主题**和 **7 个节日主题**（万圣节、圣诞节、新年、情人节、狂欢节、复活节、圣帕特里克节）；
+  - **22 个预设主题**：经典主题、**8 个 AION 2 职业主题**和 **7 个节日主题**（万圣节、圣诞节、新年、情人节、狂欢节、复活节、圣帕特里克节）；
   - **主题编辑器**："自定义此主题"会生成你自己的 "… Custom" 副本，每个细节都能修改。
 - **🔄 更新：** 检查并安装新版本，游戏时绝不打扰。设置、预设和主题（`%AppData%\AION 2 Wingman`）**会被保留**。
 
@@ -492,7 +521,7 @@ I tasti arrivano comunque al gioco.
   - メンテナンスメニューと **Wingman を終了** ボタン；
   - **12 言語**。
 - **🎨 テーマ：**
-  - **23 種類の既成テーマ**：定番、**AION 2 のクラス 8 種**、**イベント 7 種**（ハロウィン、クリスマス、お正月、バレンタイン、カーニバル、イースター、聖パトリックの日）；
+  - **22 種類の既成テーマ**：定番、**AION 2 のクラス 8 種**、**イベント 7 種**（ハロウィン、クリスマス、お正月、バレンタイン、カーニバル、イースター、聖パトリックの日）；
   - **テーマエディター**：「このテーマをカスタマイズ」で、細部まで変更できる自分のコピー「… Custom」が作られます。
 - **🔄 アップデート：** プレイ中は邪魔せずに新しいリリースを確認・インストールします。設定・プリセット・テーマ（`%AppData%\AION 2 Wingman`）は**そのまま残ります**。
 

@@ -14,7 +14,7 @@ DE QUOI S'AGIT-IL
     script vous guide étape par étape jusqu'au Teleport le plus proche,
     puis indique la direction de vol.
   - Fenêtre de Paramètres complète, presets de résolution, profils de
-    performance, 12 langues d'interface et 23 thèmes (8 de classe, 7 de fêtes)
+    performance, 12 langues d'interface et 22 thèmes (8 de classe, 7 de fêtes)
     et vos propres thèmes.
 
   Le script NE clique PAS et N'appuie PAS sur les touches à votre place :

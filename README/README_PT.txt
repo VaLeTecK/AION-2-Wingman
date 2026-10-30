@@ -14,7 +14,7 @@ O QUE É
     guia você passo a passo até o Teleport mais próximo e depois mostra
     a direção de voo.
   - Janela de Configurações completa, presets de resolução, perfis de
-    desempenho, 12 idiomas de interface e 23 temas (8 de classe, 7 de datas
+    desempenho, 12 idiomas de interface e 22 temas (8 de classe, 7 de datas
     comemorativas) e temas próprios.
 
   O script NÃO clica nem aperta teclas por você no jogo: só move o

@@ -14,7 +14,7 @@ WHAT IT IS
     guides you step by step to the nearest Teleport, then shows you the
     flight direction.
   - Full Settings window, resolution presets, performance profiles,
-    12 interface languages and 23 themes (8 class, 7 holiday)
+    12 interface languages and 22 themes (8 class, 7 holiday)
     plus your own saved themes.
 
   The script does NOT click or press keys in the game for you:
