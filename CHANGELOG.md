@@ -3,6 +3,14 @@
 Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descrizione della release
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
 
+## v1.02
+
+### 🇬🇧 English
+- Fixed: turning off the live preview in Settings could stop Wingman with the error "Gui has no window" (the HUD was being rebuilt while Windows reported a window change).
+
+### 🇮🇹 Italiano
+- Corretto: spegnendo l'anteprima dal vivo nelle Impostazioni, Wingman poteva bloccarsi con l'errore "Gui has no window" (l'HUD veniva ricostruito proprio mentre Windows segnalava un cambio di finestra).
+
 ## v1.01
 
 ### 🇬🇧 English

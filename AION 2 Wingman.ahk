@@ -20,7 +20,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.01"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.02"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -699,6 +699,7 @@ global FieldBossList := [
 global ChevPi   := 3.14159265358979
 global GameActive := ""                  ; ultimo stato "gioco in primo piano" (per avviare/fermare i tool)
 global HudShown := false                 ; true quando il gioco è in primo piano e l'HUD è visibile
+global HudBuilding := false              ; true mentre BuildHud ricostruisce le finestre dell'HUD
 
 ; Profilo prestazioni: sovrascrive i cicli in ms con quelli del profilo scelto ([PRESTAZIONI])
 ; Variabili gestite dai profili, nello stesso ordine dei valori qui sotto
@@ -970,6 +971,7 @@ global CombatIcon := "", CombatFx := "", AllGroups := "", CombatGroups := "", Co
 BuildHud() {
     global                                   ; tutte le variabili qui sono globali
     Critical "On"                            ; nessun fotogramma durante la ricostruzione
+    HudBuilding := true                      ; il cambio di finestra in primo piano (callback) può arrivare anche qui
     DestroyHud()
 
     ; 1. Mirino centrale (dimensione finestra calcolata per contenere ON, OFF e animazione)
@@ -1030,6 +1032,7 @@ BuildHud() {
     LootHUD := HudChannel(LootKey, LootTimeout, LootGrace, HudC("ColorIdleLoot"), [LootIcon], (on) => LootFx.SetActive(on))
 
     HudShown := false                        ; le nuove finestre partono nascoste: UpdateVisibility le mostra
+    HudBuilding := false
 }
 
 ; Distrugge le finestre dell'HUD e libera le risorse grafiche (prima di una ricostruzione)
@@ -1038,9 +1041,13 @@ DestroyHud() {
     if !IsObject(AllGroups)
         return
     SetTimer(Ticker.Fn, 0), Ticker.Items := Map()
-    for grp in AllGroups
+    old := AllGroups
+    AllGroups := [], CombatGroups := []           ; prima di distruggere: nessuno le usa più (es. cambio di finestra in primo piano)
+    for grp in old {
+        grp.Dead := true
         for item in grp.Windows
             try item.Win.Destroy()
+    }
     for name in ["LootFx", "CombatFx"]
         if IsObject(%name%)
             %name%.Free()
@@ -1140,6 +1147,8 @@ Updater.Startup()                            ; aggiornamenti da GitHub (vedi [AG
 ; HUD visibile = gioco in primo piano E HUD acceso. I tool seguono solo il gioco.
 UpdateVisibility() {
     global HudShown, GameActive
+    if HudBuilding                              ; l'HUD si sta ricostruendo: ci pensa BuildHud alla fine
+        return
     game := WinActive("ahk_exe " GameExe) != 0
     show := (game && Hud.On) || PreviewMode     ; in anteprima l'HUD si vede sempre
     if (show != HudShown) {
@@ -1763,14 +1772,19 @@ class FadeGroup {
             SetLayerAlpha(win.Hwnd, this.Applied, colorKey)
     }
 
+    ; (try: un gruppo appena distrutto da una ricostruzione dell'HUD non deve mai bloccare lo script)
     Show() {
+        if this.HasOwnProp("Dead")
+            return
         for item in this.Windows
-            item.Win.Show(item.Opts)
+            try item.Win.Show(item.Opts)
     }
 
     Hide() {
+        if this.HasOwnProp("Dead")
+            return
         for item in this.Windows
-            item.Win.Hide()
+            try item.Win.Hide()
     }
 
     ; Cambia il colore dei riempimenti (RGB intero), istantaneamente o con una sfumatura
