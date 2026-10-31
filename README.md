@@ -6,6 +6,8 @@
 
 [**⬇ Download the latest release**](../../releases/latest) · 💖 Donate: [**PayPal**](https://www.paypal.com/paypalme/valeteck) · [**Ko-fi**](https://ko-fi.com/VaLeTecK)
 
+📦 **First time?** Extract the zip and double-click **`Setup AION 2 Wingman.bat`**: it installs everything and sets Wingman up for you.
+
 <br>
 
 <img src="docs/images/overview.jpg" alt="AION 2 Wingman: Field Boss panel, flight direction, step-by-step guide, HUD icons and the Settings window with live preview" width="100%">
@@ -42,6 +44,8 @@ Reaching a Field Boss normally means opening the map, going to Exploration and t
 3. Wingman **moves the cursor step by step** to *Exploration*, *Field Boss*, *the boss* and then **the nearest Teleport**, which it finds by itself on the map. A big on-screen instruction and a ring on the exact spot tell you what to click, and the cursor can stay locked there so you can't miss.
 4. **Press `F`** (Travel): an arrow shows the **flight direction** to the boss, for example *NORTH-EAST*.
 5. `Esc` cancels at any time. Inside dungeons the panel stays hidden.
+
+⚡ **Built for speed.** Once you've picked the boss there's nothing to aim at or read: just **keep spamming left click**. At every step the cursor is already on the right spot, and stray clicks between steps are blocked. As soon as the Teleport is clicked, **spam `F`**: the mouse stays locked for a few seconds, so no misclick can get in the way of your departure.
 
 <img src="docs/images/guide-step1.jpg" alt="Assisted Teleport, step 1: click the boss" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Assisted Teleport: click the nearest Teleport" width="100%">
@@ -95,17 +99,50 @@ Reaching a Field Boss normally means opening the map, going to Exploration and t
 - Checks this repository for new releases and installs them when you agree, or automatically. It never interrupts you while you play.
 - Your settings, presets and themes are stored in `%AppData%\AION 2 Wingman` and **survive every update**.
 
+### 🎛️ Customize everything
+
+Every single element of the HUD and of the tools can be tuned to your taste, in **look** and in **behavior**: more than 240 options, each with a description, an example and the live preview, without touching the code.
+
+- **Crosshair**: shape (arrow, triangle, bar, diamond, circle, block, separate for ON and OFF), number of arrows, size, thickness, spacing, gap, animation (pulse, march, sequence) and speed.
+- **Bars**: width, height, border, position, center gap and slant, each bar on its own.
+- **LOOT and COMBAT icons**: shape, size, border, position (or mirrored), top and bottom text, emoji, text colors, effects (pulse, ring, spin, glow) with duration, color and intensity, fade in and out, each icon on its own.
+- **Colors and transitions**: active and idle colors, fade and color-blend times for every element.
+- **Field Boss and Assisted Teleport**: panel size and position, filters, full boss list editor (name, grade, importance), key legend, guide behavior (mouse lock, click block, instruction size and position, mouse lock after the Teleport), flight-direction arrow (duration, delay, size), Teleport search and zoom, dungeon list.
+- **Hidden Cube**: position, mouse lock, intervals, optional auto-click.
+- **Keys**: every key can be changed.
+- **The whole app**: 22 themes plus the Theme editor, 12 languages, performance profiles, resolution presets and your own presets.
+
 ### 💻 Requirements
 - Windows 10 or 11
 - AutoHotkey v2 and the English Windows OCR (both installed by the setup)
 - English AION 2 client (for Field Boss)
 
-### 📦 Installation
+### 🚀 Installation and first launch: start from the Setup
+
+> **After extracting the zip, double-click `Setup AION 2 Wingman.bat` first.**
+> It's the file with "Setup" in its name, in the main folder of the package.
+>
+> The Setup installs everything Wingman needs to work 100% (AutoHotkey v2, the Windows OCR, the OCR library) and walks you through a quick first configuration: language, screen resolution, performance, color theme, features ON/OFF and keyboard. At the end it creates a desktop shortcut and starts Wingman with your settings already in place.
+
 1. Download **`AION-2-Wingman.zip`** from the [latest release](../../releases/latest).
 2. Right-click the zip > **Properties** > tick **Unblock** > OK. This avoids Windows warnings.
-3. Extract it to a **permanent folder**, for example `Documents\AION 2 Wingman`. Do not run it from inside the zip.
-4. Double-click **`Setup AION 2 Wingman.bat`** and accept the administrator prompt. It checks and installs what is missing, then guides you through language, resolution, performance, theme and features. It can also create a desktop shortcut.
-5. From then on, start **`AION 2 Wingman.ahk`** or the shortcut.
+3. Extract it to a **permanent folder**, for example `Documents\AION 2 Wingman`. Don't run it from inside the zip.
+4. Double-click **`Setup AION 2 Wingman.bat`** and accept the administrator prompt. If you see "Windows protected your PC", click *More info* > *Run anyway*.
+5. Follow the guided setup. Pressing Enter always picks the recommended choice.
+6. From then on, start Wingman from the desktop shortcut or with **`AION 2 Wingman.ahk`**. You can run the Setup again at any time from *Settings > 🛠️ Maintenance*.
+
+| In the package | What it is |
+|---|---|
+| 📦 **`Setup AION 2 Wingman.bat`** | **Start here**: first-time setup |
+| `AION 2 Wingman.ahk` | the program |
+| `OCR.ahk` | OCR library (used by Field Boss) |
+| `README\` · `INFOGRAPHICS\` | guides in 10 languages |
+
+### 📖 Quick guide
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_EN_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_EN_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ Default keys
 | Keys | Action |
@@ -161,6 +198,8 @@ Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Explorat
 4. **Premi `F`** (Travel): una freccia indica la **direzione di volo** verso il boss, per esempio *NORD-EST*.
 5. `Esc` annulla in qualsiasi momento. Nei dungeon il pannello resta nascosto.
 
+⚡ **Pensato per la velocità.** Scelto il boss non devi mirare né leggere niente: **spamma il click sinistro**. A ogni fase il cursore è già sul punto giusto e i click fuori tempo tra una fase e l'altra vengono bloccati. Appena hai cliccato il Teleport, **spamma `F`**: il mouse resta bloccato per qualche secondo, così nessun click sbagliato può rovinarti la partenza.
+
 <img src="docs/images/guide-step1.jpg" alt="Teleport assistito, fase 1: clicca il boss" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport assistito: clicca il Teleport più vicino" width="100%">
 
@@ -213,17 +252,50 @@ Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Explorat
 - Controlla le nuove release di questa repository e le installa quando sei d'accordo, oppure in automatico. Non ti interrompe mai mentre giochi.
 - Impostazioni, preset e temi sono salvati in `%AppData%\AION 2 Wingman` e **restano dopo ogni aggiornamento**.
 
+### 🎛️ Personalizza ogni cosa
+
+Ogni singolo elemento dell'HUD e dei tool si regola come vuoi, sia nell'**aspetto** sia nel **funzionamento**: più di 240 opzioni, ognuna con descrizione, esempio e anteprima dal vivo, senza toccare il codice.
+
+- **Mirino**: forma (freccia, triangolo, barra, rombo, cerchio, blocco, diversa per ON e OFF), numero di frecce, grandezza, spessore, spaziatura, distanza, animazione (pulse, march, sequence) e velocità.
+- **Barre**: larghezza, altezza, cornice, posizione, spazio centrale e inclinazione, ogni barra per conto suo.
+- **Icone LOOT e COMBAT**: forma, grandezza, cornice, posizione (o speculare), testo in alto e in basso, emoji, colori dei testi, effetti (pulse, ring, spin, glow) con durata, colore e intensità, dissolvenze, ogni icona per conto suo.
+- **Colori e transizioni**: colori attivi e inattivi, tempi di dissolvenza e sfumatura per ogni elemento.
+- **Field Boss e Teleport assistito**: grandezza e posizione del pannello, filtri, editor completo della lista dei boss (nome, grado, importanza), legenda dei tasti, comportamento della guida (blocco del mouse, blocco dei click, grandezza e posizione delle istruzioni, blocco del mouse dopo il Teleport), freccia della direzione (durata, ritardo, grandezza), ricerca del Teleport e zoom, lista dei dungeon.
+- **Hidden Cube**: posizione, blocco del mouse, intervalli, click automatico facoltativo.
+- **Tasti**: ogni tasto si può cambiare.
+- **Tutta l'app**: 22 temi più l'Editor temi, 12 lingue, profili prestazioni, preset di risoluzione e preset tuoi.
+
 ### 💻 Requisiti
 - Windows 10 o 11
 - AutoHotkey v2 e l'OCR inglese di Windows (li installa il setup)
 - Client di AION 2 in inglese (per il Field Boss)
 
-### 📦 Installazione
+### 🚀 Installazione e primo avvio: si parte dal Setup
+
+> **Dopo aver estratto lo zip, avvia per primo `Setup AION 2 Wingman.bat` con un doppio click.**
+> È il file con "Setup" nel nome, nella cartella principale del pacchetto.
+>
+> Il Setup installa tutto quello che serve a Wingman per funzionare al 100% (AutoHotkey v2, l'OCR di Windows, la libreria OCR) e ti guida in una breve configurazione iniziale: lingua, risoluzione dello schermo, prestazioni, tema dei colori, funzioni ON/OFF e tastiera. Alla fine crea il collegamento sul desktop e avvia Wingman con le tue impostazioni già pronte.
+
 1. Scarica **`AION-2-Wingman.zip`** dall'[ultima release](../../releases/latest).
 2. Tasto destro sullo zip > **Proprietà** > spunta **Annulla blocco** > OK. Così eviti gli avvisi di Windows.
 3. Estrailo in una **cartella fissa**, ad esempio `Documenti\AION 2 Wingman`. Non avviarlo da dentro lo zip.
-4. Doppio click su **`Setup AION 2 Wingman.bat`** e accetta la richiesta di amministratore. Controlla e installa ciò che manca, poi ti guida in lingua, risoluzione, prestazioni, tema e funzioni. Può anche creare un collegamento sul desktop.
-5. Da lì in poi avvia **`AION 2 Wingman.ahk`** o il collegamento.
+4. Doppio click su **`Setup AION 2 Wingman.bat`** e accetta la richiesta di amministratore. Se compare "Windows ha protetto il PC", clicca *Ulteriori informazioni* > *Esegui comunque*.
+5. Segui la configurazione guidata. Premendo Invio scegli sempre l'opzione consigliata.
+6. Da lì in poi avvia Wingman dal collegamento sul desktop o con **`AION 2 Wingman.ahk`**. Il Setup si può rilanciare quando vuoi da *Impostazioni > 🛠️ Manutenzione*.
+
+| Nel pacchetto | Cos'è |
+|---|---|
+| 📦 **`Setup AION 2 Wingman.bat`** | **Parti da qui**: installazione del primo avvio |
+| `AION 2 Wingman.ahk` | il programma |
+| `OCR.ahk` | libreria OCR (serve al Field Boss) |
+| `README\` · `INFOGRAPHICS\` | guide in 10 lingue |
+
+### 📖 Guida rapida
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_IT_1_Primo_avvio.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_IT_2_Come_si_usa.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ Tasti predefiniti
 | Tasti | Azione |
@@ -279,6 +351,8 @@ Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego 
 4. **Pulsa `F`** (Travel): una flecha indica la **dirección de vuelo** hacia el jefe.
 5. `Esc` cancela en cualquier momento. En las mazmorras el panel se oculta.
 
+⚡ **Pensado para la velocidad.** Una vez elegido el jefe no hay que apuntar ni leer nada: **haz clic izquierdo sin parar**. En cada paso el cursor ya está en el punto correcto y los clics fuera de tiempo entre pasos se bloquean. En cuanto hagas clic en el Teleport, **pulsa `F` sin parar**: el ratón queda bloqueado unos segundos, así ningún clic erróneo estropea la salida.
+
 <img src="docs/images/guide-step1.jpg" alt="Teleport asistido, paso 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport asistido: el Teleport más cercano" width="100%">
 
@@ -302,17 +376,37 @@ Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego 
   - **Editor de temas**: *Personalizar este tema* crea tu copia "… Custom", editable en cada detalle.
 - **🔄 Actualizaciones:** comprueba e instala las nuevas releases sin interrumpirte mientras juegas. Tus ajustes, presets y temas (`%AppData%\AION 2 Wingman`) **se mantienen**.
 
+### 🎛️ Personaliza todo
+
+Cada elemento del HUD y de las herramientas se ajusta a tu gusto, en **aspecto** y en **funcionamiento**: más de 240 opciones con descripción, ejemplo y vista previa en vivo, sin tocar el código.
+- **Mira**: forma (distinta para ON y OFF), número, tamaño, grosor, espaciado, animación y velocidad.
+- **Barras** e **iconos LOOT / COMBAT**: forma, tamaño, borde, posición, textos, emoji, colores, efectos y fundidos, cada uno por separado.
+- **Field Boss y Teleport asistido**: tamaño y posición del panel, filtros, editor de la lista de jefes, comportamiento de la guía, bloqueo del ratón tras el Teleport, flecha de dirección, búsqueda del Teleport, lista de mazmorras.
+- **Hidden Cube**, **teclas**, **temas**, **idiomas**, **perfiles de rendimiento** y **presets**.
+
 ### 💻 Requisitos
 - Windows 10 u 11
 - AutoHotkey v2 y el OCR inglés de Windows (los instala el setup)
 - Cliente de AION 2 en inglés
 
-### 📦 Instalación
+### 🚀 Instalación y primer inicio: empieza por el Setup
+
+> **Después de extraer el zip, ejecuta primero `Setup AION 2 Wingman.bat` con doble clic.** Es el archivo con "Setup" en el nombre, en la carpeta principal del paquete.
+>
+> El Setup instala todo lo que Wingman necesita para funcionar al 100% (AutoHotkey v2, el OCR de Windows, la librería OCR) y te guía en una breve configuración inicial: idioma, resolución, rendimiento, tema de colores, funciones ON/OFF y teclado. Al final crea un acceso directo e inicia Wingman ya configurado.
+
 1. Descarga **`AION-2-Wingman.zip`** de la [última release](../../releases/latest).
 2. Clic derecho > **Propiedades** > marca **Desbloquear** > Aceptar.
-3. Extráelo en una carpeta fija.
-4. Ejecuta **`Setup AION 2 Wingman.bat`** como administrador: instala lo que falta y te guía en la primera configuración.
-5. Después, inicia **`AION 2 Wingman.ahk`** o el acceso directo.
+3. Extráelo en una carpeta fija (no lo ejecutes desde dentro del zip).
+4. Doble clic en **`Setup AION 2 Wingman.bat`** y acepta el permiso de administrador.
+5. Sigue la configuración guiada (Intro = opción recomendada).
+6. Después inicia Wingman con el acceso directo o **`AION 2 Wingman.ahk`**. El Setup se puede repetir desde *Ajustes > 🛠️ Mantenimiento*.
+
+### 📖 Guía rápida
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_ES_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_ES_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ Teclas predeterminadas
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` Ajustes · `Esc` cancelar guía · `F9` / `F10` señales de las macros (combat: F9 en spam; loot: F10 con espera de 1350 ms).
@@ -346,6 +440,8 @@ Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Explo
 4. **Appuie sur `F`** (Travel) : une flèche indique la **direction de vol** vers le boss.
 5. `Esc` annule à tout moment. Dans les donjons, le panneau reste masqué.
 
+⚡ **Pensé pour la vitesse.** Une fois le boss choisi, rien à viser ni à lire : **clique gauche en rafale**. À chaque étape le curseur est déjà au bon endroit et les clics à contretemps entre les étapes sont bloqués. Dès que le Teleport est cliqué, **spamme `F`** : la souris reste bloquée quelques secondes, aucun mauvais clic ne peut gâcher le départ.
+
 <img src="docs/images/guide-step1.jpg" alt="Teleport assisté, étape 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport assisté : le Teleport le plus proche" width="100%">
 
@@ -369,17 +465,37 @@ Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Explo
   - **Éditeur de thèmes** : *Personnaliser ce thème* crée ta copie "… Custom", modifiable dans les moindres détails.
 - **🔄 Mises à jour :** vérifie et installe les nouvelles releases sans jamais te déranger en jeu. Tes paramètres, presets et thèmes (`%AppData%\AION 2 Wingman`) **sont conservés**.
 
+### 🎛️ Personnalise tout
+
+Chaque élément du HUD et des outils se règle à ton goût, en **apparence** comme en **fonctionnement** : plus de 240 options avec description, exemple et aperçu en direct, sans toucher au code.
+- **Viseur** : forme (différente pour ON et OFF), nombre, taille, épaisseur, espacement, animation et vitesse.
+- **Barres** et **icônes LOOT / COMBAT** : forme, taille, cadre, position, textes, emoji, couleurs, effets et fondus, chacun séparément.
+- **Field Boss et Teleport assisté** : taille et position du panneau, filtres, éditeur de la liste des boss, comportement du guide, blocage de la souris après le Teleport, flèche de direction, recherche du Teleport, liste des donjons.
+- **Hidden Cube**, **touches**, **thèmes**, **langues**, **profils de performance** et **presets**.
+
 ### 💻 Configuration requise
 - Windows 10 ou 11
 - AutoHotkey v2 et l'OCR anglais de Windows (installés par le setup)
 - Client AION 2 en anglais
 
-### 📦 Installation
+### 🚀 Installation et premier lancement : commence par le Setup
+
+> **Après avoir extrait le zip, lance d'abord `Setup AION 2 Wingman.bat` par un double-clic.** C'est le fichier avec "Setup" dans le nom, dans le dossier principal du paquet.
+>
+> Le Setup installe tout ce dont Wingman a besoin pour fonctionner à 100 % (AutoHotkey v2, l'OCR de Windows, la bibliothèque OCR) et te guide dans une courte configuration : langue, résolution, performance, thème, fonctions ON/OFF et clavier. À la fin, il crée un raccourci et lance Wingman déjà configuré.
+
 1. Télécharge **`AION-2-Wingman.zip`** depuis la [dernière release](../../releases/latest).
 2. Clic droit > **Propriétés** > coche **Débloquer** > OK.
-3. Extrais-le dans un dossier fixe.
-4. Lance **`Setup AION 2 Wingman.bat`** en administrateur : il installe ce qui manque et te guide dans la première configuration.
-5. Ensuite, lance **`AION 2 Wingman.ahk`** ou le raccourci.
+3. Extrais-le dans un dossier fixe (ne le lance pas depuis le zip).
+4. Double-clic sur **`Setup AION 2 Wingman.bat`** et accepte la demande d'administrateur.
+5. Suis la configuration guidée (Entrée = choix recommandé).
+6. Ensuite, lance Wingman avec le raccourci ou **`AION 2 Wingman.ahk`**. Le Setup peut être relancé depuis *Paramètres > 🛠️ Maintenance*.
+
+### 📖 Guide rapide
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_FR_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_FR_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ Touches par défaut
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` Paramètres · `Esc` annuler le guide · `F9` / `F10` signaux des macros (combat : F9 en spam ; loot : F10 avec une attente de 1350 ms).
@@ -413,6 +529,8 @@ Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration u
 4. **`F` drücken** (Travel): Ein Pfeil zeigt die **Flugrichtung** zum Boss.
 5. `Esc` bricht jederzeit ab. In Dungeons bleibt das Panel ausgeblendet.
 
+⚡ **Auf Tempo gebaut.** Ist der Boss gewählt, musst du nichts mehr zielen oder lesen: **einfach weiter Linksklick spammen**. Bei jedem Schritt steht der Cursor schon richtig, und Klicks zur falschen Zeit zwischen den Schritten werden blockiert. Sobald der Teleport angeklickt ist, **F spammen**: Die Maus bleibt ein paar Sekunden gesperrt, damit kein Fehlklick den Abflug stört.
+
 <img src="docs/images/guide-step1.jpg" alt="Assistierter Teleport, Schritt 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Assistierter Teleport: der nächste Teleport" width="100%">
 
@@ -436,17 +554,37 @@ Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration u
   - **Design-Editor**: *Dieses Design anpassen* erstellt deine eigene Kopie "… Custom", die du in jedem Detail ändern kannst.
 - **🔄 Updates:** prüft und installiert neue Releases, ohne dich beim Spielen zu stören. Einstellungen, Presets und Designs (`%AppData%\AION 2 Wingman`) **bleiben erhalten**.
 
+### 🎛️ Alles anpassen
+
+Jedes Element von HUD und Tools lässt sich nach deinem Geschmack einstellen, in **Aussehen** und **Verhalten**: über 240 Optionen mit Beschreibung, Beispiel und Live-Vorschau, ohne den Code anzufassen.
+- **Fadenkreuz**: Form (getrennt für AN und AUS), Anzahl, Größe, Stärke, Abstand, Animation und Tempo.
+- **Balken** und **LOOT-/COMBAT-Symbole**: Form, Größe, Rahmen, Position, Texte, Emoji, Farben, Effekte und Überblendungen, jeweils einzeln.
+- **Field Boss und assistierter Teleport**: Größe und Position des Panels, Filter, Editor der Bossliste, Verhalten der Führung, Maussperre nach dem Teleport, Richtungspfeil, Teleport-Suche, Dungeon-Liste.
+- **Hidden Cube**, **Tasten**, **Designs**, **Sprachen**, **Leistungsprofile** und **Presets**.
+
 ### 💻 Voraussetzungen
 - Windows 10 oder 11
 - AutoHotkey v2 und die englische Windows-OCR (installiert das Setup)
 - Englischer AION-2-Client
 
-### 📦 Installation
+### 🚀 Installation und erster Start: mit dem Setup beginnen
+
+> **Nach dem Entpacken zuerst `Setup AION 2 Wingman.bat` doppelklicken.** Das ist die Datei mit "Setup" im Namen, im Hauptordner des Pakets.
+>
+> Das Setup installiert alles, was Wingman für den vollen Betrieb braucht (AutoHotkey v2, die Windows-OCR, die OCR-Bibliothek), und führt dich durch eine kurze Ersteinrichtung: Sprache, Auflösung, Leistung, Farbdesign, Funktionen AN/AUS und Tastatur. Am Ende erstellt es eine Verknüpfung und startet Wingman fertig eingestellt.
+
 1. **`AION-2-Wingman.zip`** aus der [neuesten Release](../../releases/latest) herunterladen.
 2. Rechtsklick > **Eigenschaften** > **Zulassen** anhaken > OK.
-3. In einen festen Ordner entpacken.
-4. **`Setup AION 2 Wingman.bat`** als Administrator starten: Es installiert Fehlendes und führt durch die Ersteinrichtung.
-5. Danach **`AION 2 Wingman.ahk`** oder die Verknüpfung starten.
+3. In einen festen Ordner entpacken (nicht aus dem Zip starten).
+4. **`Setup AION 2 Wingman.bat`** doppelklicken und die Administratorabfrage bestätigen.
+5. Der geführten Einrichtung folgen (Enter = empfohlene Wahl).
+6. Danach Wingman über die Verknüpfung oder **`AION 2 Wingman.ahk`** starten. Das Setup lässt sich unter *Einstellungen > 🛠️ Wartung* erneut starten.
+
+### 📖 Kurzanleitung
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_DE_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_DE_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ Standardtasten
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` Einstellungen · `Esc` Führung abbrechen · `F9` / `F10` Makro-Signale (Kampf: F9 dauerhaft drücken; Loot: F10 mit 1350 ms Wartezeit).
@@ -480,6 +618,8 @@ Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e 
 4. **Aperte `F`** (Travel): uma seta mostra a **direção de voo** até o chefe.
 5. `Esc` cancela a qualquer momento. Nas masmorras o painel fica oculto.
 
+⚡ **Feito para ser rápido.** Escolhido o chefe, não precisa mirar nem ler nada: **clique com o botão esquerdo sem parar**. Em cada passo o cursor já está no ponto certo e os cliques fora de hora entre os passos são bloqueados. Assim que clicar no Teleport, **aperte `F` sem parar**: o mouse fica travado por alguns segundos, então nenhum clique errado atrapalha a partida.
+
 <img src="docs/images/guide-step1.jpg" alt="Teleport assistido, passo 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport assistido: o Teleport mais próximo" width="100%">
 
@@ -503,17 +643,37 @@ Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e 
   - **Editor de temas**: *Personalizar este tema* cria a sua cópia "… Custom", editável em cada detalhe.
 - **🔄 Atualizações:** verifica e instala as novas releases sem atrapalhar enquanto você joga. Configurações, presets e temas (`%AppData%\AION 2 Wingman`) **são mantidos**.
 
+### 🎛️ Personalize tudo
+
+Cada elemento do HUD e das ferramentas se ajusta ao seu gosto, na **aparência** e no **funcionamento**: mais de 240 opções com descrição, exemplo e prévia ao vivo, sem mexer no código.
+- **Mira**: forma (diferente para ON e OFF), quantidade, tamanho, espessura, espaçamento, animação e velocidade.
+- **Barras** e **ícones LOOT / COMBAT**: forma, tamanho, borda, posição, textos, emoji, cores, efeitos e transições, cada um separado.
+- **Field Boss e Teleport assistido**: tamanho e posição do painel, filtros, editor da lista de chefes, comportamento do guia, bloqueio do mouse após o Teleport, seta de direção, busca do Teleport, lista de masmorras.
+- **Hidden Cube**, **teclas**, **temas**, **idiomas**, **perfis de desempenho** e **presets**.
+
 ### 💻 Requisitos
 - Windows 10 ou 11
 - AutoHotkey v2 e o OCR em inglês do Windows (instalados pelo setup)
 - Cliente do AION 2 em inglês
 
-### 📦 Instalação
+### 🚀 Instalação e primeiro uso: comece pelo Setup
+
+> **Depois de extrair o zip, execute primeiro `Setup AION 2 Wingman.bat` com dois cliques.** É o arquivo com "Setup" no nome, na pasta principal do pacote.
+>
+> O Setup instala tudo o que o Wingman precisa para funcionar 100% (AutoHotkey v2, o OCR do Windows, a biblioteca OCR) e guia uma configuração inicial rápida: idioma, resolução, desempenho, tema, funções ON/OFF e teclado. No final cria um atalho e abre o Wingman já configurado.
+
 1. Baixe **`AION-2-Wingman.zip`** da [última release](../../releases/latest).
 2. Botão direito > **Propriedades** > marque **Desbloquear** > OK.
-3. Extraia em uma pasta fixa.
-4. Execute **`Setup AION 2 Wingman.bat`** como administrador: ele instala o que falta e guia a primeira configuração.
-5. Depois, abra **`AION 2 Wingman.ahk`** ou o atalho.
+3. Extraia em uma pasta fixa (não execute de dentro do zip).
+4. Dois cliques em **`Setup AION 2 Wingman.bat`** e aceite a permissão de administrador.
+5. Siga a configuração guiada (Enter = opção recomendada).
+6. Depois abra o Wingman pelo atalho ou por **`AION 2 Wingman.ahk`**. O Setup pode ser repetido em *Configurações > 🛠️ Manutenção*.
+
+### 📖 Guia rápido
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_PT_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_PT_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ Teclas padrão
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` Configurações · `Esc` cancelar guia · `F9` / `F10` sinais das macros (combate: F9 em spam; loot: F10 com espera de 1350 ms).
@@ -547,6 +707,8 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
 4. **Нажмите `F`** (Travel): стрелка покажет **направление полёта** к боссу.
 5. `Esc` отменяет в любой момент. В подземельях панель скрыта.
 
+⚡ **Сделано для скорости.** После выбора босса не нужно ни целиться, ни читать: **просто жмите левый клик без остановки**. На каждом шаге курсор уже стоит в нужной точке, а лишние клики между шагами блокируются. Как только кликнули по Teleport, **жмите `F` без остановки**: мышь на несколько секунд заблокирована, и никакой случайный клик не помешает отправлению.
+
 <img src="docs/images/guide-step1.jpg" alt="Телепорт с подсказками, шаг 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Телепорт с подсказками: ближайший Teleport" width="100%">
 
@@ -570,17 +732,37 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
   - **Редактор тем**: кнопка «Настроить эту тему» создаёт вашу копию «… Custom», которую можно менять до мелочей.
 - **🔄 Обновления:** проверяет и устанавливает новые релизы, не мешая игре. Настройки, пресеты и темы (`%AppData%\AION 2 Wingman`) **сохраняются**.
 
+### 🎛️ Настраивается всё
+
+Каждый элемент HUD и инструментов настраивается под вас — и **внешний вид**, и **поведение**: более 240 параметров с описанием, примером и живым предпросмотром, без правки кода.
+- **Прицел**: форма (отдельно для ВКЛ и ВЫКЛ), количество, размер, толщина, интервалы, анимация и скорость.
+- **Полосы** и **значки LOOT / COMBAT**: форма, размер, рамка, позиция, тексты, эмодзи, цвета, эффекты и переходы — каждый отдельно.
+- **Field Boss и телепорт с подсказками**: размер и позиция панели, фильтры, редактор списка боссов, поведение подсказок, блокировка мыши после Teleport, стрелка направления, поиск Teleport, список подземелий.
+- **Hidden Cube**, **клавиши**, **темы**, **языки**, **профили производительности** и **пресеты**.
+
 ### 💻 Требования
 - Windows 10 или 11
 - AutoHotkey v2 и английский OCR Windows (их ставит setup)
 - Клиент AION 2 на английском
 
-### 📦 Установка
+### 🚀 Установка и первый запуск: начните с Setup
+
+> **После распаковки zip сначала дважды щёлкните `Setup AION 2 Wingman.bat`.** Это файл со словом "Setup" в названии, в главной папке пакета.
+>
+> Setup установит всё, что нужно Wingman для полноценной работы (AutoHotkey v2, OCR Windows, библиотеку OCR), и проведёт через короткую первичную настройку: язык, разрешение, производительность, тема, функции ВКЛ/ВЫКЛ и клавиатура. В конце он создаст ярлык и запустит уже настроенный Wingman.
+
 1. Скачайте **`AION-2-Wingman.zip`** из [последнего релиза](../../releases/latest).
 2. Правый клик > **Свойства** > отметьте **Разблокировать** > OK.
-3. Распакуйте в постоянную папку.
-4. Запустите **`Setup AION 2 Wingman.bat`** от имени администратора: он установит недостающее и проведёт через первую настройку.
-5. Дальше запускайте **`AION 2 Wingman.ahk`** или ярлык.
+3. Распакуйте в постоянную папку (не запускайте из zip).
+4. Дважды щёлкните **`Setup AION 2 Wingman.bat`** и подтвердите запрос администратора.
+5. Следуйте мастеру (Enter = рекомендуемый вариант).
+6. Затем запускайте Wingman ярлыком или **`AION 2 Wingman.ahk`**. Setup можно перезапустить в *Настройки > 🛠️ Обслуживание*.
+
+### 📖 Краткое руководство
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_RU_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_RU_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ Клавиши по умолчанию
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` Настройки · `Esc` отменить подсказку · `F9` / `F10` сигналы макросов (бой: спам F9; лут: F10 с ожиданием 1350 мс).
@@ -614,6 +796,8 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
 4. **`F`를 누르면** (Travel) 화살표가 보스까지의 **비행 방향**을 보여 줍니다.
 5. `Esc`로 언제든 취소할 수 있습니다. 던전에서는 패널이 숨겨집니다.
 
+⚡ **속도를 위해 설계.** 보스를 고른 뒤에는 조준하거나 읽을 필요가 없습니다: **왼쪽 클릭을 계속 연타**하세요. 단계마다 커서가 이미 정확한 위치에 있고, 단계 사이의 엉뚱한 클릭은 차단됩니다. Teleport를 클릭했다면 **`F`를 연타**하세요. 몇 초 동안 마우스가 잠겨 잘못된 클릭이 출발을 방해하지 않습니다.
+
 <img src="docs/images/guide-step1.jpg" alt="텔레포트 안내 1단계" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="텔레포트 안내: 가장 가까운 Teleport" width="100%">
 
@@ -637,17 +821,37 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
   - **테마 편집기**: "이 테마 꾸미기"를 누르면 모든 부분을 바꿀 수 있는 "… Custom" 복사본이 만들어집니다.
 - **🔄 업데이트:** 게임 중에는 방해하지 않고 새 릴리스를 확인·설치합니다. 설정, 프리셋, 테마(`%AppData%\AION 2 Wingman`)는 **그대로 유지**됩니다.
 
+### 🎛️ 모든 것을 내 마음대로
+
+HUD와 도구의 모든 요소를 **모양**과 **동작** 모두 원하는 대로 바꿀 수 있습니다. 240개가 넘는 옵션마다 설명, 예시, 실시간 미리보기가 있어 코드를 건드릴 필요가 없습니다.
+- **조준선**: 모양(켜짐/꺼짐 따로), 개수, 크기, 두께, 간격, 애니메이션과 속도.
+- **바**와 **LOOT / COMBAT 아이콘**: 모양, 크기, 테두리, 위치, 텍스트, 이모지, 색상, 효과와 페이드를 각각 따로.
+- **Field Boss와 텔레포트 안내**: 패널 크기와 위치, 필터, 보스 목록 편집기, 안내 동작, Teleport 후 마우스 잠금, 방향 화살표, Teleport 찾기, 던전 목록.
+- **Hidden Cube**, **키**, **테마**, **언어**, **성능 프로필**, **프리셋**.
+
 ### 💻 요구 사항
 - Windows 10 또는 11
 - AutoHotkey v2와 Windows 영어 OCR (설치 프로그램이 설치)
 - 영어 AION 2 클라이언트
 
-### 📦 설치
+### 🚀 설치와 첫 실행: Setup부터 시작하세요
+
+> **zip을 푼 뒤 가장 먼저 `Setup AION 2 Wingman.bat`을 더블클릭하세요.** 패키지 기본 폴더에 있는, 이름에 "Setup"이 들어간 파일입니다.
+>
+> Setup은 Wingman이 완전히 작동하는 데 필요한 모든 것(AutoHotkey v2, Windows OCR, OCR 라이브러리)을 설치하고 언어, 해상도, 성능, 테마, 기능 켜기/끄기, 키보드를 짧게 설정해 줍니다. 마지막에 바로 가기를 만들고 설정이 끝난 Wingman을 실행합니다.
+
 1. [최신 릴리스](../../releases/latest)에서 **`AION-2-Wingman.zip`**을 받습니다.
 2. 우클릭 > **속성** > **차단 해제** 체크 > 확인.
-3. 고정된 폴더에 압축을 풉니다.
-4. **`Setup AION 2 Wingman.bat`**을 관리자 권한으로 실행합니다. 없는 구성 요소를 설치하고 첫 설정을 안내합니다.
-5. 이후에는 **`AION 2 Wingman.ahk`** 또는 바로 가기로 실행합니다.
+3. 고정된 폴더에 압축을 풉니다 (zip 안에서 실행하지 마세요).
+4. **`Setup AION 2 Wingman.bat`**을 더블클릭하고 관리자 권한을 허용합니다.
+5. 안내에 따라 설정합니다 (Enter = 권장 선택).
+6. 이후에는 바로 가기나 **`AION 2 Wingman.ahk`**로 실행합니다. Setup은 *설정 > 🛠️ 유지 관리*에서 다시 실행할 수 있습니다.
+
+### 📖 빠른 안내
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_KO_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_KO_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ 기본 키
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` 설정 · `Esc` 안내 취소 · `F9` / `F10` 매크로 신호 (전투: F9 반복 입력, 루팅: F10 후 1350 ms 대기).
@@ -681,6 +885,8 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
 4. **按 `F`**（Travel）：箭头会显示前往首领的**飞行方向**。
 5. 随时按 `Esc` 取消。在副本中面板会隐藏。
 
+⚡ **为速度而设计。** 选好首领后无需瞄准、无需阅读：**只管连续点击左键**。每一步光标都已在正确位置，步骤之间的多余点击会被拦截。点击 Teleport 后，**连按 `F`**：鼠标会锁定几秒，任何误点都不会耽误出发。
+
 <img src="docs/images/guide-step1.jpg" alt="辅助传送 第 1 步" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="辅助传送：最近的 Teleport" width="100%">
 
@@ -704,17 +910,37 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
   - **主题编辑器**："自定义此主题"会生成你自己的 "… Custom" 副本，每个细节都能修改。
 - **🔄 更新：** 检查并安装新版本，游戏时绝不打扰。设置、预设和主题（`%AppData%\AION 2 Wingman`）**会被保留**。
 
+### 🎛️ 一切皆可自定义
+
+HUD 和工具的每一个元素都能按你的喜好调整**外观**和**行为**：240 多个选项，每个都有说明、示例和实时预览，无需改代码。
+- **准星**：形状（开/关分别设置）、数量、大小、粗细、间距、动画和速度。
+- **横条**和 **LOOT / COMBAT 图标**：形状、大小、边框、位置、文字、表情、颜色、效果和淡入淡出，各自独立。
+- **Field Boss 与辅助传送**：面板大小和位置、筛选、首领列表编辑器、引导方式、Teleport 后锁定鼠标、方向箭头、Teleport 搜索、副本列表。
+- **Hidden Cube**、**按键**、**主题**、**语言**、**性能配置**和**预设**。
+
 ### 💻 系统要求
 - Windows 10 或 11
 - AutoHotkey v2 和 Windows 英语 OCR（由安装程序安装）
 - 英文版 AION 2 客户端
 
-### 📦 安装
+### 🚀 安装与首次运行：从 Setup 开始
+
+> **解压 zip 后，请先双击 `Setup AION 2 Wingman.bat`。** 它就是安装包主文件夹中名字带有 "Setup" 的文件。
+>
+> Setup 会安装 Wingman 完整运行所需的一切（AutoHotkey v2、Windows OCR、OCR 库），并引导你完成简短的初始设置：语言、分辨率、性能、主题、功能开关和键盘。最后它会创建桌面快捷方式，并以设置好的状态启动 Wingman。
+
 1. 从[最新发布](../../releases/latest)下载 **`AION-2-Wingman.zip`**。
 2. 右键 > **属性** > 勾选**解除锁定** > 确定。
-3. 解压到固定文件夹。
-4. 以管理员身份运行 **`Setup AION 2 Wingman.bat`**：它会安装缺少的组件并引导首次设置。
-5. 之后运行 **`AION 2 Wingman.ahk`** 或快捷方式。
+3. 解压到固定文件夹（不要在 zip 里直接运行）。
+4. 双击 **`Setup AION 2 Wingman.bat`** 并允许管理员权限。
+5. 按向导完成设置（回车 = 推荐选项）。
+6. 之后用快捷方式或 **`AION 2 Wingman.ahk`** 启动。可在 *设置 > 🛠️ 维护* 中重新运行 Setup。
+
+### 📖 快速指南
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_ZH_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_ZH_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ 默认按键
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` 设置 · `Esc` 取消引导 · `F9` / `F10` 宏信号（战斗：连续按 F9；拾取：F10 后等待 1350 毫秒）。
@@ -748,6 +974,8 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
 4. **`F` を押す**（Travel）：矢印がボスへの**飛行方向**を示します。
 5. `Esc` でいつでもキャンセル。ダンジョンではパネルは表示されません。
 
+⚡ **スピード重視の設計。** ボスを選んだら、狙うことも読むことも不要です：**左クリックを連打するだけ**。各ステップでカーソルはすでに正しい位置にあり、ステップ間の余計なクリックはブロックされます。Teleport をクリックしたら **`F` を連打**。数秒間マウスがロックされるので、誤クリックで出発が邪魔されることはありません。
+
 <img src="docs/images/guide-step1.jpg" alt="テレポートアシスト 手順 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="テレポートアシスト：最寄りの Teleport" width="100%">
 
@@ -771,17 +999,37 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
   - **テーマエディター**：「このテーマをカスタマイズ」で、細部まで変更できる自分のコピー「… Custom」が作られます。
 - **🔄 アップデート：** プレイ中は邪魔せずに新しいリリースを確認・インストールします。設定・プリセット・テーマ（`%AppData%\AION 2 Wingman`）は**そのまま残ります**。
 
+### 🎛️ すべてを自由にカスタマイズ
+
+HUD とツールのあらゆる要素を、**見た目**も**動作**も好みに合わせて調整できます。240 以上のオプションに説明・例・ライブプレビューがあり、コードに触れる必要はありません。
+- **照準**：形（オン/オフ別）、数、サイズ、太さ、間隔、アニメーションと速度。
+- **バー**と **LOOT / COMBAT アイコン**：形、サイズ、枠、位置、テキスト、絵文字、色、エフェクト、フェードをそれぞれ個別に。
+- **Field Boss とテレポートアシスト**：パネルのサイズと位置、フィルター、ボスリスト編集、ガイドの動作、Teleport 後のマウスロック、方向矢印、Teleport 検索、ダンジョンリスト。
+- **Hidden Cube**、**キー**、**テーマ**、**言語**、**パフォーマンス**、**プリセット**。
+
 ### 💻 動作環境
 - Windows 10 または 11
 - AutoHotkey v2 と Windows の英語 OCR（セットアップがインストール）
 - 英語版 AION 2 クライアント
 
-### 📦 インストール
+### 🚀 インストールと初回起動：まず Setup から
+
+> **zip を展開したら、最初に `Setup AION 2 Wingman.bat` をダブルクリックしてください。** パッケージのメインフォルダーにある、名前に "Setup" が付いたファイルです。
+>
+> Setup は Wingman を完全に動かすために必要なもの（AutoHotkey v2、Windows の OCR、OCR ライブラリ）をすべてインストールし、言語・解像度・パフォーマンス・テーマ・機能のオン/オフ・キーボードの初期設定を案内します。最後にショートカットを作り、設定済みの Wingman を起動します。
+
 1. [最新リリース](../../releases/latest)から **`AION-2-Wingman.zip`** をダウンロード。
 2. 右クリック > **プロパティ** > **許可する** にチェック > OK。
-3. 固定のフォルダーに展開。
-4. **`Setup AION 2 Wingman.bat`** を管理者として実行：足りないものをインストールし、初期設定を案内します。
-5. 以降は **`AION 2 Wingman.ahk`** またはショートカットで起動。
+3. 固定のフォルダーに展開（zip の中から実行しないでください）。
+4. **`Setup AION 2 Wingman.bat`** をダブルクリックし、管理者の確認を許可。
+5. ガイドに従って設定（Enter = おすすめの選択）。
+6. 以降はショートカットか **`AION 2 Wingman.ahk`** で起動。Setup は *設定 > 🛠️ メンテナンス* からいつでも再実行できます。
+
+### 📖 クイックガイド
+
+<p align="center">
+<img src="INFOGRAPHICS/AION2Wingman_JA_1_First_launch.png" alt="Quick guide 1" width="49%"> <img src="INFOGRAPHICS/AION2Wingman_JA_2_How_to.png" alt="Quick guide 2" width="49%">
+</p>
 
 ### ⌨️ 既定のキー
 `Ctrl+Shift+\` HUD · `Ctrl+Shift+1` Hidden Cube · `Ctrl+Shift+2` Field Boss · `Ctrl+Shift+F12` 設定 · `Esc` ガイドを取消 · `F9` / `F10` マクロ信号（戦闘：F9 を連打、ルート：F10 のあと 1350 ms 待機）。
