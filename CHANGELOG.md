@@ -3,6 +3,24 @@
 Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descrizione della release
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
 
+## v1.03
+
+### 🇬🇧 English
+- Assisted Teleport: after you click the Teleport, the mouse stays locked for 5 seconds (movement and clicks) while you press F, so no accidental clicks before departure. Adjustable in Settings > Field Boss > Travel and direction (0 = off); Esc unlocks it right away.
+- Field Boss panel: the A–Z list now has a divider with the initial letter before each group of bosses.
+- Settings: buttons light up with a glow in your theme's color and zoom in slightly on hover.
+- Updates: new "Check at every startup" option (on by default) in Settings > Updates.
+- GTA VI countdown (vi theme): smaller and attached to the top edge of the screen.
+- New 💖 Donate button (Settings bottom bar, Maintenance and tray menu) with PayPal and Ko-fi: completely optional.
+
+### 🇮🇹 Italiano
+- Teleport assistito: dopo il click sul Teleport il mouse resta bloccato per 5 secondi (movimento e click) mentre premi F, così niente click accidentali prima della partenza. Regolabile in Impostazioni > Field Boss > Travel e direzione (0 = spento); Esc lo sblocca subito.
+- Pannello Field Boss: nella lista A–Z c'è ora un divisorio con la lettera iniziale prima di ogni gruppo di boss.
+- Impostazioni: i pulsanti si illuminano con un alone del colore del tema e si ingrandiscono leggermente al passaggio del mouse.
+- Aggiornamenti: nuova opzione "Controlla a ogni avvio" (attiva di default) in Impostazioni > Aggiornamenti.
+- Countdown di GTA VI (tema vi): più piccolo e attaccato al bordo superiore dello schermo.
+- Nuovo pulsante 💖 Dona (barra in basso delle Impostazioni, Manutenzione e menu dell'icona) con PayPal e Ko-fi: del tutto facoltativo.
+
 ## v1.02
 
 ### 🇬🇧 English

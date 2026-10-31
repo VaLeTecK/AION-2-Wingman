@@ -20,7 +20,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.02"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.03"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -117,6 +117,7 @@ global UpdateRepo       := "VaLeTecK/AION-2-Wingman"   ; repository GitHub del p
 global UpdateMode       := "automatico" ; "chiedi"     = se c'è una versione nuova te lo chiede (mai mentre giochi)
                                        ; "automatico" = la installa da solo appena il gioco non è in primo piano
                                        ; "spento"     = nessun controllo automatico (resta il pulsante in Manutenzione)
+global UpdateCheckOnStart := true      ; true = controlla subito a ogni avvio dello script (oltre al controllo periodico)
 global UpdateCheckHours := 1           ; ogni quante ore controllare (all'avvio e poi di continuo mentre lo script è aperto)
 
 ; ------------------------------------------------------------------------------
@@ -594,12 +595,14 @@ global FieldBossDirDelay     := 3333        ; ms di attesa dopo la chiusura dell
 global FieldBossDirTop       := 110      ; distanza dal bordo superiore dello schermo (px a 1440p)
 global FieldBossDirScale     := 1.0      ; dimensione (1.0 = normale)
 global FieldBossTravelWait   := 15       ; secondi in cui aspetta che tu prema F dopo il click sul Teleport
+global FieldBossTeleportLock := 5        ; secondi di mouse bloccato (movimento e click) dopo il click sul Teleport,
+                                         ; mentre premi F: niente click sbagliati prima della partenza. 0 = spento
 global FieldBossTravelPresses := 2       ; quante volte va premuto F per partire (2 = doppia pressione).
                                          ; Raggiunto questo numero il Teleport è considerato fatto:
                                          ; click sbloccati e indicazione della direzione.
 
 ; Pannello
-global FieldBossPanelScale   := 1.45     ; dimensione: 1.0 piccolo | 1.3 medio | 1.6 grande
+global FieldBossPanelScale   := 1.10     ; dimensione: 1.0 piccolo | 1.3 medio | 1.6 grande
 global FieldBossPanelMarginR := 500      ; distanza dal bordo destro (px a 1440p). Il valore attuale
                                          ; lascia libero il riquadro dei drop che il gioco apre a destra.
 global FieldBossPanelOffsetY := 0        ; spostamento dal centro verticale (px a 1440p, + = più giù)
@@ -1093,7 +1096,8 @@ if (SettingsKey != "")
     Hotkey(SettingsKey, (*) => SettingsEditor.Open())
 A_TrayMenu.Insert("1&", Tr("Impostazioni AION 2 Wingman"), (*) => SettingsEditor.Open())
 A_TrayMenu.Insert("2&", Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow())
-A_TrayMenu.Insert("3&")
+A_TrayMenu.Insert("3&", "💖  " Tr("Dona"), Donate)
+A_TrayMenu.Insert("4&")
 A_TrayMenu.Default := Tr("Impostazioni AION 2 Wingman")
 
 ; Accende/spegne un tool mentre giochi e lo conferma con un avviso
@@ -2501,13 +2505,14 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.Pending := ""
         this.NextCheck := 0
         this.Misses  := 0
+        this.GuardUntil := 0, this.GuardFn := ObjBindMethod(this, "GuardEnd")   ; blocco dopo il click sul Teleport
 
         ; pannello
         this.Panel := "", this.BuiltFor := 0, this.Shown := false
         ; tipo di mappa aperta: "field" / "dungeon" / "" (non ancora chiaro), azzerato alla chiusura
         this.MapKind := "", this.TabsField := false, this.TitleAt := 0
         this.PW := 0, this.PH := 0, this.PHFull := 0
-        this.Rows := [], this.RowByHwnd := Map(), this.Chips := Map(), this.Extras := []
+        this.Rows := [], this.RowByHwnd := Map(), this.Chips := Map(), this.Extras := [], this.Dividers := Map()
         this.Hover := "", this.BtnToggle := "", this.TitleH := 0
         this.Legend := "", this.LegendFor := 0, this.LegendShown := false
         this.Footer := "", this.FooterH := 0, this.FooterGap := 0
@@ -2551,7 +2556,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         HotIfWinActive(this.Win)
         if (FieldBossMapKey != "")
             Hotkey("~" FieldBossMapKey, (*) => this.OnMapKey())
-        Hotkey("~Esc", (*) => this.Cancel := true)
+        Hotkey("~Esc", (*) => (this.Cancel := true, this.GuardEnd()))
         if (FieldBossMapTestKey != "")
             Hotkey(FieldBossMapTestKey, (*) => this.Request(ObjBindMethod(this, "DebugMap")))
         if (FieldBossScanKey != "")
@@ -2562,7 +2567,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
 
         ; Blocco dei click tra una fase e l'altra: attivo solo durante una ricerca, con il gioco in
         ; primo piano e il mouse NON sul pannello (che resta sempre usabile).
-        HotIf((*) => this.BlockClicks && WinActive(this.Win) && !this.MouseOnPanel())
+        HotIf((*) => (this.BlockClicks || A_TickCount < this.GuardUntil) && WinActive(this.Win) && !this.MouseOnPanel())
         Hotkey("*LButton", (*) => 0)
         Hotkey("*RButton", (*) => 0)
         HotIf()
@@ -2853,6 +2858,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             , (x, y, w) => this.IsPanel(w) ? -1 : (Abs(x - best.x) <= rad && Abs(y - best.y) <= rad) ? true : -1)
         if !onIcon
             return
+        this.TeleportGuard()                             ; mouse fermo qualche secondo: niente click sbagliati prima di F
         ; il gioco blocca i tasti simulati: il Travel lo premi tu
         if !FieldBossDirHint {
             this.WaitTravel("", name)                    ; attende comunque il Travel per sbloccare i click
@@ -2865,6 +2871,24 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
                 SetTimer(this.DirDelayFn := ObjBindMethod(this, "DirShow", dir, name), -FieldBossDirDelay)
             else
                 this.DirShow(dir, name)
+        }
+    }
+
+    ; Dopo il click sul Teleport: per FieldBossTeleportLock secondi il mouse non si muove e non clicca
+    ; (la tastiera resta libera per premere F). Esc lo toglie subito.
+    TeleportGuard() {
+        if (FieldBossTeleportLock <= 0)
+            return
+        this.GuardUntil := A_TickCount + FieldBossTeleportLock * 1000
+        try BlockInput("MouseMove")
+        SetTimer(this.GuardFn, -FieldBossTeleportLock * 1000)
+    }
+
+    GuardEnd() {
+        SetTimer(this.GuardFn, 0)
+        if this.GuardUntil {
+            this.GuardUntil := 0
+            try BlockInput("MouseMoveOff")
         }
     }
 
@@ -3430,9 +3454,18 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.Extras.Push(P.AddText(Format("x{} y{} w{} h1 Background{}", pad, sepY, w, pal.sep)))
         this.RowsY0 := sepY + Round(9 * s)
 
-        ; Righe boss (A-Z): barra grado | nome | importanza | stato
+        ; Righe boss (A-Z): barra grado | nome | importanza | stato.
+        ; Prima di ogni nuova lettera iniziale un divisorio con la lettera (A ———, B ———, ...).
         fs := Round(10 * s), y := this.RowsY0, rh := this.RowH
+        this.Dividers := Map(), this.DivH := Round(15 * s), letterW := Round(16 * s)
         for name in this.SortedNames() {
+            letter := StrUpper(SubStr(name, 1, 1))
+            if !this.Dividers.Has(letter) {
+                P.SetFont("s" Round(8 * s) " bold c" pal.title, "Segoe UI")
+                lt := P.AddText(Format("x{} y{} w{} h{} 0x200", pad + Round(2 * s), y, letterW, this.DivH), letter)
+                ln := P.AddText(Format("x{} y{} w{} h1 Background{}", pad + Round(2 * s) + letterW, y + this.DivH // 2, w - letterW - Round(2 * s), pal.sep))
+                this.Dividers[letter] := {lt: lt, ln: ln}
+            }
             b    := this.Bosses[name]
             col  := FieldBossTool.Grades[b.grade].color
             tier := FieldBossTool.Tiers.Has(b.tier) ? FieldBossTool.Tiers[b.tier] : ""
@@ -3443,7 +3476,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             bd := P.AddText(Format("x{} y{} w{} h{} Center 0x200 Background{}", pad + w - stW * 2, y, stW, rh, pal.row), tier ? tier.sym : "")
             P.SetFont("s" fs " bold", "Segoe UI Symbol")
             st := P.AddText(Format("x{} y{} w{} h{} Center 0x200 Background{}", pad + w - stW, y, stW, rh, pal.row), "")
-            row := {name: name, grade: b.grade, ctrls: [bc, tc, bd, st], cells: [tc, bd, st], st: st, cur: "?"}
+            row := {name: name, grade: b.grade, letter: letter, ctrls: [bc, tc, bd, st], cells: [tc, bd, st], st: st, cur: "?"}
             for c in row.cells {
                 c.OnEvent("Click", ObjBindMethod(this, "PickRow", name))
                 this.RowByHwnd[c.Hwnd] := row
@@ -3507,9 +3540,20 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     LayoutRows() {
         if !IsObject(this.Panel)
             return
-        y := this.RowsY0, yFull := this.RowsY0
+        y := this.RowsY0, yFull := this.RowsY0, lastLetter := ""
+        for _l, d in this.Dividers
+            d.lt.Visible := false, d.ln.Visible := false
         for r in this.Rows {
             vis := this.RowVisible(r), show := vis && !this.Collapsed
+            if (vis && r.letter != lastLetter) {        ; prima riga visibile di una nuova lettera: divisorio
+                lastLetter := r.letter
+                d := this.Dividers[r.letter]
+                if show {
+                    d.lt.Move(, y), d.ln.Move(, y + this.DivH // 2)
+                    d.lt.Visible := true, d.ln.Visible := true
+                }
+                y += this.DivH + this.RowGap
+            }
             for c in r.ctrls {
                 c.Visible := show
                 if show
@@ -3831,11 +3875,11 @@ class SettingsEditor {
                 ["FieldBossListScroll", "FieldBossFindTeleport", "FieldBossAutoZoomOut", "FieldBossZoomOut",
                  "FieldBossZoomBack", "FieldBossZoomOutWheel", "FieldBossCloseLoot", "FieldBossLootClickDist"]],
             ["Travel e direzione", "Dopo il click sul Teleport: pressioni di F per partire e freccia con la direzione del boss.",
-                ["FieldBossTravelPresses", "FieldBossTravelWait", "FieldBossDirHint", "FieldBossDirSeconds",
+                ["FieldBossTravelPresses", "FieldBossTravelWait", "FieldBossTeleportLock", "FieldBossDirHint", "FieldBossDirSeconds",
                  "FieldBossDirDelay", "FieldBossDirTop", "FieldBossDirScale"]],
             ["Elenco boss", "", "BOSS"]]],
         ["Aggiornamenti", "Controllo e installazione delle nuove versioni pubblicate su GitHub. Le tue impostazioni restano dopo ogni aggiornamento.",
-            ["UpdateMode", "UpdateCheckHours", "UpdateRepo"]],
+            ["UpdateMode", "UpdateCheckOnStart", "UpdateCheckHours", "UpdateRepo"]],
         ["Manutenzione", "", "MAINT"]
     ]
 
@@ -3843,6 +3887,7 @@ class SettingsEditor {
     static Labels := Map(
         "Language", "Lingua",
         "IconAutoFit", "Testo ed emoji automatici",
+        "FieldBossTeleportLock", "Blocco mouse dopo il Teleport (s)", "UpdateCheckOnStart", "Controlla a ogni avvio",
         "UpdateMode", "Aggiornamenti automatici", "UpdateCheckHours", "Controlla ogni (ore)", "UpdateRepo", "Repository GitHub", "IconMirror", "Icona Combat speculare al Loot",
         "CombatSize", "Grandezza icona (altezza)", "CombatBorderSize", "Bordino nero",
         "FieldBossHideInDungeon", "Nascondi il pannello nei dungeon", "FieldBossDungeons", "Nomi dei dungeon",
@@ -4017,7 +4062,7 @@ class SettingsEditor {
     ; ---- Valori ammessi per i numeri: [minimo, massimo, solo interi] ----
     static Limits := Map(
         "SplashHold", [0, 10, 0], "SplashScale", [0.3, 3, 0],
-        "HudBaseHeight", [480, 4320, 1], "UpdateCheckHours", [1, 168, 1],
+        "HudBaseHeight", [480, 4320, 1], "FieldBossTeleportLock", [0, 30, 0], "UpdateCheckHours", [1, 168, 1],
         "PerfWorkerTick", [10, 500, 1], "PerfLockTick", [5, 200, 1], "PerfPollMs", [5, 100, 1],
         "PerfRingTick", [10, 200, 1], "PerfOcrQuality", [1, 3, 0],
         "CombatTimeout", [0, 60000, 1], "LootTimeout", [0, 60000, 1], "CombatGrace", [0, 60000, 1], "LootGrace", [0, 60000, 1],
@@ -4372,6 +4417,7 @@ class SettingsEditor {
         q := g.AddText("x984 y8 w184 h28 Center 0x200 Background" UiC("Err"), "⏻  " Tr("Termina Wingman"))
         q.OnEvent("Click", (*) => this.QuitApp())
         RoundCtl(q, 10)
+        this.QuitBtn := q
         g.SetFont("s7 norm c" UiC("Muted"), "Segoe UI")
         g.AddText("x984 y38 w184 h20 Center Background" UiC("Bg"), Tr("chiude il programma, non solo questa finestra"))
 
@@ -4524,6 +4570,7 @@ class SettingsEditor {
         for it in [["🧙  " Tr("Riesegui l'installazione guidata"), (*) => this.RunSetup()]
                  , ["🔄  " Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow()]
                  , ["🌐  " Tr("Pagina del progetto su GitHub"), (*) => Updater.OpenPage()]
+                 , ["💖  " Tr("Supporta Wingman con una donazione"), (*) => Donate()]
                  , ["📂  " Tr("Apri la cartella delle impostazioni personali"), (*) => Run('explorer.exe "' UserData.Dir '"')]
                  , ["🗂️  " Tr("Apri la cartella di Wingman"), (*) => Run('explorer.exe "' A_ScriptDir '"')]
                  , ["📝  " Tr("Apri il file"), (*) => Run('notepad.exe "' A_ScriptFullPath '"')]] {
@@ -4543,7 +4590,13 @@ class SettingsEditor {
         g.AddText("x0 y" (H - 56) " w" W " h1 Background" UiC("Line"))
         this.ChgBtn := g.AddButton("x12 y" (H - 46) " w150 h34", Tr("Vedi modifiche"))
         this.ChgBtn.OnEvent("Click", (*) => this.ShowChanges())
-        this.Status := g.AddText("x172 y" (H - 42) " w420 h26 0x200", "")
+        this.Status := g.AddText("x172 y" (H - 42) " w400 h26 0x200", "")
+        ; donazione: piccolo e discreto, accanto ai pulsanti principali
+        g.SetFont("s9 bold c" UiC("Accent"), "Segoe UI")
+        this.DonateBtn := g.AddText("x" (W - 600) " y" (H - 42) " w110 h26 Center 0x200 Background" UiC("Bg"), "💖  " Tr("Dona"))
+        this.DonateBtn.OnEvent("Click", (*) => Donate())
+        RoundCtl(this.DonateBtn, 10)
+        g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
         b := g.AddButton("x" (W - 482) " y" (H - 46) " w170 h34 Default", Tr("Salva e riavvia"))
         b.OnEvent("Click", (*) => this.Save())
         b := g.AddButton("x" (W - 304) " y" (H - 46) " w160 h34", Tr("Annulla modifiche"))
@@ -4561,6 +4614,109 @@ class SettingsEditor {
         this.TV.Modify(this.TV.GetChild(0), "Select")
         this.SelectNode(this.TV.GetChild(0), true)
         this.UpdateStatus()
+        this.HoverInit([this.QuitBtn, this.PrevElemBtn, this.PrevOn, this.PrevOff, this.DonateBtn])
+    }
+
+    ; ---------------- Pulsanti animati ----------------
+    ; Mouse sopra un pulsante: si ingrandisce un poco e si accende un alone del colore del tema
+    ; (due anelli sovrapposti, il più esterno più tenue). Un timer leggero guarda cosa c'è sotto il mouse.
+    static HovMap := Map(), HovCur := 0, HovFn := "", HovAnimFn := "", HovK := 0, HovOrig := "", Glow := [], HovRound := Map()
+
+    static HoverInit(extra) {
+        this.HovMap := Map(), this.HovCur := 0, this.HovK := 0, this.Glow := []
+        this.HovRound := Map(this.QuitBtn.Hwnd, 10, this.DonateBtn.Hwnd, 10)
+        for hwnd, c in this.Win
+            if (c.Type = "Button")
+                this.HovMap[c.Hwnd] := c
+        for c in extra
+            if IsObject(c)
+                this.HovMap[c.Hwnd] := c
+        if !this.HovFn
+            this.HovFn := ObjBindMethod(this, "HoverTick"), this.HovAnimFn := ObjBindMethod(this, "HoverAnim")
+        SetTimer(this.HovFn, 40)
+    }
+
+    static HoverTick() {
+        if !IsObject(this.Win) {
+            SetTimer(this.HovFn, 0), SetTimer(this.HovAnimFn, 0)
+            this.HovCur := 0
+            return
+        }
+        target := 0
+        try {
+            MouseGetPos(,, &win, &ctl, 2)
+            if (win = this.Win.Hwnd && this.HovMap.Has(ctl)) {
+                c := this.HovMap[ctl]
+                if (c.Visible && c.Enabled)
+                    target := ctl
+            }
+        }
+        if (target = this.HovCur)
+            return
+        if this.HovCur
+            this.HoverLeave()
+        if target
+            this.HoverEnter(target)
+    }
+
+    static HoverEnter(hwnd) {
+        c := this.HovMap[hwnd]
+        c.GetPos(&x, &y, &w, &h)
+        this.HovCur := hwnd, this.HovOrig := [x, y, w, h], this.HovK := 0
+        alive := false
+        try alive := this.Glow.Length = 2 && WinExist(this.Glow[1].Hwnd)
+        if !alive {
+            this.Glow := []
+            loop 2 {
+                gw := Gui("-Caption +ToolWindow -DPIScale +E0x20 +Owner" this.Win.Hwnd)
+                gw.BackColor := UiC("Accent")
+                this.Glow.Push(gw)
+            }
+        }
+        SetTimer(this.HovAnimFn, 15)
+        this.HoverAnim()
+    }
+
+    static HoverLeave() {
+        SetTimer(this.HovAnimFn, 0)
+        try {
+            c := this.HovMap[this.HovCur], o := this.HovOrig
+            c.Move(o[1], o[2], o[3], o[4])
+            if this.HovRound.Has(c.Hwnd)
+                RoundCtl(c, this.HovRound[c.Hwnd])
+            c.Redraw()
+        }
+        for gw in this.Glow
+            try gw.Hide()
+        this.HovCur := 0
+    }
+
+    ; un passo dell'animazione di entrata (circa 120 ms): zoom di 2 px per lato e alone che si accende
+    static HoverAnim() {
+        if !this.HovCur
+            return SetTimer(this.HovAnimFn, 0)
+        this.HovK := Min(1, this.HovK + 0.2)
+        k := this.HovK, o := this.HovOrig, d := Round(2 * k)
+        try {
+            c := this.HovMap[this.HovCur]
+            c.Move(o[1] - d, o[2] - d, o[3] + d * 2, o[4] + d * 2)
+            if this.HovRound.Has(c.Hwnd)
+                RoundCtl(c, this.HovRound[c.Hwnd])
+            WinGetPos(&sx, &sy, &sw, &sh, "ahk_id " c.Hwnd)
+            for i, gw in this.Glow {                       ; 1 = anello interno (forte), 2 = esterno (tenue)
+                t := i = 1 ? 2 : 6, inner := i = 1 ? 0 : 2
+                ow := sw + t * 2, oh := sh + t * 2
+                outer := DllCall("CreateRoundRectRgn", "Int", 0, "Int", 0, "Int", ow + 1, "Int", oh + 1, "Int", 12 + t, "Int", 12 + t, "Ptr")
+                hole := DllCall("CreateRoundRectRgn", "Int", t - inner, "Int", t - inner, "Int", t + sw + inner + 1, "Int", t + sh + inner + 1, "Int", 8, "Int", 8, "Ptr")
+                DllCall("CombineRgn", "Ptr", outer, "Ptr", outer, "Ptr", hole, "Int", 4)   ; RGN_DIFF: resta solo l'anello
+                DllCall("DeleteObject", "Ptr", hole)
+                gw.Show(Format("NA x{} y{} w{} h{}", sx - t, sy - t, ow, oh))
+                DllCall("SetWindowRgn", "Ptr", gw.Hwnd, "Ptr", outer, "Int", true)
+                WinSetTransparent(Round((i = 1 ? 200 : 70) * k), gw.Hwnd)
+            }
+        }
+        if (k >= 1)
+            SetTimer(this.HovAnimFn, 0)
     }
 
     ; ---------------- Manutenzione ----------------
@@ -14328,6 +14484,78 @@ ru=как часто проверять, в часах (при запуске и
 ko=몇 시간마다 확인할지 (시작할 때, 그리고 스크립트가 실행되는 동안 계속)
 zh=每隔多少小时检查一次（启动时以及脚本运行期间持续检查）
 ja=何時間ごとに確認するか（起動時と、スクリプト実行中は継続的に）
+it=Blocco mouse dopo il Teleport (s)
+en=Mouse lock after the Teleport (s)
+nap=Blocco d'o mouse doppo 'o Teleport (s)
+bro=Mouse bloccato dopo il Teleport (s)
+es=Bloqueo del ratón tras el Teleport (s)
+fr=Blocage de la souris après le Teleport (s)
+de=Maussperre nach dem Teleport (s)
+pt=Bloqueio do mouse após o Teleport (s)
+ru=Блокировка мыши после Teleport (с)
+ko=Teleport 후 마우스 잠금 (초)
+zh=Teleport 后锁定鼠标（秒）
+ja=Teleport 後のマウスロック（秒）
+it=Controlla a ogni avvio
+en=Check at every startup
+nap=Cuntrolla ogni vota ca parte
+bro=Check a ogni avvio
+es=Comprobar en cada inicio
+fr=Vérifier à chaque démarrage
+de=Bei jedem Start prüfen
+pt=Verificar a cada início
+ru=Проверять при каждом запуске
+ko=시작할 때마다 확인
+zh=每次启动时检查
+ja=起動するたびに確認
+it=Dona
+en=Donate
+nap=Dona
+bro=Dona
+es=Donar
+fr=Faire un don
+de=Spenden
+pt=Doar
+ru=Поддержать
+ko=후원
+zh=捐助
+ja=寄付
+it=Supporta Wingman con una donazione
+en=Support Wingman with a donation
+nap=Aiuta Wingman cu na donazione
+bro=Supporta Wingman con una donazione
+es=Apoya Wingman con una donación
+fr=Soutenir Wingman par un don
+de=Wingman mit einer Spende unterstützen
+pt=Apoie o Wingman com uma doação
+ru=Поддержать Wingman пожертвованием
+ko=후원으로 Wingman 응원하기
+zh=捐助支持 Wingman
+ja=寄付で Wingman を応援
+@=FieldBossTeleportLock
+en=seconds of locked mouse (movement and clicks) after clicking the Teleport,\nwhile you press F: no wrong clicks before departure. 0 = off
+nap=secondi 'e mouse bloccato (movimento e click) doppo 'o click ncopp'o Teleport,\nmentre premme F: nisciuno click sbagliato primma 'e partì. 0 = stutato
+bro=secondi di mouse bloccato (movimento e click) dopo il click sul Teleport,\nmentre premi F: zero click sbagliati prima di partire. 0 = off
+es=segundos de ratón bloqueado (movimiento y clics) tras hacer clic en el Teleport,\nmientras pulsas F: sin clics erróneos antes de partir. 0 = desactivado
+fr=secondes de souris bloquée (mouvement et clics) après le clic sur le Teleport,\npendant que tu appuies sur F : aucun mauvais clic avant le départ. 0 = désactivé
+de=Sekunden gesperrte Maus (Bewegung und Klicks) nach dem Klick auf den Teleport,\nwährend du F drückst: keine Fehlklicks vor dem Abflug. 0 = aus
+pt=segundos de mouse bloqueado (movimento e cliques) após clicar no Teleport,\nenquanto você aperta F: nenhum clique errado antes de partir. 0 = desligado
+ru=сколько секунд мышь заблокирована (движение и клики) после клика по Teleport,\nпока вы жмёте F: никаких лишних кликов до отправления. 0 = выкл.
+ko=Teleport 클릭 후 마우스(이동과 클릭)를 잠그는 시간(초).\nF를 누르는 동안 출발 전 잘못된 클릭을 막습니다. 0 = 끔
+zh=点击 Teleport 后锁定鼠标（移动和点击）的秒数，\n在你按 F 时防止出发前误点。0 = 关闭
+ja=Teleport をクリックした後、マウス（移動とクリック）をロックする秒数。\nF を押す間、出発前の誤クリックを防ぎます。0 = オフ
+@=UpdateCheckOnStart
+en=true = checks right away at every script startup (besides the periodic check)
+nap=true = cuntrolla subbeto ogni vota ca parte 'o script (oltre 'o cuntrollo periodico)
+bro=true = fa il check subito a ogni avvio dello script (oltre a quello periodico)
+es=true = comprueba enseguida en cada inicio del script (además de la comprobación periódica)
+fr=true = vérifie tout de suite à chaque démarrage du script (en plus de la vérification périodique)
+de=true = prüft sofort bei jedem Start des Skripts (zusätzlich zur regelmäßigen Prüfung)
+pt=true = verifica logo a cada início do script (além da verificação periódica)
+ru=true = проверяет сразу при каждом запуске скрипта (помимо периодической проверки)
+ko=true = 스크립트가 시작될 때마다 바로 확인 (주기적 확인과 별도로)
+zh=true = 每次脚本启动时立即检查（另外还有定期检查）
+ja=true = スクリプト起動のたびにすぐ確認（定期確認とは別に）
 )" "`n"
         return s
     }
@@ -14504,6 +14732,17 @@ class UserData {
     }
 }
 
+; Donazioni (facoltative): un piccolo menu con PayPal e Ko-fi, dove si trova il mouse
+Donate(*) {
+    m := Menu()
+    m.Add("PayPal", (*) => DonateOpen("https://www.paypal.com/paypalme/valeteck"))
+    m.Add("Ko-fi", (*) => DonateOpen("https://ko-fi.com/VaLeTecK"))
+    m.Show()
+}
+DonateOpen(url) {
+    try Run(url)
+}
+
 ; ==============================================================================
 ; === AGGIORNAMENTI DA GITHUB (release) ===
 ; ==============================================================================
@@ -14666,7 +14905,7 @@ class Updater {
             return
         wait := 20000, last := ""
         try last := IniRead(UserData.File, "Update", "LastCheck", "")
-        if (last != "") {
+        if (last != "" && !UpdateCheckOnStart) {          ; senza controllo all'avvio: aspetta la fine dell'intervallo
             try {
                 left := this.EveryMs() - DateDiff(A_Now, last, "Seconds") * 1000
                 wait := Max(20000, left)
@@ -14737,7 +14976,7 @@ class ViCountdownBar {
             this.TimeCtl.Text := txt
         if !DllCall("IsWindowVisible", "Ptr", this.Win.Hwnd) {
             this.Win.GetPos(,, &w)
-            this.Win.Show("NA x" (A_ScreenWidth - w) // 2 " y" Round(6 * A_ScreenHeight / 1440))
+            this.Win.Show("NA x" (A_ScreenWidth - w) // 2 " y0")        ; attaccato al bordo alto
         }
     }
 
@@ -14746,14 +14985,18 @@ class ViCountdownBar {
             this.Win.Destroy()
         k := A_ScreenHeight / 1440
         g := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08080020")   ; non attiva, attraversabile
-        g.BackColor := UiC("Deep"), g.MarginX := Round(14 * k), g.MarginY := Round(3 * k)
-        g.SetFont("s" Round(13 * k) " bold c" UiC("Err"), "Segoe UI")
-        g.AddText("ym h" Round(26 * k) " 0x200", "GTA VI")
-        g.SetFont("s" Round(13 * k) " bold c" UiC("Go"), "Segoe UI")
-        g.AddText("x+" Round(10 * k) " yp h" Round(26 * k) " 0x200", "▸")
-        g.SetFont("s" Round(14 * k) " bold c" UiC("Text"), "Consolas")
-        this.TimeCtl := g.AddText("x+" Round(10 * k) " yp h" Round(26 * k) " w" Round(150 * k) " 0x200", "00:00:00:00")
+        g.BackColor := UiC("Deep"), g.MarginX := Round(10 * k), g.MarginY := Round(1 * k)
+        h := Round(19 * k)
+        g.SetFont("s" Round(9 * k) " bold c" UiC("Err"), "Segoe UI")
+        g.AddText("ym h" h " 0x200", "GTA VI")
+        g.SetFont("s" Round(9 * k) " bold c" UiC("Go"), "Segoe UI")
+        g.AddText("x+" Round(6 * k) " yp h" h " 0x200", "▸")
+        g.SetFont("s" Round(10 * k) " bold c" UiC("Text"), "Consolas")
+        this.TimeCtl := g.AddText("x+" Round(6 * k) " yp h" h " w" Round(104 * k) " 0x200", "00:00:00:00")
         g.Show("Hide AutoSize")
+        g.GetPos(,, &w, &hh)
+        r := Round(10 * k)                                   ; linguetta: angoli tondi solo in basso
+        DllCall("SetWindowRgn", "Ptr", g.Hwnd, "Ptr", DllCall("CreateRoundRectRgn", "Int", 0, "Int", -r, "Int", w + 1, "Int", hh + 1, "Int", r * 2, "Int", r * 2, "Ptr"), "Int", true)
         WinSetTransparent(225, g.Hwnd)
         this.Win := g, this.BuiltFor := A_ScreenWidth "x" A_ScreenHeight "|" UiC("Accent")
     }

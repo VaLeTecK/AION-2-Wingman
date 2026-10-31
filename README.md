@@ -4,7 +4,7 @@
 
 ### 🧭 Assisted Teleport to any Field Boss · 🎯 HUD overlay · 🛡️ No injection, no bot, no telemetry
 
-[**⬇ Download the latest release**](../../releases/latest)
+[**⬇ Download the latest release**](../../releases/latest) · 💖 Donate: [**PayPal**](https://www.paypal.com/paypalme/valeteck) · [**Ko-fi**](https://ko-fi.com/VaLeTecK)
 
 <br>
 
@@ -791,6 +791,17 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
 <div align="center">
 
 **AION 2 Wingman** — by VaLeTecK
+
+### 💖 Support Wingman · Supporta Wingman
+
+AION 2 Wingman is free and always will be. If it saves you time, you can buy me a coffee with PayPal or Ko-fi (card payments, no PayPal account needed): every donation helps keep it updated.
+AION 2 Wingman è gratuito e lo resterà. Se ti fa risparmiare tempo puoi offrirmi un caffè con PayPal o Ko-fi (anche con carta, senza account PayPal): ogni donazione aiuta a tenerlo aggiornato.
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/valeteck) [![Support me on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/VaLeTecK)
+
+<sub>Also in the app: Settings > 💖 Donate · Anche nell'app: Impostazioni > 💖 Dona</sub>
+
+---
 
 OCR.ahk by [Descolada](https://github.com/Descolada/OCR) · Built with [AutoHotkey v2](https://www.autohotkey.com)
 
