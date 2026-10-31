@@ -4,6 +4,8 @@
 
 ### 🧭 Assisted Teleport to any Field Boss · 🎯 HUD overlay · 🛡️ No injection, no bot, no telemetry
 
+**💚 100% free · no paid features · no hidden features · donations are entirely optional**
+
 [**⬇ Download the latest release**](../../releases/latest) · 💖 Donate: [**PayPal**](https://www.paypal.com/paypalme/valeteck) · [**Ko-fi**](https://ko-fi.com/VaLeTecK)
 
 📦 **First time?** Extract the zip and double-click **`Setup AION 2 Wingman.bat`**: it installs everything and sets Wingman up for you.
@@ -32,6 +34,8 @@ AION 2 Wingman is a plain **AutoHotkey v2** script: you can open it with Notepad
 - 🖱️ **Every click is yours**: it moves the cursor to the right spot and, on the map, uses the mouse wheel to scroll the boss list and zoom out. The only automatic click (Hidden Cube) is **off by default**.
 - 🔒 **No telemetry, no data collection**: it sends no game or personal data anywhere. Its only connection is the update check on this GitHub page, which you can turn off (Settings > Updates).
 - 🗂️ **Everything stays on your PC**: your settings are saved in `%AppData%\AION 2 Wingman`.
+- 🧪 **Scanned on VirusTotal**: every release has its VirusTotal scan linked in the release notes.
+- 💚 **100% free, forever**: no paid features, no hidden features, no ads, no account. Donations are entirely up to you and unlock nothing.
 
 > ⚠️ Wingman is an unofficial third-party tool. Nobody can promise that an external program is 100% risk-free under a game's rules and anti-cheat, so use it consciously and within the game's terms of service.
 
@@ -76,6 +80,9 @@ Reaching a Field Boss normally means opening the map, going to Exploration and t
 - When the Hidden Cube window opens, it moves the mouse to "Open with Key" and keeps it there.
 
 **⚙️ Settings window** (Ctrl+Shift+F12)
+- A **Home page** to turn each feature on and off with one click, plus shortcuts to presets, theme, keys and updates.
+- **Basic mode** (only the essential options, no technical names) and **Advanced mode** (every customization option), switchable at the top.
+- Closes by itself when you close AION 2 (can be turned off).
 - A menu for every function, a **search box**, a description and an example for each option, and a **live preview** of the HUD without the game.
 - **Resolution presets**: FullHD, 2K and 4K.
 - **Performance profiles**, from "potato" to "gigachad".
@@ -185,6 +192,8 @@ AION 2 Wingman è un semplice script **AutoHotkey v2**: puoi aprirlo con il Bloc
 - 🖱️ **Ogni click è tuo**: porta il cursore sul punto giusto e, sulla mappa, usa la rotellina del mouse per scorrere la lista dei boss e fare zoom indietro. L'unico click automatico (Hidden Cube) è **spento di default**.
 - 🔒 **Nessuna telemetria, nessuna raccolta di dati**: non invia da nessuna parte dati del gioco o personali. L'unica connessione è il controllo aggiornamenti su questa pagina GitHub, che puoi disattivare (Impostazioni > Aggiornamenti).
 - 🗂️ **Tutto resta sul tuo PC**: le impostazioni sono salvate in `%AppData%\AION 2 Wingman`.
+- 🧪 **Controllato su VirusTotal**: ogni release ha la sua scansione VirusTotal collegata nelle note della release.
+- 💚 **Gratuito al 100%, per sempre**: nessuna funzione a pagamento, nessuna funzione nascosta, niente pubblicità, nessun account. Le donazioni sono del tutto a tua scelta e non sbloccano nulla.
 
 > ⚠️ Wingman è uno strumento di terze parti non ufficiale. Nessuno può promettere che un programma esterno sia a rischio zero rispetto alle regole e all'anti-cheat di un gioco: usalo consapevolmente e nel rispetto dei termini di servizio del gioco.
 
@@ -229,6 +238,9 @@ Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Explorat
 - Quando si apre la finestra degli Hidden Cube porta il mouse su "Open with Key" e ce lo tiene.
 
 **⚙️ Finestra Impostazioni** (Ctrl+Shift+F12)
+- Una pagina **Home** per accendere e spegnere ogni funzione con un click, con scorciatoie a preset, tema, tasti e aggiornamenti.
+- Modalità **Base** (solo le opzioni essenziali, senza nomi tecnici) e **Avanzata** (tutte le opzioni di personalizzazione), da scegliere in alto.
+- Si chiude da sola quando chiudi AION 2 (disattivabile).
 - Un menu per ogni funzione, una **casella di ricerca**, descrizione ed esempio per ogni opzione e l'**anteprima dal vivo** dell'HUD anche senza gioco.
 - **Preset di risoluzione**: FullHD, 2K e 4K.
 - **Profili prestazioni**, da "potato" a "gigachad".
@@ -338,6 +350,8 @@ AION 2 Wingman es un simple script de **AutoHotkey v2**: puedes abrirlo con el B
 - 🖱️ **Cada clic es tuyo**: mueve el cursor y, en el mapa, usa la rueda del ratón para desplazar la lista y alejar el zoom. El único clic automático (Hidden Cube) está **desactivado por defecto**.
 - 🔒 **Sin telemetría**: no envía datos del juego ni personales. Su única conexión es la comprobación de actualizaciones en esta página de GitHub, que puedes desactivar.
 - 🗂️ **Todo se queda en tu PC** (`%AppData%\AION 2 Wingman`).
+- 🧪 **Analizado en VirusTotal**: cada release enlaza su análisis de VirusTotal en las notas.
+- 💚 **100% gratis, para siempre**: sin funciones de pago, sin funciones ocultas, sin anuncios, sin cuenta. Las donaciones son totalmente opcionales y no desbloquean nada.
 
 > ⚠️ Es una herramienta de terceros no oficial: nadie puede garantizar que un programa externo tenga riesgo cero frente a las reglas y el anti-cheat de un juego. Úsala con conciencia y respetando los términos del juego.
 
@@ -368,6 +382,7 @@ Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego 
   - el panel se oculta en las **mazmorras**.
 - **🧊 Hidden Cube:** lleva el ratón a "Open with Key" cuando se abre la ventana.
 - **⚙️ Ajustes** (Ctrl+Shift+F12):
+  - página **Inicio** con activación de cada función en un clic; modo **Básico** (lo esencial) y **Avanzado** (todas las opciones); se cierra sola al cerrar AION 2 (desactivable);
   - búsqueda, **vista previa en vivo**, presets de resolución (FullHD / 2K / 4K), perfiles de rendimiento y presets propios;
   - menú Mantenimiento y botón **Cerrar Wingman**;
   - **12 idiomas**.
@@ -427,6 +442,8 @@ AION 2 Wingman est un simple script **AutoHotkey v2** : tu peux l'ouvrir avec le
 - 🖱️ **Chaque clic est le tien** : il déplace le curseur et, sur la carte, utilise la molette pour faire défiler la liste et dézoomer. Le seul clic automatique (Hidden Cube) est **désactivé par défaut**.
 - 🔒 **Aucune télémétrie** : il n'envoie aucune donnée du jeu ni personnelle. Sa seule connexion est la vérification des mises à jour sur cette page GitHub, désactivable.
 - 🗂️ **Tout reste sur ton PC** (`%AppData%\AION 2 Wingman`).
+- 🧪 **Analysé sur VirusTotal** : chaque release renvoie à son analyse VirusTotal dans les notes.
+- 💚 **100 % gratuit, pour toujours** : aucune fonction payante, aucune fonction cachée, pas de pub, pas de compte. Les dons sont entièrement libres et ne débloquent rien.
 
 > ⚠️ C'est un outil tiers non officiel : personne ne peut garantir qu'un programme externe soit sans aucun risque face aux règles et à l'anti-triche d'un jeu. Utilise-le en connaissance de cause et dans le respect des conditions du jeu.
 
@@ -457,6 +474,7 @@ Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Explo
   - le panneau est masqué dans les **donjons**.
 - **🧊 Hidden Cube :** place la souris sur "Open with Key" quand la fenêtre s'ouvre.
 - **⚙️ Paramètres** (Ctrl+Shift+F12) :
+  - page **Accueil** pour activer chaque fonction en un clic ; mode **Basique** (l'essentiel) et **Avancé** (toutes les options) ; se ferme seul quand AION 2 se ferme (désactivable) ;
   - recherche, **aperçu en direct**, presets de résolution (FullHD / 2K / 4K), profils de performance et presets perso ;
   - menu Maintenance et bouton **Quitter Wingman** ;
   - **12 langues**.
@@ -516,6 +534,8 @@ AION 2 Wingman ist ein einfaches **AutoHotkey-v2**-Skript: Du kannst es mit dem 
 - 🖱️ **Jeder Klick ist deiner**: Es bewegt den Cursor und scrollt auf der Karte mit dem Mausrad durch die Liste und zoomt heraus. Der einzige automatische Klick (Hidden Cube) ist **standardmäßig aus**.
 - 🔒 **Keine Telemetrie**: Es sendet keine Spiel- oder persönlichen Daten. Die einzige Verbindung ist die abschaltbare Update-Prüfung auf dieser GitHub-Seite.
 - 🗂️ **Alles bleibt auf deinem PC** (`%AppData%\AION 2 Wingman`).
+- 🧪 **Auf VirusTotal geprüft**: Jede Release verlinkt ihren VirusTotal-Scan in den Release-Notes.
+- 💚 **Zu 100 % kostenlos, für immer**: keine kostenpflichtigen Funktionen, keine versteckten Funktionen, keine Werbung, kein Konto. Spenden sind völlig freiwillig und schalten nichts frei.
 
 > ⚠️ Es ist ein inoffizielles Drittanbieter-Tool: Niemand kann garantieren, dass ein externes Programm gegenüber den Regeln und dem Anti-Cheat eines Spiels völlig risikofrei ist. Nutze es bewusst und im Rahmen der Nutzungsbedingungen.
 
@@ -546,6 +566,7 @@ Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration u
   - in **Dungeons** bleibt das Panel ausgeblendet.
 - **🧊 Hidden Cube:** bringt die Maus auf "Open with Key", sobald sich das Fenster öffnet.
 - **⚙️ Einstellungen** (Ctrl+Shift+F12):
+  - **Startseite** zum Ein-/Ausschalten jeder Funktion mit einem Klick; **Basis**-Modus (das Wichtigste) und **Erweitert** (alle Optionen); beendet sich mit AION 2 (abschaltbar);
   - Suche, **Live-Vorschau**, Auflösungs-Presets (FullHD / 2K / 4K), Leistungsprofile und eigene Presets;
   - Wartungsmenü und Knopf **Wingman beenden**;
   - **12 Sprachen**.
@@ -605,6 +626,8 @@ O AION 2 Wingman é um simples script **AutoHotkey v2**: você pode abri-lo no B
 - 🖱️ **Cada clique é seu**: move o cursor e, no mapa, usa a roda do mouse para rolar a lista e afastar o zoom. O único clique automático (Hidden Cube) vem **desligado**.
 - 🔒 **Sem telemetria**: não envia dados do jogo nem pessoais. A única conexão é a verificação de atualizações nesta página do GitHub, que pode ser desligada.
 - 🗂️ **Tudo fica no seu PC** (`%AppData%\AION 2 Wingman`).
+- 🧪 **Verificado no VirusTotal**: cada release traz o link da análise do VirusTotal nas notas.
+- 💚 **100% gratuito, para sempre**: sem funções pagas, sem funções ocultas, sem anúncios, sem conta. As doações são totalmente opcionais e não liberam nada.
 
 > ⚠️ É uma ferramenta de terceiros não oficial: ninguém pode garantir que um programa externo tenha risco zero diante das regras e do anti-cheat de um jogo. Use com consciência e respeitando os termos do jogo.
 
@@ -635,6 +658,7 @@ Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e 
   - o painel fica oculto nas **masmorras**.
 - **🧊 Hidden Cube:** leva o mouse até "Open with Key" quando a janela abre.
 - **⚙️ Configurações** (Ctrl+Shift+F12):
+  - página **Início** para ligar cada função com um clique; modo **Básico** (o essencial) e **Avançado** (todas as opções); fecha sozinho ao fechar o AION 2 (desativável);
   - busca, **prévia ao vivo**, presets de resolução (FullHD / 2K / 4K), perfis de desempenho e presets próprios;
   - menu Manutenção e botão **Encerrar Wingman**;
   - **12 idiomas**.
@@ -694,6 +718,8 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
 - 🖱️ **Каждый клик — ваш**: двигает курсор, а на карте прокручивает колесом мыши список и отдаляет масштаб. Единственный автоклик (Hidden Cube) **по умолчанию выключен**.
 - 🔒 **Никакой телеметрии**: не отправляет игровые или личные данные. Единственное подключение — проверка обновлений на этой странице GitHub, её можно отключить.
 - 🗂️ **Всё остаётся на вашем ПК** (`%AppData%\AION 2 Wingman`).
+- 🧪 **Проверено на VirusTotal**: у каждого релиза в примечаниях есть ссылка на проверку VirusTotal.
+- 💚 **Полностью бесплатно, навсегда**: никаких платных и скрытых функций, рекламы и аккаунтов. Пожертвования — только по желанию и ничего не открывают.
 
 > ⚠️ Это неофициальный сторонний инструмент: никто не может гарантировать, что внешняя программа абсолютно безопасна с точки зрения правил и античита игры. Пользуйтесь осознанно и в рамках условий игры.
 
@@ -724,6 +750,7 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
   - в **подземельях** панель скрыта.
 - **🧊 Hidden Cube:** когда открывается окно, переносит мышь на «Open with Key».
 - **⚙️ Настройки** (Ctrl+Shift+F12):
+  - **Главная** страница: каждая функция включается одним кликом; **Базовый** режим (самое нужное) и **Расширенный** (все параметры); закрывается вместе с AION 2 (можно отключить);
   - поиск, **живой предпросмотр**, пресеты разрешения (FullHD / 2K / 4K), профили производительности и свои пресеты;
   - меню «Обслуживание» и кнопка **Выйти из Wingman**;
   - **12 языков**.
@@ -783,6 +810,8 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
 - 🖱️ **클릭은 모두 직접**: 커서를 옮기고, 지도에서는 마우스 휠로 목록을 스크롤하고 축소합니다. 유일한 자동 클릭(Hidden Cube)은 **기본적으로 꺼져 있습니다**.
 - 🔒 **텔레메트리 없음**: 게임 데이터나 개인 정보를 보내지 않습니다. 유일한 연결은 이 GitHub 페이지의 업데이트 확인이며 끌 수 있습니다.
 - 🗂️ **모든 것이 내 PC에** (`%AppData%\AION 2 Wingman`).
+- 🧪 **VirusTotal 검사**: 모든 릴리스 노트에 VirusTotal 검사 링크가 있습니다.
+- 💚 **영원히 100% 무료**: 유료 기능, 숨겨진 기능, 광고, 계정이 없습니다. 후원은 전적으로 자유이며 아무것도 잠금 해제하지 않습니다.
 
 > ⚠️ 비공식 서드파티 도구입니다. 외부 프로그램이 게임 규칙과 안티치트에 대해 위험이 전혀 없다고 누구도 보장할 수 없으니, 게임 이용 약관을 지키며 신중하게 사용하세요.
 
@@ -813,6 +842,7 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
   - **던전**에서는 패널이 나타나지 않습니다.
 - **🧊 Hidden Cube:** 창이 열리면 마우스를 "Open with Key"로 옮깁니다.
 - **⚙️ 설정** (Ctrl+Shift+F12):
+  - 클릭 한 번으로 기능을 켜고 끄는 **홈** 페이지, **기본** 모드(핵심만)와 **고급** 모드(모든 옵션), AION 2를 닫으면 함께 종료(끌 수 있음);
   - 검색, **실시간 미리보기**, 해상도 프리셋(FullHD / 2K / 4K), 성능 프로필, 나만의 프리셋;
   - 유지 관리 메뉴와 **Wingman 종료** 버튼;
   - **12개 언어**.
@@ -872,6 +902,8 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
 - 🖱️ **每次点击都由你完成**：它移动光标，并在地图上用鼠标滚轮滚动列表和缩小视图。唯一的自动点击（Hidden Cube）**默认关闭**。
 - 🔒 **没有遥测**：不发送任何游戏或个人数据。唯一的联网是在本 GitHub 页面检查更新，可以关闭。
 - 🗂️ **一切都留在你的电脑上**（`%AppData%\AION 2 Wingman`）。
+- 🧪 **经过 VirusTotal 扫描**：每个发布版本的说明中都附有 VirusTotal 扫描链接。
+- 💚 **永久 100% 免费**：没有付费功能、没有隐藏功能、没有广告、无需账号。捐助完全自愿，不会解锁任何内容。
 
 > ⚠️ 这是非官方的第三方工具：没有人能保证外部程序在游戏规则和反作弊面前完全零风险，请在遵守游戏服务条款的前提下谨慎使用。
 
@@ -902,6 +934,7 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
   - 在**副本**中面板不会出现。
 - **🧊 Hidden Cube：** 窗口打开时把鼠标移到 "Open with Key"。
 - **⚙️ 设置**（Ctrl+Shift+F12）：
+  - **主页**一键开关各项功能；**基础**模式（只显示要点）与**高级**模式（全部选项）；关闭 AION 2 时自动退出（可关闭）；
   - 搜索、**实时预览**、分辨率预设（FullHD / 2K / 4K）、性能配置和自定义预设；
   - 维护菜单和**退出 Wingman**按钮；
   - **12 种语言**。
@@ -961,6 +994,8 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
 - 🖱️ **クリックはすべてご自身で**：カーソルを動かし、マップではマウスホイールでリストをスクロールしズームアウトします。唯一の自動クリック（Hidden Cube）は**初期状態でオフ**です。
 - 🔒 **テレメトリなし**：ゲームや個人のデータは送信しません。唯一の通信はこの GitHub ページでのアップデート確認で、オフにできます。
 - 🗂️ **すべてあなたの PC に保存**（`%AppData%\AION 2 Wingman`）。
+- 🧪 **VirusTotal でスキャン済み**：各リリースのノートに VirusTotal の結果リンクがあります。
+- 💚 **ずっと 100% 無料**：有料機能・隠し機能・広告・アカウントは一切ありません。寄付は完全に任意で、何も解放されません。
 
 > ⚠️ 非公式のサードパーティ製ツールです。外部プログラムがゲームの規約やアンチチートに対して完全にノーリスクだと保証できる人はいません。利用規約を守り、理解したうえでご利用ください。
 
@@ -991,6 +1026,7 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
   - **ダンジョン**ではパネルを表示しません。
 - **🧊 Hidden Cube：** ウィンドウが開くとマウスを「Open with Key」へ移動します。
 - **⚙️ 設定**（Ctrl+Shift+F12）：
+  - 各機能をワンクリックでオン/オフできる**ホーム**画面、**基本**モード（要点のみ）と**詳細**モード（全オプション）、AION 2 を閉じると自動終了（オフ可）；
   - 検索、**ライブプレビュー**、解像度プリセット（FullHD / 2K / 4K）、パフォーマンスプロファイル、自作プリセット；
   - メンテナンスメニューと **Wingman を終了** ボタン；
   - **12 言語**。
@@ -1042,8 +1078,8 @@ HUD とツールのあらゆる要素を、**見た目**も**動作**も好み�
 
 ### 💖 Support Wingman · Supporta Wingman
 
-AION 2 Wingman is free and always will be. If it saves you time, you can buy me a coffee with PayPal or Ko-fi (card payments, no PayPal account needed): every donation helps keep it updated.
-AION 2 Wingman è gratuito e lo resterà. Se ti fa risparmiare tempo puoi offrirmi un caffè con PayPal o Ko-fi (anche con carta, senza account PayPal): ogni donazione aiuta a tenerlo aggiornato.
+AION 2 Wingman is **100% free** and always will be: no paid or hidden features, and a donation unlocks nothing. If it saves you time, you can buy me a coffee with PayPal or Ko-fi (card payments, no PayPal account needed): every donation helps keep it updated.
+AION 2 Wingman è **gratuito al 100%** e lo resterà: nessuna funzione a pagamento o nascosta, e una donazione non sblocca nulla. Se ti fa risparmiare tempo puoi offrirmi un caffè con PayPal o Ko-fi (anche con carta, senza account PayPal): ogni donazione aiuta a tenerlo aggiornato.
 
 [![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/valeteck) [![Support me on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/VaLeTecK)
 

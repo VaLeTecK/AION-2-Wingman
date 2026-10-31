@@ -23,7 +23,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.03"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.04"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -101,6 +101,8 @@ LegacyCleanup() {
 ; ------------------------------------------------------------------------------
 global GameExe        := "AION2.exe"   ; nome del processo del gioco. HUD e tool funzionano
                                        ; solo quando questa finestra è in primo piano.
+global AutoExitWithGame := true        ; true = Wingman si chiude da solo quando chiudi AION 2
+                                       ; (solo se il gioco era aperto; con le Impostazioni aperte non si chiude)
 global ClickThrough   := true          ; true  = i click del mouse "attraversano" l'HUD e arrivano al gioco
                                        ; false = l'HUD blocca i click nei punti dove è disegnato
 global Language       := "italiano"    ; lingua di impostazioni, avvisi e istruzioni a schermo:
@@ -1115,6 +1117,23 @@ ToggleTool(tool, label) {
     FieldBoss.RefreshLegend()              ; la leggenda mostra lo stato aggiornato dei tool
 }
 
+; Chiude Wingman qualche secondo dopo la chiusura del gioco (se il gioco era stato aperto)
+GameWatch() {
+    static seen := false, goneAt := 0
+    if !AutoExitWithGame
+        return
+    if ProcessExist(GameExe) {
+        seen := true, goneAt := 0
+        return
+    }
+    if !seen
+        return
+    if !goneAt
+        goneAt := A_TickCount
+    else if (A_TickCount - goneAt > 8000 && !IsObject(SettingsEditor.Win) && !Updater.Busy)
+        ExitApp()
+}
+
 ; Avviso temporaneo vicino al mouse
 ShowTip(msg, ms := 2500, x?, y?) {
     static hide := (*) => ToolTip()          ; un solo timer: un avviso nuovo non viene chiuso da uno vecchio
@@ -1145,6 +1164,7 @@ FirstRunCheck() {
     SetTimer(() => SettingsEditor.Open(), SplashEnabled ? -2500 : -500)
 }
 FirstRunCheck()
+SetTimer(GameWatch, 3000)                    ; autochiusura quando il gioco viene chiuso (AutoExitWithGame)
 Updater.Startup()                            ; aggiornamenti da GitHub (vedi [AGGIORNAMENTI])
 
 
@@ -3800,8 +3820,9 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
 class SettingsEditor {
     ; ---- Menu: [titolo, introduzione, variabili]  oppure  [titolo, introduzione, [sottomenu...]] ----
     static Tree := [
+        ["Home", "", "HOME"],
         ["Preset", "", "PRESET"],
-        ["Generale", "Impostazioni comuni a tutta la suite.", ["Language", "GameExe", "ClickThrough", "SplashEnabled", "SplashHold", "SplashScale"]],
+        ["Generale", "Impostazioni comuni a tutta la suite.", ["Language", "AutoExitWithGame", "GameExe", "ClickThrough", "SplashEnabled", "SplashHold", "SplashScale"]],
         ["Tema", "Colori di tutta la suite. I temi pronti non si modificano: per crearne uno tuo partendo da un tema qualsiasi usa Editor temi.",
             ["Theme", "ViCountdown", "ViCountdownDate", "ThemeColorBg", "ThemeColorRow", "ThemeColorHover", "ThemeColorLine", "ThemeColorAccent", "ThemeColorText", "ThemeColorSubText", "ThemeColorMuted", "ThemeColorDeep", "ThemeColorGo", "ThemeColorWait", "ThemeColorOk", "ThemeColorErr", "ThemeColorInfo", "ThemeColorWinBg", "ThemeColorWinText", "ThemeColorWinSub", "ThemeColorWinField"]],
         ["Editor temi", "", "THEMES"],
@@ -3890,7 +3911,7 @@ class SettingsEditor {
     ; ---- Nomi leggibili ----
     static Labels := Map(
         "Language", "Lingua",
-        "IconAutoFit", "Testo ed emoji automatici",
+        "IconAutoFit", "Testo ed emoji automatici", "AutoExitWithGame", "Chiudi Wingman quando chiudi AION 2",
         "FieldBossTeleportLock", "Blocco mouse dopo il Teleport (s)", "UpdateCheckOnStart", "Controlla a ogni avvio",
         "UpdateMode", "Aggiornamenti automatici", "UpdateCheckHours", "Controlla ogni (ore)", "UpdateRepo", "Repository GitHub", "IconMirror", "Icona Combat speculare al Loot",
         "CombatSize", "Grandezza icona (altezza)", "CombatBorderSize", "Bordino nero",
@@ -4186,6 +4207,9 @@ class SettingsEditor {
             this.Win.Show()
             return
         }
+        mode := ""
+        try mode := IniRead(UserData.File, "App", "SettingsMode", "")
+        this.Basic := mode != "avanzata"
         try this.Load()
         catch as e {
             MsgBox(Tr("Impossibile leggere la CONFIG:") "`n" e.Message, "AION 2 Wingman", "Icon!")
@@ -4386,6 +4410,15 @@ class SettingsEditor {
         g.AddText("x20 y8 h30 Background" UiC("Bg"), "AION 2 Wingman " AppVersion)
         g.SetFont("s9 norm c" UiC("Muted"), "Segoe UI")
         g.AddText("x22 y40 Background" UiC("Bg"), Tr("Impostazioni") "   ·   by VaLeTecK")
+        ; modalità del menu: Base (solo l'essenziale) / Avanzata (tutto)
+        g.SetFont("s8 norm c" UiC("Muted"), "Segoe UI")
+        g.AddText("x252 y8 w140 h16 Background" UiC("Bg"), Tr("Modalità"))
+        g.SetFont("s9 bold", "Segoe UI")
+        this.ModeB := g.AddText("x252 y26 w68 h24 Center 0x200", Tr("Base"))
+        this.ModeA := g.AddText("x322 y26 w70 h24 Center 0x200", Tr("Avanzata"))
+        this.ModeB.OnEvent("Click", (*) => this.SetMode(true))
+        this.ModeA.OnEvent("Click", (*) => this.SetMode(false))
+        this.PaintMode()
         ; lingua (si applica subito a questa finestra; al gioco dopo "Salva e riavvia")
         g.SetFont("s8 norm c" UiC("Muted"), "Segoe UI")
         g.AddText("x400 y8 w230 h16 Background" UiC("Bg"), Tr("Lingua") "  ·  Language")
@@ -4443,7 +4476,7 @@ class SettingsEditor {
         for name in this.Cfg
             if !listed.Has(name)
                 extra.Push(name)
-        if extra.Length {
+        if (extra.Length && !this.Basic) {
             id := this.TV.Add(this.Icon("Altro") Tr("Altro"), 0)
             this.Nodes[id] := {title: this.Icon("Altro") Tr("Altro"), intro: Tr("Impostazioni della CONFIG non ancora catalogate nei menu."), content: extra}
         }
@@ -4457,7 +4490,10 @@ class SettingsEditor {
         ; ---- elenco impostazioni ----
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
         this.LV := g.AddListView("x" X " y152 w" CW " h252 -Multi Grid NoSortHdr Background" UiC("WinField"), [Tr("Impostazione"), Tr("Valore"), Tr("Variabile"), ""])
-        this.LV.ModifyCol(1, 330), this.LV.ModifyCol(2, 260), this.LV.ModifyCol(3, 240), this.LV.ModifyCol(4, 26)
+        if this.Basic                                     ; modalità Base: niente nomi tecnici delle variabili
+            this.LV.ModifyCol(1, 450), this.LV.ModifyCol(2, 380), this.LV.ModifyCol(3, 0), this.LV.ModifyCol(4, 26)
+        else
+            this.LV.ModifyCol(1, 330), this.LV.ModifyCol(2, 260), this.LV.ModifyCol(3, 240), this.LV.ModifyCol(4, 26)
         this.LV.OnEvent("ItemSelect", (c, row, sel) => sel ? this.SelectRow(row) : 0)
 
         ; ---- dettaglio: nome, descrizione ----
@@ -4550,6 +4586,38 @@ class SettingsEditor {
         this.PHelp := g.AddText("x" X " y574 w" CW " h90", "")
         this.PresetCtrls := [this.PLV, this.PApply, this.PSave, this.PDel, this.PImport, this.PHelp]
 
+        ; ---- pannello Home: stato delle funzioni, scorciatoie, gratuità ----
+        this.HomeCtrls := [], this.HomeCards := []
+        g.SetFont("s9 bold c" UiC("WinSub"), "Segoe UI")
+        this.HomeCtrls.Push(g.AddText("x" X " y156 w" CW " h18", Tr("FUNZIONI") "   ·   " Tr("clicca per accendere o spegnere")))
+        for i, it in [["🎯", "HUD overlay", "Hud"], ["🧊", "Hidden Cube", "HiddenCube"], ["🐉", "Field Boss", "FieldBoss"]] {
+            g.SetFont("s12 bold c" UiC("Text"), "Segoe UI")
+            c := g.AddText(Format("x{} y178 w276 h70 Center", X + (i - 1) * 293), it[1] "  " it[2])
+            c.OnEvent("Click", ObjBindMethod(this, "HomeToggle", it[3], it[2]))
+            this.HomeCards.Push({ctrl: c, tool: it[3], label: it[2], icon: it[1]})
+            this.HomeCtrls.Push(c)
+        }
+        g.SetFont("s9 bold c" UiC("WinSub"), "Segoe UI")
+        this.HomeCtrls.Push(g.AddText("x" X " y268 w" CW " h18", Tr("SCORCIATOIE")))
+        g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
+        for i, it in [["📦  " Tr("Preset risoluzione"), (*) => this.GoNode("PRESET")]
+                    , ["🌈  " Tr("Tema"), (*) => this.GoNode("Tema")]
+                    , ["⌨️  " Tr("Tasti"), (*) => this.GoNode("Tasti")]
+                    , ["🔄  " Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow()]
+                    , ["📖  " Tr("Guida online"), (*) => OpenUrl("https://github.com/VaLeTecK/AION-2-Wingman#readme")]
+                    , ["🛠️  " Tr("Manutenzione"), (*) => this.GoNode("MAINT")]] {
+            bt := g.AddButton(Format("x{} y{} w276 h38", X + Mod(i - 1, 3) * 293, 290 + (i - 1) // 3 * 46), it[1])
+            bt.OnEvent("Click", it[2])
+            this.HomeCtrls.Push(bt)
+        }
+        g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
+        this.HomeInfo := g.AddText("x" X " y396 w" CW " h66", "")
+        this.HomeCtrls.Push(this.HomeInfo)
+        g.SetFont("s10 bold c" UiC("Ok"), "Segoe UI")
+        this.HomeFree := g.AddText("x" X " y476 w" CW " h46 0x200 Background" UiC("Bg"),
+            "   💚  " Tr("Wingman è gratuito al 100%: nessuna funzione a pagamento o nascosta. Le donazioni sono del tutto facoltative."))
+        this.HomeCtrls.Push(this.HomeFree)
+
         ; ---- pannello Editor temi ----
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI Emoji")
         this.TLV := g.AddListView("x" X " y152 w" CW " h330 -Multi Grid NoSortHdr Background" UiC("WinField"), [Tr("Tema"), Tr("Tipo"), Tr("Dettagli")])
@@ -4617,11 +4685,15 @@ class SettingsEditor {
         this.ShowPresetEditor(false)
         this.ShowMaintenance(false)
         this.ShowThemeEditor(false)
+        this.ShowHome(false)
         g.Show((px != "" ? "x" px " y" py " " : "") "w" W " h" H)
         this.TV.Modify(this.TV.GetChild(0), "Select")
         this.SelectNode(this.TV.GetChild(0), true)
         this.UpdateStatus()
-        this.HoverInit([this.QuitBtn, this.PrevElemBtn, this.PrevOn, this.PrevOff, this.PayPalBtn, this.KofiBtn])
+        extra := [this.QuitBtn, this.PrevElemBtn, this.PrevOn, this.PrevOff, this.PayPalBtn, this.KofiBtn, this.ModeB, this.ModeA]
+        for c in this.HomeCards
+            extra.Push(c.ctrl)
+        this.HoverInit(extra)
     }
 
     ; ---------------- Pulsanti animati ----------------
@@ -4726,6 +4798,38 @@ class SettingsEditor {
             SetTimer(this.HovAnimFn, 0)
     }
 
+    ; ---------------- Home ----------------
+    static HomeCtrls := [], HomeCards := []
+
+    static ShowHome(on) {
+        for c in this.HomeCtrls
+            c.Visible := on
+        if on {
+            for c in [this.LV, this.DName, this.DDesc, this.HdrVal, this.HdrEx, this.ExTxt]
+                c.Visible := false
+            this.EditorShow("")
+            this.FillHome()
+        }
+    }
+
+    static FillHome() {
+        for card in this.HomeCards {
+            tool := GetGlobalVar(card.tool)
+            on := IsObject(tool) && tool.On
+            card.ctrl.Opt("+Background" (on ? UiC("Go") : UiC("Row")))
+            card.ctrl.SetFont("c" (on ? UiC("Deep") : UiC("Muted")))
+            card.ctrl.Text := "`n" card.icon "  " card.label "`n" (on ? "●  ON" : "○  OFF")
+        }
+        this.HomeInfo.Text := "AION 2 Wingman " AppVersion "   ·   " Tr("Tema") ": " this.EnumText("Theme", this.Unq(this.Val("Theme")))
+            . "`n" (this.Basic ? Tr("Modalità Base: solo le opzioni principali. Passa ad Avanzata per personalizzare ogni dettaglio.")
+                               : Tr("Modalità Avanzata: tutte le opzioni di personalizzazione."))
+    }
+
+    static HomeToggle(tool, label, *) {
+        ToggleTool(GetGlobalVar(tool), label)
+        this.FillHome()
+    }
+
     ; ---------------- Manutenzione ----------------
     static ShowMaintenance(on) {
         for c in this.MaintCtrls
@@ -4766,14 +4870,19 @@ class SettingsEditor {
         q := Trim(this.Search.Value)
         if (q = "")                                         ; ricerca vuota: torna alla voce del menu
             return this.SelectNode(this.TV.GetSelection(), true)
-        found := []
+        found := [], hidden := 0
         for name, it in this.Cfg
-            if (InStr(this.Label(name), q) || InStr(name, q) || InStr(this.Desc(name), q) || InStr(this.Shown(name), q))
-                found.Push(name)
+            if (InStr(this.Label(name), q) || InStr(name, q) || InStr(this.Desc(name), q) || InStr(this.Shown(name), q)) {
+                if (this.Basic && !this.BasicVars.Has(name))
+                    hidden++
+                else
+                    found.Push(name)
+            }
         this.LastNode := 0
-        this.ShowPresetEditor(false), this.ShowMaintenance(false), this.ShowThemeEditor(false), this.ShowBossEditor(false)
+        this.ShowPresetEditor(false), this.ShowMaintenance(false), this.ShowThemeEditor(false), this.ShowBossEditor(false), this.ShowHome(false)
         this.Title.Text := "🔍  " Tr("Risultati della ricerca")
-        this.Intro.Text := found.Length ? Tr("{1} risultati per `"{2}`"", found.Length, q) : Tr("Nessun risultato per `"{1}`"", q)
+        this.Intro.Text := (found.Length ? Tr("{1} risultati per `"{2}`"", found.Length, q) : Tr("Nessun risultato per `"{1}`"", q))
+            . (hidden ? "`n" Tr("Altri {1} risultati nella modalità Avanzata.", hidden) : "")
         this.LV.Opt("-Redraw")
         this.LV.Delete()
         for v in found
@@ -4785,21 +4894,85 @@ class SettingsEditor {
     }
 
     ; emoji davanti a ogni voce del menu (solo grafica: le traduzioni usano il titolo senza emoji)
-    static Icons := Map("Preset", "📦", "Generale", "⚙️", "Prestazioni", "🚀", "Tasti", "⌨️",
+    static Icons := Map("Home", "🏠", "Preset", "📦", "Generale", "⚙️", "Prestazioni", "🚀", "Tasti", "⌨️",
         "HUD overlay", "🖥️", "Tema", "🌈", "Generale e macro", "🎮", "Colori", "🎨", "Mirino", "🎯", "Barre", "📊",
         "Icone - generale", "🔲", "Icona Loot", "💰", "Icona Combat", "⚔️", "Effetti Loot", "✨", "Effetti Combat", "💥",
         "Transizioni", "🌗", "Hidden Cube", "🧊", "Field Boss", "🐉", "Fasi di click", "🖱️", "Pannello", "📋",
         "Leggenda", "🏷️", "Ricerca e Teleport", "🔍", "Travel e direzione", "🧭", "Elenco boss", "👑", "Aggiornamenti", "🔄", "Manutenzione", "🛠️", "Editor temi", "🖌️", "Altro", "📁")
     static Icon(title) => this.Icons.Has(title) ? this.Icons[title] "  " : ""
 
+    ; Modalità "Base": solo le opzioni principali (menu semplificato, senza nomi tecnici);
+    ; "Avanzata": tutte le opzioni. La scelta resta in settings.ini ([App] SettingsMode).
+    static Basic := true
+    static BasicVars := Map(
+        "AutoExitWithGame", 1, "SplashEnabled", 1, "Theme", 1, "ViCountdown", 1, "PerfProfile", 1,
+        "CombatKey", 1, "LootKey", 1, "HudToggleKey", 1, "HiddenCubeToggleKey", 1, "FieldBossToggleKey", 1, "SettingsKey", 1,
+        "FieldBossMapKey", 1, "FieldBossTravelKey", 1,
+        "HudEnabled", 1, "ColorActive", 1, "Bar1Enabled", 1, "Bar2Enabled", 1, "IconMirror", 1, "CombatIconEnabled", 1,
+        "LootShape", 1, "CombatShape", 1, "LootEmoji", 1, "CombatEmoji", 1,
+        "HiddenCubeEnabled", 1, "HiddenCubeLockMouse", 1, "HiddenCubeAutoClick", 1,
+        "FieldBossEnabled", 1, "FieldBossHideInDungeon", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
+        "FieldBossPanelScale", 1, "FieldBossShowLegend", 1, "FieldBossTravelPresses", 1, "FieldBossTeleportLock", 1, "FieldBossDirHint", 1,
+        "UpdateMode", 1, "UpdateCheckOnStart", 1)
+    static BasicPanels := Map("HOME", 1, "PRESET", 1, "BOSS", 1, "MAINT", 1)
+
     static AddNodes(list, parent) {
         for n in list {
+            content := n[3], kids := IsObject(content) && content.Length && IsObject(content[1])
+            if this.Basic {                                   ; menu semplificato: niente sottomenu, solo opzioni base
+                if !IsObject(content) {
+                    if !this.BasicPanels.Has(content)
+                        continue
+                } else {
+                    vars := [], panels := []
+                    for v in this.NodeVars({content: content})
+                        if this.BasicVars.Has(v)
+                            vars.Push(v)
+                    if kids
+                        for c in content
+                            if (!IsObject(c[3]) && this.BasicPanels.Has(c[3]))
+                                panels.Push(c)
+                    if (!vars.Length && !panels.Length)
+                        continue
+                    t := this.Icon(n[1]) Tr(n[1])
+                    id := this.TV.Add(t, parent, "Expand")
+                    this.Nodes[id] := {title: t, intro: Tr(n[2]), content: vars}
+                    if panels.Length
+                        this.AddNodes(panels, id)
+                    continue
+                }
+            }
             t := this.Icon(n[1]) Tr(n[1])
             id := this.TV.Add(t, parent, "Expand")
-            this.Nodes[id] := {title: t, intro: Tr(n[2]), content: n[3]}
-            if (IsObject(n[3]) && n[3].Length && IsObject(n[3][1]))      ; ha dei sottomenu
-                this.AddNodes(n[3], id)
+            this.Nodes[id] := {title: t, intro: Tr(n[2]), content: content}
+            if kids                                           ; ha dei sottomenu
+                this.AddNodes(content, id)
         }
+    }
+
+    static SetMode(basic) {
+        if (basic = this.Basic)
+            return
+        this.Basic := basic
+        try IniWrite(basic ? "base" : "avanzata", UserData.File, "App", "SettingsMode")
+        SetTimer(ObjBindMethod(this, "Redraw"), -10)
+    }
+
+    static PaintMode() {
+        for c in [[this.ModeB, this.Basic], [this.ModeA, !this.Basic]] {
+            c[1].Opt("+Background" (c[2] ? UiC("Accent") : UiC("Row")))
+            c[1].SetFont("c" (c[2] ? UiC("Deep") : UiC("SubText")))
+            c[1].Redraw()
+        }
+    }
+
+    ; porta a una voce del menu (per titolo italiano o per pannello speciale)
+    static GoNode(key) {
+        for id, n in this.Nodes
+            if ((!IsObject(n.content) && n.content == key) || n.title == this.Icon(key) Tr(key)) {
+                this.TV.Modify(id, "Select Vis")
+                return this.SelectNode(id, true)
+            }
     }
 
     ; tutte le variabili di un nodo (anche dei suoi sottomenu), solo quelle presenti nella CONFIG
@@ -4832,6 +5005,13 @@ class SettingsEditor {
         this.ShowPresetEditor(false)
         this.ShowMaintenance(false)
         this.ShowThemeEditor(false)
+        this.ShowHome(false)
+        if (node.content = "HOME") {
+            this.Intro.Text := Tr("Accendi e spegni le funzioni con un click e raggiungi subito le impostazioni più usate.")
+            this.ShowBossEditor(false)
+            this.ShowHome(true)
+            return
+        }
         if (node.content = "THEMES") {
             this.Intro.Text := Tr("I temi pronti restano sempre uguali. Scegli un tema e premi `"Personalizza questo tema`": "
                 . "viene creato un tuo tema con lo stesso nome più `"Custom`", modificabile in ogni dettaglio.")
@@ -6104,6 +6284,7 @@ class SettingsEditor {
         if !IsObject(this.Win)
             return
         sel := this.TV.GetSelection(), content := this.Nodes.Has(sel) ? this.Nodes[sel].content : "", cur := this.Cur
+        selTitle := this.Nodes.Has(sel) ? this.Nodes[sel].title : ""
         this.Win.GetPos(&wx, &wy)
         elemOpen := IsObject(this.ElemWin) && WinExist(this.ElemWin.Hwnd) && DllCall("IsWindowVisible", "Ptr", this.ElemWin.Hwnd)
         this.ElemHide(), this.ElemWin := ""
@@ -6112,14 +6293,21 @@ class SettingsEditor {
         this.Build(wx, wy)
         if elemOpen
             this.ElemShow()
+        found := false
         for id, n in this.Nodes {
             same := IsObject(content) ? (IsObject(n.content) && ObjPtr(n.content) = ObjPtr(content))
                                       : (!IsObject(n.content) && n.content == content)
-            if same {
+            if (same || (selTitle != "" && n.title == selTitle)) {
                 this.TV.Modify(id, "Select")
                 this.SelectNode(id, true)                 ; riempie subito l'elenco (senza aspettare l'evento)
+                found := true
                 break
             }
+        }
+        if !found {                                       ; voce sparita (cambio di modalità): la prima del menu
+            first := this.TV.GetChild(0)
+            this.TV.Modify(first, "Select")
+            this.SelectNode(first, true)
         }
         if (cur != "" && (row := this.FindRow(cur)))
             this.LV.Modify(row, "Select Focus Vis"), this.SelectRow(row)
@@ -14587,6 +14775,201 @@ ru=Поддержать через Ko-fi
 ko=Ko-fi로 후원
 zh=通过 Ko-fi 捐助
 ja=Ko-fi で寄付
+it=Home
+en=Home
+nap=Home
+bro=Home
+es=Inicio
+fr=Accueil
+de=Start
+pt=Início
+ru=Главная
+ko=홈
+zh=主页
+ja=ホーム
+it=Accendi e spegni le funzioni con un click e raggiungi subito le impostazioni più usate.
+en=Turn features on and off with one click and jump straight to the most used settings.
+nap=Appiccia e stuta 'e funzione cu nu click e arriva subbeto â mpustaziune cchiù usate.
+bro=Accendi e spegni le funzioni con un click e vai dritto ai settaggi più usati.
+es=Activa y desactiva las funciones con un clic y ve directo a los ajustes más usados.
+fr=Active et désactive les fonctions en un clic et va directement aux réglages les plus utilisés.
+de=Funktionen mit einem Klick ein- und ausschalten und direkt zu den meistgenutzten Einstellungen springen.
+pt=Ligue e desligue as funções com um clique e vá direto às configurações mais usadas.
+ru=Включайте и выключайте функции одним кликом и сразу переходите к самым нужным настройкам.
+ko=클릭 한 번으로 기능을 켜고 끄고, 자주 쓰는 설정으로 바로 이동하세요.
+zh=一键开关各项功能，直接跳转到最常用的设置。
+ja=ワンクリックで機能をオン/オフし、よく使う設定へすぐ移動できます。
+it=FUNZIONI
+en=FEATURES
+nap=FUNZIONE
+bro=FUNZIONI
+es=FUNCIONES
+fr=FONCTIONS
+de=FUNKTIONEN
+pt=FUNÇÕES
+ru=ФУНКЦИИ
+ko=기능
+zh=功能
+ja=機能
+it=clicca per accendere o spegnere
+en=click to turn on or off
+nap=clicca pe' appiccià o stutà
+bro=clicca per on/off
+es=haz clic para activar o desactivar
+fr=clique pour activer ou désactiver
+de=zum Ein- oder Ausschalten klicken
+pt=clique para ligar ou desligar
+ru=кликните, чтобы включить или выключить
+ko=클릭해서 켜기/끄기
+zh=点击开启或关闭
+ja=クリックでオン/オフ
+it=SCORCIATOIE
+en=SHORTCUTS
+nap=SCURCIATORE
+bro=SHORTCUT
+es=ATAJOS
+fr=RACCOURCIS
+de=SCHNELLZUGRIFF
+pt=ATALHOS
+ru=БЫСТРЫЙ ДОСТУП
+ko=바로 가기
+zh=快捷入口
+ja=ショートカット
+it=Preset risoluzione
+en=Resolution presets
+nap=Preset 'e risoluzione
+bro=Preset risoluzione
+es=Presets de resolución
+fr=Presets de résolution
+de=Auflösungs-Presets
+pt=Presets de resolução
+ru=Пресеты разрешения
+ko=해상도 프리셋
+zh=分辨率预设
+ja=解像度プリセット
+)" "`n"
+        s .= "
+(
+it=Guida online
+en=Online guide
+nap=Guida online
+bro=Guida online
+es=Guía en línea
+fr=Guide en ligne
+de=Online-Anleitung
+pt=Guia online
+ru=Онлайн-руководство
+ko=온라인 안내
+zh=在线指南
+ja=オンラインガイド
+it=Wingman è gratuito al 100%: nessuna funzione a pagamento o nascosta. Le donazioni sono del tutto facoltative.
+en=Wingman is 100% free: no paid or hidden features. Donations are entirely optional.
+nap=Wingman è gratis 'o 100%: nisciuna funzione a pagamento o annascosta. 'E donazione so' comme vuò tu.
+bro=Wingman è gratis al 100%: zero funzioni a pagamento o nascoste. Le donazioni sono solo se ti va.
+es=Wingman es 100% gratuito: sin funciones de pago ni ocultas. Las donaciones son totalmente opcionales.
+fr=Wingman est 100 % gratuit : aucune fonction payante ou cachée. Les dons sont entièrement facultatifs.
+de=Wingman ist zu 100 % kostenlos: keine kostenpflichtigen oder versteckten Funktionen. Spenden sind völlig freiwillig.
+pt=O Wingman é 100% gratuito: sem funções pagas ou ocultas. As doações são totalmente opcionais.
+ru=Wingman полностью бесплатен: никаких платных или скрытых функций. Пожертвования — исключительно по желанию.
+ko=Wingman은 100% 무료입니다. 유료 기능이나 숨겨진 기능이 없으며, 후원은 전적으로 선택입니다.
+zh=Wingman 100% 免费：没有付费或隐藏功能。捐助完全自愿。
+ja=Wingman は 100% 無料です。有料機能や隠し機能はありません。寄付は完全に任意です。
+it=Modalità Base: solo le opzioni principali. Passa ad Avanzata per personalizzare ogni dettaglio.
+en=Basic mode: only the main options. Switch to Advanced to customize every detail.
+nap=Modalità Base: sulo 'e opzione principale. Passa ad Avanzata pe' personalizzà ogni cosa.
+bro=Modalità Base: solo le opzioni principali. Passa ad Avanzata per customizzare ogni dettaglio.
+es=Modo Básico: solo las opciones principales. Cambia a Avanzado para personalizar cada detalle.
+fr=Mode Basique : seulement les options principales. Passe en Avancé pour personnaliser chaque détail.
+de=Basis-Modus: nur die wichtigsten Optionen. Wechsle zu Erweitert, um jedes Detail anzupassen.
+pt=Modo Básico: só as opções principais. Mude para Avançado para personalizar cada detalhe.
+ru=Базовый режим: только основные настройки. Переключитесь на Расширенный, чтобы настроить каждую деталь.
+ko=기본 모드: 주요 옵션만 표시합니다. 모든 부분을 꾸미려면 고급으로 바꾸세요.
+zh=基础模式：只显示主要选项。切换到高级模式可自定义每个细节。
+ja=基本モード：主なオプションのみ。細部までカスタマイズするには詳細に切り替えてください。
+it=Modalità Avanzata: tutte le opzioni di personalizzazione.
+en=Advanced mode: every customization option.
+nap=Modalità Avanzata: tutte 'e opzione 'e personalizzazione.
+bro=Modalità Avanzata: tutte le opzioni di customizzazione.
+es=Modo Avanzado: todas las opciones de personalización.
+fr=Mode Avancé : toutes les options de personnalisation.
+de=Erweiterter Modus: alle Anpassungsoptionen.
+pt=Modo Avançado: todas as opções de personalização.
+ru=Расширенный режим: все параметры настройки.
+ko=고급 모드: 모든 사용자 지정 옵션.
+zh=高级模式：全部自定义选项。
+ja=詳細モード：すべてのカスタマイズオプション。
+it=Modalità
+en=Mode
+nap=Modalità
+bro=Modalità
+es=Modo
+fr=Mode
+de=Modus
+pt=Modo
+ru=Режим
+ko=모드
+zh=模式
+ja=モード
+it=Base
+en=Basic
+nap=Base
+bro=Base
+es=Básico
+fr=Basique
+de=Basis
+pt=Básico
+ru=Базовый
+ko=기본
+zh=基础
+ja=基本
+it=Avanzata
+en=Advanced
+nap=Avanzata
+bro=Pro
+es=Avanzado
+fr=Avancé
+de=Erweitert
+pt=Avançado
+ru=Расширенный
+ko=고급
+zh=高级
+ja=詳細
+it=Altri {1} risultati nella modalità Avanzata.
+en={1} more results in Advanced mode.
+nap=Ate {1} risultate int'a modalità Avanzata.
+bro=Altri {1} risultati in modalità Pro.
+es={1} resultados más en el modo Avanzado.
+fr={1} autres résultats en mode Avancé.
+de={1} weitere Ergebnisse im erweiterten Modus.
+pt=Mais {1} resultados no modo Avançado.
+ru=Ещё результатов в расширенном режиме: {1}.
+ko=고급 모드에 결과 {1}개가 더 있습니다.
+zh=高级模式中还有 {1} 个结果。
+ja=詳細モードにあと {1} 件の結果があります。
+it=Chiudi Wingman quando chiudi AION 2
+en=Close Wingman when AION 2 closes
+nap=Stuta Wingman quanno stute AION 2
+bro=Chiudi Wingman quando chiudi AION 2
+es=Cerrar Wingman al cerrar AION 2
+fr=Fermer Wingman quand AION 2 se ferme
+de=Wingman beim Schließen von AION 2 beenden
+pt=Fechar o Wingman ao fechar o AION 2
+ru=Закрывать Wingman вместе с AION 2
+ko=AION 2를 닫으면 Wingman도 종료
+zh=关闭 AION 2 时同时关闭 Wingman
+ja=AION 2 を閉じたら Wingman も終了
+@=AutoExitWithGame
+en=true = Wingman closes by itself when you close AION 2\n(only if the game was open; with the Settings open it does not close)
+nap=true = Wingman se stuta 'a sulo quanno stute AION 2\n(sulo si 'o juoco era apierto; cu 'e Mpustaziune aperte nun se stuta)
+bro=true = Wingman si chiude da solo quando chiudi AION 2\n(solo se il gioco era aperto; con i Settaggi aperti non si chiude)
+es=true = Wingman se cierra solo cuando cierras AION 2\n(solo si el juego estaba abierto; con los Ajustes abiertos no se cierra)
+fr=true = Wingman se ferme tout seul quand tu fermes AION 2\n(seulement si le jeu était ouvert ; avec les Paramètres ouverts il ne se ferme pas)
+de=true = Wingman beendet sich selbst, wenn du AION 2 schließt\n(nur wenn das Spiel geöffnet war; bei offenen Einstellungen nicht)
+pt=true = o Wingman fecha sozinho quando você fecha o AION 2\n(só se o jogo estava aberto; com as Configurações abertas ele não fecha)
+ru=true = Wingman закрывается сам, когда вы закрываете AION 2\n(только если игра была открыта; при открытых Настройках не закрывается)
+ko=true = AION 2를 닫으면 Wingman도 스스로 종료\n(게임이 열려 있었던 경우에만; 설정 창이 열려 있으면 종료하지 않음)
+zh=true = 关闭 AION 2 时 Wingman 自动退出\n（仅当游戏曾经打开；设置窗口打开时不会退出）
+ja=true = AION 2 を閉じると Wingman も自動で終了\n（ゲームが開いていた場合のみ。設定が開いている間は終了しません）
 )" "`n"
         return s
     }

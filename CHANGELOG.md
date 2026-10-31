@@ -2,6 +2,23 @@
 
 Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descrizione della release
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
+A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal del pacchetto.
+
+## v1.04
+
+### 🇬🇧 English
+- New **Home page** in Settings: turn HUD, Hidden Cube and Field Boss on and off with one click, plus shortcuts to resolution presets, theme, keys, updates, online guide and maintenance.
+- New **Basic / Advanced** switch at the top of Settings: Basic shows only the essential options (no technical names), Advanced shows every customization option. Search tells you when more results are in Advanced mode.
+- Wingman now **closes by itself when you close AION 2** (on by default, can be turned off in Settings > General).
+- Clearer statement everywhere: Wingman is 100% free, with no paid or hidden features; donations are entirely optional.
+- Every release now links its VirusTotal scan in the release notes.
+
+### 🇮🇹 Italiano
+- Nuova pagina **Home** nelle Impostazioni: accendi e spegni HUD, Hidden Cube e Field Boss con un click, con scorciatoie a preset di risoluzione, tema, tasti, aggiornamenti, guida online e manutenzione.
+- Nuovo interruttore **Base / Avanzata** in cima alle Impostazioni: Base mostra solo le opzioni essenziali (senza nomi tecnici), Avanzata tutte le opzioni di personalizzazione. La ricerca ti avvisa quando ci sono altri risultati in modalità Avanzata.
+- Wingman ora **si chiude da solo quando chiudi AION 2** (attivo di default, disattivabile in Impostazioni > Generale).
+- Ovunque è indicato chiaramente che Wingman è gratuito al 100%, senza funzioni a pagamento o nascoste; le donazioni sono del tutto facoltative.
+- Ogni release ora collega la sua scansione VirusTotal nelle note.
 
 ## v1.03
 
@@ -20,6 +37,8 @@ Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descriz
 - Aggiornamenti: nuova opzione "Controlla a ogni avvio" (attiva di default) in Impostazioni > Aggiornamenti.
 - Countdown di GTA VI (tema vi): più piccolo e attaccato al bordo superiore dello schermo.
 - Nuovi pulsanti per donare con PayPal e Ko-fi (barra in basso delle Impostazioni, Manutenzione e menu dell'icona): del tutto facoltativi.
+
+🧪 **VirusTotal**: [scan report](https://www.virustotal.com/gui/file/701897983f070662e38a667cef7255fc11575880284ac80c0df40f06fb3ccdfc/detection)
 
 ## v1.02
 
