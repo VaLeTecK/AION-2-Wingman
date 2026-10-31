@@ -1,7 +1,8 @@
 # Quando pubblichi una release dal sito (Releases > Draft a new release, tag "vX.Y"):
-# controlla che il tag sia uguale ad AppVersion nello script, crea lo zip da distribuire
-# e lo allega alla release. Se la descrizione della release è vuota, usa la sezione
-# "## vX.Y" di CHANGELOG.md.
+# controlla che il tag sia uguale ad AppVersion nello script, crea lo zip da distribuire,
+# lo allega alla release, scrive le note dalla sezione "## vX.Y" di CHANGELOG.md (se la
+# descrizione è vuota) e, se c'è il secret VT_API_KEY, fa scansionare lo zip e lo script da
+# VirusTotal aggiungendo i link dei risultati in fondo alle note della release.
 name: Release
 
 on:
@@ -17,6 +18,7 @@ jobs:
     env:
       TAG: ${{ github.event.release.tag_name }}
       GH_TOKEN: ${{ github.token }}
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,9 +39,7 @@ jobs:
           cp "AION 2 Wingman.ahk" "OCR.ahk" "Setup AION 2 Wingman.bat" "dist/AION 2 Wingman/"
           cp -r README INFOGRAPHICS "dist/AION 2 Wingman/"
           cd dist && zip -qr ../AION-2-Wingman.zip "AION 2 Wingman"
-
-      - name: Allega lo zip alla release
-        run: gh release upload "$TAG" AION-2-Wingman.zip --clobber
+          cd .. && cp "AION 2 Wingman.ahk" AION-2-Wingman.ahk
 
       - name: Note dal CHANGELOG (solo se la release non ha descrizione)
         if: ${{ github.event.release.body == '' }}
@@ -50,3 +50,17 @@ jobs:
             on {print}
           ' CHANGELOG.md > notes.md
           if [ -s notes.md ]; then gh release edit "$TAG" --notes-file notes.md; fi
+
+      - name: Allega lo zip alla release
+        run: gh release upload "$TAG" AION-2-Wingman.zip --clobber
+
+      - name: Scansione VirusTotal (link in fondo alle note)
+        if: ${{ env.VT_API_KEY != '' }}
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ env.VT_API_KEY }}
+          github_token: ${{ github.token }}
+          update_release_body: true
+          files: |
+            AION-2-Wingman.zip
+            AION-2-Wingman.ahk
