@@ -799,7 +799,7 @@ AION 2 Wingman è gratuito e lo resterà. Se ti fa risparmiare tempo puoi offrir
 
 [![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal&logoColor=white)](https://www.paypal.com/paypalme/valeteck) [![Support me on Ko-fi](https://img.shields.io/badge/Support-Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/VaLeTecK)
 
-<sub>Also in the app: Settings > 💖 Donate · Anche nell'app: Impostazioni > 💖 Dona</sub>
+<sub>Also in the app: PayPal / Ko-fi buttons at the bottom of Settings · Anche nell'app: pulsanti PayPal / Ko-fi in fondo alle Impostazioni</sub>
 
 ---
 

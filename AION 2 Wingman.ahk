@@ -1,5 +1,8 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
+; OCR.ahk è facoltativo (#Include *i in fondo): se manca, niente avviso "variabile mai assegnata" su OCR
+; all'avvio. Il tool Field Boss lo rileva da solo (IsSet(OCR)) e resta spento, tutto il resto funziona.
+#Warn VarUnset, Off
 
 ; ##############################################################################
 ; #  AION 2 WINGMAN 1.0  -  HUD overlay + Tools                 by VaLeTecK     #
@@ -1096,8 +1099,9 @@ if (SettingsKey != "")
     Hotkey(SettingsKey, (*) => SettingsEditor.Open())
 A_TrayMenu.Insert("1&", Tr("Impostazioni AION 2 Wingman"), (*) => SettingsEditor.Open())
 A_TrayMenu.Insert("2&", Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow())
-A_TrayMenu.Insert("3&", "💖  " Tr("Dona"), Donate)
-A_TrayMenu.Insert("4&")
+A_TrayMenu.Insert("3&", Tr("Dona con PayPal"), DonatePayPal)
+A_TrayMenu.Insert("4&", Tr("Dona con Ko-fi"), DonateKofi)
+A_TrayMenu.Insert("5&")
 A_TrayMenu.Default := Tr("Impostazioni AION 2 Wingman")
 
 ; Accende/spegne un tool mentre giochi e lo conferma con un avviso
@@ -4570,7 +4574,8 @@ class SettingsEditor {
         for it in [["🧙  " Tr("Riesegui l'installazione guidata"), (*) => this.RunSetup()]
                  , ["🔄  " Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow()]
                  , ["🌐  " Tr("Pagina del progetto su GitHub"), (*) => Updater.OpenPage()]
-                 , ["💖  " Tr("Supporta Wingman con una donazione"), (*) => Donate()]
+                 , ["🅿️  " Tr("Dona con PayPal"), DonatePayPal]
+                 , ["☕  " Tr("Dona con Ko-fi"), DonateKofi]
                  , ["📂  " Tr("Apri la cartella delle impostazioni personali"), (*) => Run('explorer.exe "' UserData.Dir '"')]
                  , ["🗂️  " Tr("Apri la cartella di Wingman"), (*) => Run('explorer.exe "' A_ScriptDir '"')]
                  , ["📝  " Tr("Apri il file"), (*) => Run('notepad.exe "' A_ScriptFullPath '"')]] {
@@ -4590,12 +4595,14 @@ class SettingsEditor {
         g.AddText("x0 y" (H - 56) " w" W " h1 Background" UiC("Line"))
         this.ChgBtn := g.AddButton("x12 y" (H - 46) " w150 h34", Tr("Vedi modifiche"))
         this.ChgBtn.OnEvent("Click", (*) => this.ShowChanges())
-        this.Status := g.AddText("x172 y" (H - 42) " w400 h26 0x200", "")
-        ; donazione: piccolo e discreto, accanto ai pulsanti principali
-        g.SetFont("s9 bold c" UiC("Accent"), "Segoe UI")
-        this.DonateBtn := g.AddText("x" (W - 600) " y" (H - 42) " w110 h26 Center 0x200 Background" UiC("Bg"), "💖  " Tr("Dona"))
-        this.DonateBtn.OnEvent("Click", (*) => Donate())
-        RoundCtl(this.DonateBtn, 10)
+        this.Status := g.AddText("x172 y" (H - 42) " w300 h26 0x200", "")
+        ; donazioni: due pulsantini discreti accanto ai pulsanti principali
+        g.SetFont("s9 bold cFFFFFF", "Segoe UI")
+        this.PayPalBtn := g.AddText("x" (W - 698) " y" (H - 42) " w100 h26 Center 0x200 Background003087", "🅿️  PayPal")
+        this.PayPalBtn.OnEvent("Click", DonatePayPal)
+        this.KofiBtn := g.AddText("x" (W - 590) " y" (H - 42) " w100 h26 Center 0x200 BackgroundFF5E5B", "☕  Ko-fi")
+        this.KofiBtn.OnEvent("Click", DonateKofi)
+        RoundCtl(this.PayPalBtn, 10), RoundCtl(this.KofiBtn, 10)
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
         b := g.AddButton("x" (W - 482) " y" (H - 46) " w170 h34 Default", Tr("Salva e riavvia"))
         b.OnEvent("Click", (*) => this.Save())
@@ -4614,7 +4621,7 @@ class SettingsEditor {
         this.TV.Modify(this.TV.GetChild(0), "Select")
         this.SelectNode(this.TV.GetChild(0), true)
         this.UpdateStatus()
-        this.HoverInit([this.QuitBtn, this.PrevElemBtn, this.PrevOn, this.PrevOff, this.DonateBtn])
+        this.HoverInit([this.QuitBtn, this.PrevElemBtn, this.PrevOn, this.PrevOff, this.PayPalBtn, this.KofiBtn])
     }
 
     ; ---------------- Pulsanti animati ----------------
@@ -4624,7 +4631,7 @@ class SettingsEditor {
 
     static HoverInit(extra) {
         this.HovMap := Map(), this.HovCur := 0, this.HovK := 0, this.Glow := []
-        this.HovRound := Map(this.QuitBtn.Hwnd, 10, this.DonateBtn.Hwnd, 10)
+        this.HovRound := Map(this.QuitBtn.Hwnd, 10, this.PayPalBtn.Hwnd, 10, this.KofiBtn.Hwnd, 10)
         for hwnd, c in this.Win
             if (c.Type = "Button")
                 this.HovMap[c.Hwnd] := c
@@ -14556,6 +14563,30 @@ ru=true = проверяет сразу при каждом запуске ск�
 ko=true = 스크립트가 시작될 때마다 바로 확인 (주기적 확인과 별도로)
 zh=true = 每次脚本启动时立即检查（另外还有定期检查）
 ja=true = スクリプト起動のたびにすぐ確認（定期確認とは別に）
+it=Dona con PayPal
+en=Donate with PayPal
+nap=Dona cu PayPal
+bro=Dona con PayPal
+es=Donar con PayPal
+fr=Faire un don avec PayPal
+de=Mit PayPal spenden
+pt=Doar com PayPal
+ru=Поддержать через PayPal
+ko=PayPal로 후원
+zh=通过 PayPal 捐助
+ja=PayPal で寄付
+it=Dona con Ko-fi
+en=Donate with Ko-fi
+nap=Dona cu Ko-fi
+bro=Dona con Ko-fi
+es=Donar con Ko-fi
+fr=Faire un don avec Ko-fi
+de=Mit Ko-fi spenden
+pt=Doar com Ko-fi
+ru=Поддержать через Ko-fi
+ko=Ko-fi로 후원
+zh=通过 Ko-fi 捐助
+ja=Ko-fi で寄付
 )" "`n"
         return s
     }
@@ -14732,16 +14763,17 @@ class UserData {
     }
 }
 
-; Donazioni (facoltative): un piccolo menu con PayPal e Ko-fi, dove si trova il mouse
-Donate(*) {
-    m := Menu()
-    m.Add("PayPal", (*) => DonateOpen("https://www.paypal.com/paypalme/valeteck"))
-    m.Add("Ko-fi", (*) => DonateOpen("https://ko-fi.com/VaLeTecK"))
-    m.Show()
+; Apre un indirizzo web nel browser predefinito. Wingman gira come amministratore e così un
+; Run diretto dell'indirizzo a volte non apre niente: lo apre Esplora risorse, come un doppio click.
+OpenUrl(url) {
+    try Run('explorer.exe "' url '"')
+    catch
+        try Run(url)
 }
-DonateOpen(url) {
-    try Run(url)
-}
+
+; Donazioni (facoltative)
+DonatePayPal(*) => OpenUrl("https://www.paypal.com/paypalme/valeteck")
+DonateKofi(*) => OpenUrl("https://ko-fi.com/VaLeTecK")
 
 ; ==============================================================================
 ; === AGGIORNAMENTI DA GITHUB (release) ===
@@ -14760,7 +14792,7 @@ class Updater {
     }
     static OpenPage() {
         if RegExMatch(this.Repo(), "^[\w.-]+/[\w.-]+$")
-            Run("https://github.com/" this.Repo() "/releases")
+            OpenUrl("https://github.com/" this.Repo() "/releases")
         else
             MsgBox(Tr("Repository GitHub non impostato (Impostazioni > Aggiornamenti)."), "AION 2 Wingman", "Icon!")
     }
@@ -14854,7 +14886,7 @@ class Updater {
     static Install(info) {
         if (info.zip = "") {
             MsgBox(Tr("Questa release non contiene il pacchetto .zip: si apre la pagina per scaricarlo a mano."), "AION 2 Wingman", "Icon!")
-            return Run(info.page)
+            return OpenUrl(info.page)
         }
         q := (p) => "'" StrReplace(p, "'", "''") "'"
         tmp := A_Temp "\AION2Wingman_update", zip := tmp "\update.zip", out := tmp "\files"
