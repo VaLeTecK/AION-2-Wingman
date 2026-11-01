@@ -1,8 +1,3 @@
-# Quando pubblichi una release dal sito (Releases > Draft a new release, tag "vX.Y"):
-# controlla che il tag sia uguale ad AppVersion nello script, crea lo zip da distribuire,
-# lo allega alla release, scrive le note dalla sezione "## vX.Y" di CHANGELOG.md (se la
-# descrizione è vuota) e, se c'è il secret VT_API_KEY, fa scansionare lo zip e lo script da
-# VirusTotal aggiungendo i link dei risultati in fondo alle note della release.
 name: Release
 
 on:
@@ -42,13 +37,34 @@ jobs:
           cd .. && cp "AION 2 Wingman.ahk" AION-2-Wingman.ahk
 
       - name: Note dal CHANGELOG (solo se la release non ha descrizione)
+        # Note brevi: per ogni novità solo emoji + titolo, poi il link al CHANGELOG completo.
+        # Le versioni fino alla 1.04 vanno in errore (PCRE -21) se le note sono troppo lunghe:
+        # tenendole corte anche chi ha una versione vecchia riceve l'aggiornamento automatico.
         if: ${{ github.event.release.body == '' }}
         run: |
-          awk -v tag="## v${TAG#v}" '
-            $0 == tag {on=1; next}
-            on && /^## / {exit}
-            on {print}
-          ' CHANGELOG.md > notes.md
+          python3 - <<'PY'
+          import os, re
+          tag = os.environ["TAG"]; repo = os.environ["GITHUB_REPOSITORY"]
+          out, on = [], False
+          for line in open("CHANGELOG.md", encoding="utf-8").read().split("\n"):
+              if line.strip() == "## v" + tag.lstrip("v"):
+                  on = True; continue
+              if on and line.startswith("## "):
+                  break
+              if not on:
+                  continue
+              if line.startswith("- "):
+                  line = re.split(r"\s+[–-]\s+", line, maxsplit=1)[0].replace("**", "")
+              if line.strip() or (out and out[-1].strip()):
+                  out.append(line)
+          while out and not out[-1].strip():
+              out.pop()
+          out += ["", f"📄 Full changelog / Changelog completo: https://github.com/{repo}/blob/{tag}/CHANGELOG.md"]
+          text = "\n".join(out).strip()
+          if len(text) > 1600:                      # limite di sicurezza per le versioni vecchie
+              text = text[:1500].rsplit("\n", 1)[0] + f"\n…\n\n📄 https://github.com/{repo}/blob/{tag}/CHANGELOG.md"
+          open("notes.md", "w", encoding="utf-8").write(text + "\n")
+          PY
           if [ -s notes.md ]; then gh release edit "$TAG" --notes-file notes.md; fi
 
       - name: Allega lo zip alla release
