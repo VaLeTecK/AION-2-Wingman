@@ -1,6 +1,6 @@
 ﻿=====================================================================
   AION 2 WINGMAN 1.0                                        by VaLeTecK
-  HUD-Overlay + Hilfswerkzeuge für AION 2
+  QoL-Tool für AION 2: schneller Teleport-Assistent + HUD-Overlay
 =====================================================================
 
 WAS IST DAS
@@ -9,10 +9,12 @@ WAS IST DAS
     die durch die Signale deiner Makros (F9 / F10) aufleuchten.
   - Hidden Cube: Öffnet sich das Hidden-Cube-Fenster, wird die Maus auf
     „Open with Key" gesetzt und dort gehalten.
-  - Field Boss: Bei offener Karte erscheint ein Panel mit allen Bossen
-    (A-Z, Rangfarben, aktiv / inaktiv). Wähle einen Boss und das Skript
-    führt dich Schritt für Schritt zum nächsten Teleport und zeigt dir
-    danach die Flugrichtung.
+  - Schneller Teleport-Assistent (Field Boss): Bei offener Karte zeigt
+    ein Panel alle Bosse (A-Z, Ränge, aktiv / inaktiv).
+    ULTRA-FAST MODE (Standard): Boss anklicken, Wingman findet seinen
+    Teleport selbst in der Kibelisk-Liste, du klickst ihn an und
+    drückst zweimal F. Danach zeigt ein Pfeil die Flugrichtung.
+    NORMAL MODE: vollständige geführte Route zum nächsten Teleport.
   - Vollständiges Einstellungsfenster, Auflösungs-Presets,
     Leistungsprofile, 12 Oberflächensprachen und 22 Designs (8 Klassen, 7 Feiertage)
     und eigene Designs.
