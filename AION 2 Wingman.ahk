@@ -5310,6 +5310,13 @@ class SettingsEditor {
         this.EChk := g.AddCheckbox("x" EX " y462 w" EW " h24", Tr("Attivo"))
         this.EChk.OnEvent("Click", (*) => this.Changed())
         this.EEdit := g.AddEdit("x" EX " y462 w" EW " h26 Background" UiC("WinField"))
+        ; tasti: riquadro che, cliccato, si mette in ascolto e registra la nuova combinazione
+        g.SetFont("s11 bold c" UiC("WinText"), "Segoe UI")
+        this.ECap := g.AddText("x" EX " y458 w" EW " h34 Center 0x200 Border Background" UiC("WinField"), "")
+        this.ECap.OnEvent("Click", (*) => this.CaptureKey())
+        g.SetFont("s8 norm c" UiC("WinSub"), "Segoe UI")
+        this.ECapHelp := g.AddText("x" EX " y496 w" EW " h30", Tr("Clicca il riquadro e premi la nuova combinazione.  Esc = annulla  ·  Canc = nessun tasto"))
+        g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
         ; numeri: cursore + valore + pulsanti, così il campo non può mai restare vuoto
         this.ESlider := g.AddSlider("x" (EX - 4) " y460 w270 h30 NoTicks")
         this.ESlider.OnEvent("Change", (*) => this.NumChanged())
@@ -5876,7 +5883,7 @@ class SettingsEditor {
     ; ---------------- Editor del valore ----------------
     static EditorShow(name) {
         this.Loading := true
-        for c in [this.EChk, this.EEdit, this.EDdl, this.EPick, this.EReset, this.ExSw]
+        for c in [this.EChk, this.EEdit, this.EDdl, this.EPick, this.EReset, this.ExSw, this.ECap, this.ECapHelp]
             c.Visible := false
         for c in this.EMulti
             c.Visible := false
@@ -5949,6 +5956,10 @@ class SettingsEditor {
                         c.Visible := true
                 } else
                     this.EEdit.Value := this.Unq(v), this.EEdit.Visible := true
+            case "key":                                   ; riquadro "in ascolto" al posto del campo di testo
+                this.EEdit.Value := this.Unq(v)
+                this.ECap.Visible := true, this.ECapHelp.Visible := true
+                this.PaintCap()
             default:
                 this.EEdit.Value := this.Unq(v), this.EEdit.Visible := true
                 if (it.type = "color")
@@ -5957,6 +5968,40 @@ class SettingsEditor {
         this.EReset.Visible := true
         this.Loading := false
         this.UpdateExample()
+    }
+
+    ; Rimappatura al volo: si mette in ascolto e prende la prossima combinazione premuta
+    ; (modificatori Ctrl/Shift/Alt/Win + un tasto). Esc annulla, Canc/Backspace = nessun tasto.
+    static CaptureKey() {
+        if (this.Cur = "" || !this.Cfg.Has(this.Cur) || this.Cfg[this.Cur].type != "key")
+            return
+        this.ECap.Opt("+Background" UiC("Accent")), this.ECap.SetFont("c" UiOn("Deep", "Accent"))
+        this.ECap.Text := "🎧  " Tr("In ascolto... premi i tasti")
+        this.ECap.Redraw()
+        ih := InputHook("L0 T10")
+        ih.KeyOpt("{All}", "ES")                                       ; il tasto non arriva alla finestra
+        ih.KeyOpt("{LCtrl}{RCtrl}{LShift}{RShift}{LAlt}{RAlt}{LWin}{RWin}", "-E -S")
+        ih.Start(), ih.Wait()
+        if (ih.EndReason = "EndKey" && ih.EndKey != "Escape") {
+            key := ih.EndKey, mods := ih.EndMods
+            if (key = "Delete" || key = "Backspace")
+                hk := ""
+            else
+                hk := (InStr(mods, "^") ? "^" : "") (InStr(mods, "+") ? "+" : "") (InStr(mods, "!") ? "!" : "")
+                    . (InStr(mods, "#") ? "#" : "") (StrLen(key) = 1 ? StrLower(key) : key)
+            this.EEdit.Value := hk
+            this.Changed()
+        }
+        this.PaintCap()
+    }
+
+    static PaintCap() {
+        if (this.Cur = "" || !this.Cfg.Has(this.Cur))
+            return
+        v := this.Unq(this.Val(this.Cur))
+        this.ECap.Opt("+Background" UiC("WinField")), this.ECap.SetFont("c" UiOn("WinText", "WinField"))
+        this.ECap.Text := "⌨️  " (v = "" ? Tr("(nessun tasto)") : FieldBossTool.KeyLabel(v))
+        this.ECap.Redraw()
     }
 
     ; valore dal controllo, nel formato della CONFIG
@@ -16449,6 +16494,30 @@ ru=true = изображения боссов (папка BOSSES рядом со
 ko=true = 보스 이미지 (스크립트 옆의 BOSSES 폴더): Teleport 메뉴에서 보스 위에 마우스를 올리면\n옆에 미리보기, 그다음 화면 안내와 비행 화살표에\n선택한 보스의 초상화
 zh=true = 首领图片（脚本旁的 BOSSES 文件夹）：鼠标经过 Teleport 菜单中的首领时在旁边预览，\n之后在屏幕提示和飞行箭头中\n显示所选首领的头像
 ja=true = ボスの画像（スクリプトと同じ場所の BOSSES フォルダー）：Teleport メニューでボスに\nマウスを乗せると横にプレビュー、その後は画面の案内と飛行矢印に\n選んだボスの肖像を表示
+it=Clicca il riquadro e premi la nuova combinazione.  Esc = annulla  ·  Canc = nessun tasto
+en=Click the box and press the new combination.  Esc = cancel  ·  Del = no key
+nap=Clicca 'o riquadro e prieme 'a nova combinazione.  Esc = annulla  ·  Canc = nisciuno tasto
+bro=Clicca il riquadro e premi la nuova combo.  Esc = annulla  ·  Canc = nessun tasto
+es=Haz clic en el recuadro y pulsa la nueva combinación.  Esc = cancelar  ·  Supr = sin tecla
+fr=Clique le cadre et appuie sur la nouvelle combinaison.  Échap = annuler  ·  Suppr = aucune touche
+de=Klicke auf das Feld und drücke die neue Kombination.  Esc = abbrechen  ·  Entf = keine Taste
+pt=Clique na caixa e pressione a nova combinação.  Esc = cancelar  ·  Del = nenhuma tecla
+ru=Нажмите на поле и затем новое сочетание клавиш.  Esc = отмена  ·  Del = без клавиши
+ko=칸을 클릭하고 새 키 조합을 누르세요.  Esc = 취소  ·  Del = 키 없음
+zh=点击此框后按下新的组合键。  Esc = 取消  ·  Del = 不设按键
+ja=枠をクリックして新しい組み合わせを押してください。  Esc = キャンセル  ·  Del = キーなし
+it=In ascolto... premi i tasti
+en=Listening... press the keys
+nap=Sto 'n ascolto... prieme 'e taste
+bro=In ascolto... premi i tasti
+es=Escuchando... pulsa las teclas
+fr=À l'écoute... appuie sur les touches
+de=Warte auf Eingabe... drücke die Tasten
+pt=Ouvindo... pressione as teclas
+ru=Ожидание... нажмите клавиши
+ko=입력 대기 중... 키를 누르세요
+zh=正在监听……请按下按键
+ja=入力待ち…キーを押してください
 )" "`n"
         return s
     }
