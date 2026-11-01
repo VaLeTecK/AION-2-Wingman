@@ -1,12 +1,12 @@
 name: Release
-
+ 
 on:
   release:
     types: [published]
-
+ 
 permissions:
   contents: write
-
+ 
 jobs:
   package:
     runs-on: ubuntu-latest
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.release.tag_name }}
-
+ 
       - name: Tag e versione dello script devono coincidere
         run: |
           VER=$(grep -oP '^global AppVersion := "\K[^"]+' "AION 2 Wingman.ahk")
@@ -27,7 +27,7 @@ jobs:
             echo "::error::Il tag $TAG non corrisponde ad AppVersion \"$VER\" nello script. Correggi AppVersion (o il tag) e ripubblica."
             exit 1
           fi
-
+ 
       - name: Crea il pacchetto zip
         run: |
           mkdir -p "dist/AION 2 Wingman"
@@ -35,7 +35,7 @@ jobs:
           cp -r README INFOGRAPHICS BOSSES "dist/AION 2 Wingman/"
           cd dist && zip -qr ../AION-2-Wingman.zip "AION 2 Wingman"
           cd .. && cp "AION 2 Wingman.ahk" AION-2-Wingman.ahk
-
+ 
       - name: Note dal CHANGELOG (solo se la release non ha descrizione)
         # Note brevi: per ogni novità solo emoji + titolo, poi il link al CHANGELOG completo.
         # Le versioni fino alla 1.04 vanno in errore (PCRE -21) se le note sono troppo lunghe:
@@ -83,10 +83,10 @@ jobs:
           open("notes.md", "w", encoding="utf-8").write(text + "\n")
           PY
           if [ -s notes.md ]; then gh release edit "$TAG" --notes-file notes.md; fi
-
+ 
       - name: Allega lo zip alla release
         run: gh release upload "$TAG" AION-2-Wingman.zip --clobber
-
+ 
       - name: Scansione VirusTotal (link in fondo alle note)
         if: ${{ env.VT_API_KEY != '' }}
         uses: crazy-max/ghaction-virustotal@v4
