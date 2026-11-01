@@ -7,32 +7,32 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 ## v1.05
 
 ### 🇬🇧 English
-- 🆕 **Fast Teleport Assistant (ULTRA-FAST MODE)** – Quality of life first: from the map to any Field Boss in 3 moves. Click the boss in the panel, click the Teleport (Wingman has already found it in the Kibelisk list and put the cursor on it), press F twice. It is now the default mode; NORMAL MODE, the full guided route, can be chosen in Settings > Field Boss > Search and Teleport.
-- ⚡ **Automatic Teleport search** – Wingman scrolls the Kibelisk list by itself until it finds the boss's Teleport, 36 scrolls per step by default (adjustable in the same menu).
-- 🧭 **Flight direction ready after the Travel** – The direction is preset for 20 Altgard bosses; for the others it is calculated from the boss icon (red or grey) nearest to the Teleport. You can choose it per boss, and the choice applies in both modes.
-- 👑 **Boss list with Teleport and Direction** – Two new fields for every boss in Settings > Field Boss > Boss list, with the reference Teleports of all Altgard bosses already filled in.
-- 🏠 **Mode shown in the Home page** – The Field Boss card and the info line show whether ULTRA-FAST or NORMAL MODE is in use.
-- 🎨 **More modern Settings** – Taller lists without grid lines, alternating rows, values in the theme color, full-row menu on the left and column headers drawn in the theme colors. With dark themes, scrollbars, buttons, drop-down menus and title bar are dark too.
-- ✨ **Splash screen tied to your theme** – Every theme now has its own animated splash: a glow in the accent color, the theme's emoji next to "by VaLeTecK", the theme name next to the version and themed effects (snow for natale, embers for halloween, hearts, leaves, confetti, fireworks, neon lines, arcane rings, light rays…). Your own themes take the style of the theme they come from. The animation is now one smooth movement (no pause between zoom and fade), with new defaults: size 1.04, time on screen 0 s.
-- 👁️ **Readable with every theme** – Values, status and messages automatically get enough contrast (e.g. the gold of the "principale" theme on white).
-- 💾 **Settings kept on every update** – Wingman remembers the values you chose yourself (in Settings, in the Setup or by editing the CONFIG) and carries only those over; everything else gets the new defaults. Fixes theme and settings going back to default, especially after using the Setup.
-- ⚙️ **Smarter Setup** – New question to choose the Teleport assistant (ULTRA-FAST or NORMAL); every question now suggests what you already chose, including a theme of your own, and the answers are saved as your choices.
-- 📖 **Guides updated** – README and quick-guide infographics in all 10 languages now cover the Fast Teleport Assistant.
-- 🐞 **Update check fixed** – Long release notes could open a "PCRE execution error -21" window; the background check now never shows errors and simply retries later.
+- 🆕 **Fast Teleport Assistant (ULTRA-FAST MODE)** – Now the default mode: click the boss in the panel, click the Teleport that Wingman has already found in the Kibelisk list, press F twice. NORMAL MODE (full guided route) can still be chosen in Settings > Field Boss > Search and Teleport.
+- ⚡ **Automatic Teleport search** – Wingman scrolls the Kibelisk list by itself until it finds the boss's Teleport: 36 scrolls per step by default, adjustable in the same menu.
+- 🧭 **Flight direction after the Travel** – Preset for 20 Altgard bosses; for the others it is taken from the boss icon (red or grey) nearest to the Teleport. You can set it per boss, and it applies in both modes.
+- 👑 **Boss list with Teleport and Direction** – Two new fields for every boss in Settings > Field Boss > Boss list, with all Altgard reference Teleports already filled in.
+- 🏠 **Mode shown in the Home** – The Field Boss card and the info line show whether ULTRA-FAST or NORMAL MODE is in use.
+- 🎨 **More modern Settings** – Taller lists without grid lines, alternating rows, values in the theme color, full-row menu and themed column headers; with dark themes, scrollbars, buttons, menus and title bar are dark too.
+- ✨ **Splash tied to your theme** – Accent-color glow, theme emoji, theme name and animated effects for every theme (snow, embers, hearts, confetti, fireworks, neon…); your own themes use the style of the theme they come from. One smooth animation, new defaults: size 1.04, 0 s on screen.
+- 👁️ **Readable with every theme** – Values, status and messages automatically get enough contrast (e.g. the gold of "principale" on white).
+- 💾 **Settings kept on every update** – Wingman carries over only the values you chose (Settings, Setup or CONFIG), everything else gets the new defaults. Fixes theme and settings going back to default after an update.
+- ⚙️ **Smarter Setup** – New question for the Teleport mode; every question suggests what you already chose (your own theme too) and saves the answers as your choices.
+- 📖 **Guides updated** – README and quick-guide infographics in 10 languages now cover the Fast Teleport Assistant.
+- 🐞 **Update check fixed** – Long release notes could open a "PCRE execution error -21" window; the background check now never shows errors and retries later.
 
 ### 🇮🇹 Italiano
-- 🆕 **Assistente Teleport veloce (ULTRA-FAST MODE)** – Prima di tutto la qualità della vita: dalla mappa a qualsiasi Field Boss in 3 mosse. Clicchi il boss nel pannello, clicchi il Teleport (Wingman l'ha già trovato nella lista Kibelisk e ci ha portato il cursore), premi F due volte. Ora è la modalità predefinita; la NORMAL MODE, il percorso guidato completo, si sceglie in Impostazioni > Field Boss > Ricerca e Teleport.
-- ⚡ **Ricerca automatica del Teleport** – Wingman scorre da solo la lista Kibelisk finché non trova il Teleport del boss, 36 scrollate per volta di default (regolabili nello stesso menu).
-- 🧭 **Direzione di volo pronta dopo il Travel** – La direzione è preimpostata per 20 boss di Altgard; per gli altri si calcola dall'icona del boss (rossa o grigia) più vicina al Teleport. Puoi sceglierla per ogni boss, e la scelta vale in entrambe le modalità.
-- 👑 **Elenco boss con Teleport e Direzione** – Due nuovi campi per ogni boss in Impostazioni > Field Boss > Elenco boss, con i Teleport di riferimento di tutti i boss di Altgard già inseriti.
+- 🆕 **Assistente Teleport veloce (ULTRA-FAST MODE)** – Ora è la modalità predefinita: click sul boss nel pannello, click sul Teleport che Wingman ha già trovato nella lista Kibelisk, F due volte. La NORMAL MODE (percorso guidato completo) si può ancora scegliere in Impostazioni > Field Boss > Ricerca e Teleport.
+- ⚡ **Ricerca automatica del Teleport** – Wingman scorre da solo la lista Kibelisk finché trova il Teleport del boss: 36 scrollate per volta di default, regolabili nello stesso menu.
+- 🧭 **Direzione di volo dopo il Travel** – Preimpostata per 20 boss di Altgard; per gli altri si ricava dall'icona del boss (rossa o grigia) più vicina al Teleport. Puoi impostarla per ogni boss e vale in entrambe le modalità.
+- 👑 **Elenco boss con Teleport e Direzione** – Due nuovi campi per ogni boss in Impostazioni > Field Boss > Elenco boss, con tutti i Teleport di riferimento di Altgard già inseriti.
 - 🏠 **Modalità visibile nella Home** – La scheda Field Boss e la riga informativa mostrano se è attiva la ULTRA-FAST o la NORMAL MODE.
-- 🎨 **Impostazioni più moderne** – Elenchi con righe più alte e senza griglia, righe alternate, valori nel colore del tema, menu a sinistra con selezione a riga intera e intestazioni delle colonne nei colori del tema. Con i temi scuri sono scuri anche barre di scorrimento, pulsanti, menu a tendina e barra del titolo.
-- ✨ **Splash legato al tuo tema** – Ogni tema ha ora il suo splash animato: alone nel colore d'accento, l'emoji del tema accanto a "by VaLeTecK", il nome del tema accanto alla versione ed effetti a tema (neve per natale, braci per halloween, cuori, foglie, coriandoli, fuochi d'artificio, linee al neon, cerchi arcani, raggi di luce…). I tuoi temi prendono lo stile del tema da cui derivano. L'animazione è ora un unico movimento fluido (nessuna pausa tra zoom e dissolvenza), con nuovi valori predefiniti: dimensione 1.04, durata a schermo 0 s.
-- 👁️ **Leggibile con ogni tema** – Valori, stato e messaggi hanno automaticamente il contrasto giusto (es. l'oro del tema "principale" sul bianco).
-- 💾 **Impostazioni conservate a ogni aggiornamento** – Wingman ricorda i valori scelti da te (nelle Impostazioni, nel Setup o modificando la CONFIG) e porta avanti solo quelli; il resto prende i nuovi valori predefiniti. Risolve il ritorno di tema e impostazioni ai valori di default, soprattutto dopo aver usato il Setup.
-- ⚙️ **Setup più furbo** – Nuova domanda per scegliere l'assistente Teleport (ULTRA-FAST o NORMAL); ogni domanda propone quello che hai già scelto, anche un tema tuo, e le risposte vengono salvate come tue scelte.
-- 📖 **Guide aggiornate** – README e infografiche della guida rapida in tutte le 10 lingue ora presentano l'Assistente Teleport veloce.
-- 🐞 **Controllo aggiornamenti corretto** – Le note di rilascio lunghe potevano aprire una finestra "PCRE execution error -21"; ora il controllo in background non mostra mai errori e riprova più tardi.
+- 🎨 **Impostazioni più moderne** – Elenchi più alti senza griglia, righe alternate, valori nel colore del tema, menu a riga intera e intestazioni a tema; con i temi scuri sono scuri anche barre di scorrimento, pulsanti, menu e barra del titolo.
+- ✨ **Splash legato al tuo tema** – Alone nel colore d'accento, emoji e nome del tema ed effetti animati per ogni tema (neve, braci, cuori, coriandoli, fuochi d'artificio, neon…); i tuoi temi usano lo stile del tema da cui derivano. Animazione unica e fluida, nuovi valori predefiniti: dimensione 1.04, 0 s a schermo.
+- 👁️ **Leggibile con ogni tema** – Valori, stato e messaggi hanno automaticamente il contrasto giusto (es. l'oro di "principale" sul bianco).
+- 💾 **Impostazioni conservate a ogni aggiornamento** – Wingman porta avanti solo i valori scelti da te (Impostazioni, Setup o CONFIG), il resto prende i nuovi valori predefiniti. Risolve tema e impostazioni che tornavano ai valori di default dopo un aggiornamento.
+- ⚙️ **Setup più furbo** – Nuova domanda per la modalità Teleport; ogni domanda propone quello che hai già scelto (anche un tuo tema) e salva le risposte come tue scelte.
+- 📖 **Guide aggiornate** – README e infografiche della guida rapida in 10 lingue ora presentano l'Assistente Teleport veloce.
+- 🐞 **Controllo aggiornamenti corretto** – Le note di rilascio lunghe potevano aprire la finestra "PCRE execution error -21"; ora il controllo in background non mostra mai errori e riprova più tardi.
 
 ## v1.04
 
