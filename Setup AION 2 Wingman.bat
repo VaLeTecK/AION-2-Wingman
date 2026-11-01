@@ -111,6 +111,41 @@ function Cfg-Set($name, $value) {
     return $true
 }
 
+# ---- impostazioni personali di Wingman (%AppData%\AION 2 Wingman\settings.ini) ----
+# Le scelte del setup finiscono anche qui, segnate come "tue": cosi' restano a ogni nuova versione.
+# E le domande propongono come risposta predefinita quello che hai gia' scelto.
+$UserDir = Join-Path $env:APPDATA 'AION 2 Wingman'
+$UserIni = Join-Path $UserDir 'settings.ini'
+try {
+    Add-Type -Namespace Wingman -Name Ini -MemberDefinition @'
+[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+public static extern int GetPrivateProfileString(string s, string k, string d, System.Text.StringBuilder r, int n, string f);
+[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+public static extern bool WritePrivateProfileString(string s, string k, string v, string f);
+'@ -ErrorAction Stop
+    $script:IniOk = $true
+} catch { $script:IniOk = $false }
+function Ini-Get($sec, $key) {
+    if (-not $script:IniOk -or -not (Test-Path -LiteralPath $UserIni)) { return $null }
+    $sb = New-Object Text.StringBuilder 4096
+    [void][Wingman.Ini]::GetPrivateProfileString($sec, $key, '', $sb, 4096, $UserIni)
+    $v = $sb.ToString()
+    if ($v.StartsWith('v:')) { return $v.Substring(2) } else { return $null }
+}
+function Ini-Set($sec, $key, $val) {
+    if (-not $script:IniOk) { return }
+    if (-not (Test-Path -LiteralPath $UserIni)) {       # file nuovo in UTF-16 (come lo crea Wingman)
+        New-Item -ItemType Directory -Path $UserDir -Force | Out-Null
+        [IO.File]::WriteAllBytes($UserIni, [byte[]](0xFF, 0xFE))
+    }
+    [void][Wingman.Ini]::WritePrivateProfileString($sec, $key, $val, $UserIni)
+}
+# valore attuale: quello salvato nelle impostazioni personali, altrimenti quello della CONFIG
+function Cur-Get($name) {
+    $v = Ini-Get 'Config' $name
+    if ($null -ne $v) { return $v } else { return (Cfg-Get $name) }
+}
+
 # misure in px dell'HUD che i preset di risoluzione riscalano (stesse del menu Preset delle Impostazioni)
 $ScaleVars = @('OffsetX','OffsetY','ChevronGap','ChevronWidthOff','ChevronWidthOn','ChevronHeightOff','ChevronHeightOn',
     'ChevronThicknessOff','ChevronThicknessOn','ChevronSpacingOff','ChevronSpacingOn',
@@ -244,7 +279,7 @@ Step 6 (L "Configurazione guidata" "Guided configuration")
 $scriptOk = Test-Path -LiteralPath $MainScript
 if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliato)" "Set up the main settings now? (recommended)") $true)) {
     Cfg-Load
-    $isOn = { param($n) (Cfg-Get $n) -eq 'true' }
+    $isOn = { param($n) (Cur-Get $n) -eq 'true' }
     $set  = [ordered]@{}
 
     # --- lingua
@@ -261,12 +296,12 @@ if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliat
     $r = Ask-Choice (L "Risoluzione del tuo schermo (dimensioni dell'HUD)" "Your screen resolution (HUD size)") `
         @('FullHD (1080p)', '2K / QHD (1440p)', '4K / UHD (2160p)') $resDef
     $target = $resList[$r - 1]
-    $base = 0; [void][int]::TryParse((Cfg-Get 'HudBaseHeight'), [ref]$base)
+    $base = 0; [void][int]::TryParse(([string](Cur-Get 'HudBaseHeight')), [ref]$base)
     if ($base -le 0) { $base = 2160 }
     if ($target -ne $base) {
         $f = $target / $base
         foreach ($v in $ScaleVars) {
-            $cur = Cfg-Get $v
+            $cur = Cur-Get $v
             if ($cur -notmatch '^-?\d+(\.\d+)?$') { continue }        # valori collegati (es. -LootOffsetX) restano tali
             $n = [double]$cur
             $m = [math]::Round($n * $f)
@@ -279,6 +314,8 @@ if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliat
     # --- prestazioni (suggerimento in base ai core della CPU)
     $cores = [Environment]::ProcessorCount
     $perfDef = if ($cores -le 4) { 2 } elseif ($cores -le 8) { 3 } else { 4 }
+    $curPerf = [array]::IndexOf(@('potato','base','bilanciato','performante','gigachad'), ([string](Cur-Get 'PerfProfile')).Trim('"'))
+    if ($curPerf -ge 0) { $perfDef = $curPerf + 1 }
     Say ""
     Say ((L "   CPU: $cores thread logici - suggerito: " "   CPU: $cores logical threads - suggested: ") + @('potato','base','bilanciato','performante','gigachad')[$perfDef - 1]) DarkGray
     $p = Ask-Choice (L "Profilo prestazioni" "Performance profile") @(
@@ -294,7 +331,7 @@ if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliat
     $themes = @('principale', 'dark', 'bright', 'cuddle', 'pinkhaze', 'egirl', 'vi',
                 'gladiator', 'templar', 'assassin', 'ranger', 'sorcerer', 'spiritmaster', 'cleric', 'chanter',
                 'halloween', 'natale', 'capodanno', 'sanvalentino', 'carnevale', 'pasqua', 'sanpatrizio')
-    $th = Ask-Choice (L "Tema dei colori (si cambia quando vuoi; nelle Impostazioni > Editor temi crei i tuoi)" "Color theme (change it any time; create your own in Settings > Theme editor)") @(
+    $thOpts = @(
         (L "principale - classico scuro e oro" "principale - classic dark and gold"),
         (L "dark       - nero grafite e azzurro ghiaccio" "dark       - graphite black and ice blue"),
         (L "bright     - chiaro, pannelli bianchi" "bright     - light, white panels"),
@@ -316,7 +353,17 @@ if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliat
         (L "sanvalentino - evento: rosa e rosso vino" "sanvalentino - event (Valentine's): pink and wine red"),
         (L "carnevale  - evento: viola, giallo e verde" "carnevale  - event (Carnival): purple, yellow and green"),
         (L "pasqua     - evento: pastelli di primavera" "pasqua     - event (Easter): spring pastels"),
-        (L "sanpatrizio - evento: verde trifoglio e oro" "sanpatrizio - event (St. Patrick's): clover green and gold")) 1
+        (L "sanpatrizio - evento: verde trifoglio e oro" "sanpatrizio - event (St. Patrick's): clover green and gold"))
+    # risposta predefinita: il tema che usi gia' (anche uno tuo, salvato con l'Editor temi)
+    $curTheme = ([string](Cur-Get 'Theme')).Trim('"')
+    $thDef = [array]::IndexOf($themes, $curTheme) + 1
+    if ($thDef -le 0 -and $curTheme -ne '') {
+        $themes = @($curTheme) + $themes
+        $thOpts = @((L "tieni il tema attuale: " "keep the current theme: ") + $curTheme) + $thOpts
+        $thDef  = 1
+    }
+    if ($thDef -le 0) { $thDef = 1 }
+    $th = Ask-Choice (L "Tema dei colori (si cambia quando vuoi; nelle Impostazioni > Editor temi crei i tuoi)" "Color theme (change it any time; create your own in Settings > Theme editor)") $thOpts $thDef
     $set['Theme'] = '"' + $themes[$th - 1] + '"'
 
     # --- funzioni accese all'avvio
@@ -329,6 +376,12 @@ if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliat
         $set['FieldBossLockMouse']  = if (Ask-YesNo (L "  Field Boss: blocca il mouse sul punto da cliccare?" "  Field Boss: lock the mouse on the spot to click?") (& $isOn 'FieldBossLockMouse')) { 'true' } else { 'false' }
         $set['FieldBossDirHint']    = if (Ask-YesNo (L "  Field Boss: freccia con la direzione del boss dopo il Teleport?" "  Field Boss: arrow with the boss direction after the Teleport?") (& $isOn 'FieldBossDirHint')) { 'true' } else { 'false' }
         $set['FieldBossShowLegend'] = if (Ask-YesNo (L "  Leggenda dei tasti in alto con la mappa aperta?" "  Key legend at the top while the map is open?") (& $isOn 'FieldBossShowLegend')) { 'true' } else { 'false' }
+        $curMode = ([string](Cur-Get 'FieldBossTeleportMode')).Trim('"')
+        $mDef = if ($curMode -eq 'normal') { 2 } else { 1 }
+        $mo = Ask-Choice (L "  Field Boss: assistente Teleport" "  Field Boss: Teleport assistant") @(
+            (L "ULTRA-FAST - click sul boss, click sul Teleport, F due volte (consigliata)" "ULTRA-FAST - click the boss, click the Teleport, F twice (recommended)"),
+            (L "NORMAL     - percorso guidato completo (Exploration > Field Boss > Teleport)" "NORMAL     - full guided route (Exploration > Field Boss > Teleport)")) $mDef
+        $set['FieldBossTeleportMode'] = if ($mo -eq 2) { '"normal"' } else { '"ultrafast"' }
     }
     $set['SplashEnabled'] = if (Ask-YesNo (L "Splash con il logo all'avvio?" "Logo splash at startup?") (& $isOn 'SplashEnabled')) { 'true' } else { 'false' }
 
@@ -342,7 +395,7 @@ if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliat
     # --- riepilogo e scrittura
     Say ""
     Say (L "   Valori da scrivere nella CONFIG:" "   Values to write into the CONFIG:") White
-    $show = @('Language','Theme','HudBaseHeight','PerfProfile','HudEnabled','HiddenCubeEnabled','FieldBossEnabled','FieldBossLockMouse','FieldBossDirHint','FieldBossShowLegend','SplashEnabled','HudToggleKey')
+    $show = @('Language','Theme','HudBaseHeight','PerfProfile','HudEnabled','HiddenCubeEnabled','FieldBossEnabled','FieldBossLockMouse','FieldBossDirHint','FieldBossShowLegend','FieldBossTeleportMode','SplashEnabled','HudToggleKey')
     foreach ($k in $show) { if ($set.Contains($k)) { Say ("     {0,-20} {1}" -f $k, $set[$k]) } }
     if ($set.Contains('HudBaseHeight')) { Say ((L "     + misure HUD riscalate da ${base}p a ${target}p" "     + HUD sizes rescaled from ${base}p to ${target}p")) DarkGray }
     if (Ask-YesNo (L "Salvo?" "Save?") $true) {
@@ -351,6 +404,10 @@ if ($scriptOk -and (Ask-YesNo (L "Imposto ora i settaggi principali? (consigliat
         try {
             Copy-Item -LiteralPath $MainScript -Destination ($MainScript + '.bak') -Force
             [IO.File]::WriteAllText($MainScript, $script:CfgText, (New-Object Text.UTF8Encoding($false)))
+            foreach ($k in $set.Keys) {                  # anche nelle impostazioni personali, come scelte tue
+                Ini-Set 'Config' $k ('v:' + $set[$k])
+                Ini-Set 'Custom' $k '1'
+            }
             Ok 'Config' (L "$written impostazioni salvate (copia di sicurezza: .bak)" "$written settings saved (backup: .bak)")
         } catch {
             Fail 'Config' ((L "Salvataggio non riuscito: " "Save failed: ") + $_.Exception.Message)

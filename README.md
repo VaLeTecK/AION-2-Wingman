@@ -2,7 +2,9 @@
 
 <img src="docs/images/banner.png" alt="AION 2 Wingman — AutoHotkey v2 companion for AION 2" width="100%">
 
-### 🧭 Assisted Teleport to any Field Boss · 🎯 HUD overlay · 🛡️ No injection, no bot, no telemetry
+### ⚡ Fast Teleport Assistant for every Field Boss · 🎯 HUD overlay · 🛡️ No injection, no bot, no telemetry
+
+**A quality-of-life (QoL) companion for AION 2: fewer menus and clicks, more time playing.**
 
 **💚 100% free · no paid features · no hidden features · donations are entirely optional**
 
@@ -22,7 +24,7 @@
 
 ## 🇬🇧 English
 
-**AION 2 Wingman** is a Windows program written in **AutoHotkey v2** that runs next to AION 2 and gives you a clearer HUD and a few smart helpers.
+**AION 2 Wingman** is a Windows program written in **AutoHotkey v2** that runs next to AION 2 and gives you a clearer HUD and a few smart helpers. It's a **quality-of-life (QoL)** tool: fewer menus, fewer clicks, more time actually playing.
 
 ### 🛡️ Safe by design
 
@@ -39,7 +41,15 @@ AION 2 Wingman is a plain **AutoHotkey v2** script: you can open it with Notepad
 
 > ⚠️ Wingman is an unofficial third-party tool. Nobody can promise that an external program is 100% risk-free under a game's rules and anti-cheat, so use it consciously and within the game's terms of service.
 
-### 🧭 Star feature: Assisted Teleport to any Field Boss
+### ⚡ Star feature: the Fast Teleport Assistant for every Field Boss
+
+**From the map to the boss in 3 moves** (ULTRA-FAST MODE, the default):
+
+1. **Click the boss** in the Field Boss panel (open the map with `M`).
+2. **Click the Teleport**: Wingman has already found the boss's Teleport in the Kibelisk list on the left, scrolled to it and put the cursor on it.
+3. **Press `F` twice** and follow the arrow with the **flight direction** to the boss.
+
+**NORMAL MODE**, the full guided route, is still one click away in the Settings:
 
 Reaching a Field Boss normally means opening the map, going to Exploration and then Field Boss, finding the boss in a long list, looking for the nearest Teleport and flying in the right direction. **Wingman turns all of this into a few guided clicks:**
 
@@ -50,6 +60,8 @@ Reaching a Field Boss normally means opening the map, going to Exploration and t
 5. `Esc` cancels at any time. Inside dungeons the panel stays hidden.
 
 ⚡ **Built for speed.** Once you've picked the boss there's nothing to aim at or read: just **keep spamming left click**. At every step the cursor is already on the right spot, and stray clicks between steps are blocked. As soon as the Teleport is clicked, **spam `F`**: the mouse stays locked for a few seconds, so no misclick can get in the way of your departure.
+
+🚀 **ULTRA-FAST MODE in detail.** Wingman scrolls the Kibelisk list by itself until it finds the Teleport. The flight direction is already set for most bosses, otherwise it's worked out from the boss icon nearest to the Teleport, and you can change it per boss in the boss list. Switch mode in *Settings > Field Boss > Search and Teleport*; the Home page shows which one is in use.
 
 <img src="docs/images/guide-step1.jpg" alt="Assisted Teleport, step 1: click the boss" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Assisted Teleport: click the nearest Teleport" width="100%">
@@ -114,7 +126,7 @@ Every single element of the HUD and of the tools can be tuned to your taste, in 
 - **Bars**: width, height, border, position, center gap and slant, each bar on its own.
 - **LOOT and COMBAT icons**: shape, size, border, position (or mirrored), top and bottom text, emoji, text colors, effects (pulse, ring, spin, glow) with duration, color and intensity, fade in and out, each icon on its own.
 - **Colors and transitions**: active and idle colors, fade and color-blend times for every element.
-- **Field Boss and Assisted Teleport**: panel size and position, filters, full boss list editor (name, grade, importance), key legend, guide behavior (mouse lock, click block, instruction size and position, mouse lock after the Teleport), flight-direction arrow (duration, delay, size), Teleport search and zoom, dungeon list.
+- **Field Boss and Assisted Teleport**: panel size and position, filters, full boss list editor (name, grade, importance, Teleport, direction), key legend, guide behavior (mouse lock, click block, instruction size and position, mouse lock after the Teleport), flight-direction arrow (duration, delay, size), Teleport search and zoom, dungeon list.
 - **Hidden Cube**: position, mouse lock, intervals, optional auto-click.
 - **Keys**: every key can be changed.
 - **The whole app**: 22 themes plus the Theme editor, 12 languages, performance profiles, resolution presets and your own presets.
@@ -180,7 +192,7 @@ The keys still reach the game as usual.
 
 ## 🇮🇹 Italiano
 
-**AION 2 Wingman** è un programma per Windows scritto in **AutoHotkey v2**. Gira accanto ad AION 2 e ti dà un HUD più chiaro e qualche aiuto intelligente.
+**AION 2 Wingman** è un programma per Windows scritto in **AutoHotkey v2**. Gira accanto ad AION 2 e ti dà un HUD più chiaro e qualche aiuto intelligente. È uno strumento di **qualità della vita (QoL)**: meno menu, meno click, più tempo per giocare davvero.
 
 ### 🛡️ Sicuro per come è fatto
 
@@ -197,7 +209,15 @@ AION 2 Wingman è un semplice script **AutoHotkey v2**: puoi aprirlo con il Bloc
 
 > ⚠️ Wingman è uno strumento di terze parti non ufficiale. Nessuno può promettere che un programma esterno sia a rischio zero rispetto alle regole e all'anti-cheat di un gioco: usalo consapevolmente e nel rispetto dei termini di servizio del gioco.
 
-### 🧭 La funzione di punta: Teleport assistito verso qualsiasi Field Boss
+### ⚡ La funzione di punta: l'Assistente Teleport veloce per ogni Field Boss
+
+**Dalla mappa al boss in 3 mosse** (ULTRA-FAST MODE, quella predefinita):
+
+1. **Clicca il boss** nel pannello Field Boss (apri la mappa con `M`).
+2. **Clicca il Teleport**: Wingman ha già trovato il Teleport del boss nella lista Kibelisk a sinistra, ci ha scrollato sopra e ci ha portato il cursore.
+3. **Premi `F` due volte** e segui la freccia con la **direzione di volo** verso il boss.
+
+La **NORMAL MODE**, il percorso guidato completo, resta a un click di distanza nelle Impostazioni:
 
 Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Exploration e poi in Field Boss, cercare il boss in una lunga lista, trovare il Teleport più vicino e volare nella direzione giusta. **Wingman trasforma tutto questo in pochi click guidati:**
 
@@ -208,6 +228,8 @@ Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Explorat
 5. `Esc` annulla in qualsiasi momento. Nei dungeon il pannello resta nascosto.
 
 ⚡ **Pensato per la velocità.** Scelto il boss non devi mirare né leggere niente: **spamma il click sinistro**. A ogni fase il cursore è già sul punto giusto e i click fuori tempo tra una fase e l'altra vengono bloccati. Appena hai cliccato il Teleport, **spamma `F`**: il mouse resta bloccato per qualche secondo, così nessun click sbagliato può rovinarti la partenza.
+
+🚀 **ULTRA-FAST MODE nel dettaglio.** Wingman scorre da solo la lista Kibelisk finché non trova il Teleport. La direzione di volo è già impostata per quasi tutti i boss, altrimenti si calcola dall'icona del boss più vicina al Teleport, e puoi cambiarla per ogni boss nell'elenco boss. La modalità si cambia in *Impostazioni > Field Boss > Ricerca e Teleport*; la Home mostra quella in uso.
 
 <img src="docs/images/guide-step1.jpg" alt="Teleport assistito, fase 1: clicca il boss" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport assistito: clicca il Teleport più vicino" width="100%">
@@ -272,7 +294,7 @@ Ogni singolo elemento dell'HUD e dei tool si regola come vuoi, sia nell'**aspett
 - **Barre**: larghezza, altezza, cornice, posizione, spazio centrale e inclinazione, ogni barra per conto suo.
 - **Icone LOOT e COMBAT**: forma, grandezza, cornice, posizione (o speculare), testo in alto e in basso, emoji, colori dei testi, effetti (pulse, ring, spin, glow) con durata, colore e intensità, dissolvenze, ogni icona per conto suo.
 - **Colori e transizioni**: colori attivi e inattivi, tempi di dissolvenza e sfumatura per ogni elemento.
-- **Field Boss e Teleport assistito**: grandezza e posizione del pannello, filtri, editor completo della lista dei boss (nome, grado, importanza), legenda dei tasti, comportamento della guida (blocco del mouse, blocco dei click, grandezza e posizione delle istruzioni, blocco del mouse dopo il Teleport), freccia della direzione (durata, ritardo, grandezza), ricerca del Teleport e zoom, lista dei dungeon.
+- **Field Boss e Teleport assistito**: grandezza e posizione del pannello, filtri, editor completo della lista dei boss (nome, grado, importanza, Teleport, direzione), legenda dei tasti, comportamento della guida (blocco del mouse, blocco dei click, grandezza e posizione delle istruzioni, blocco del mouse dopo il Teleport), freccia della direzione (durata, ritardo, grandezza), ricerca del Teleport e zoom, lista dei dungeon.
 - **Hidden Cube**: posizione, blocco del mouse, intervalli, click automatico facoltativo.
 - **Tasti**: ogni tasto si può cambiare.
 - **Tutta l'app**: 22 temi più l'Editor temi, 12 lingue, profili prestazioni, preset di risoluzione e preset tuoi.
@@ -338,7 +360,7 @@ I tasti arrivano comunque al gioco.
 
 ## 🇪🇸 Español
 
-**AION 2 Wingman** es un programa para Windows escrito en **AutoHotkey v2**. Funciona junto a AION 2 y te da un HUD más claro y algunas ayudas inteligentes.
+**AION 2 Wingman** es un programa para Windows escrito en **AutoHotkey v2**. Funciona junto a AION 2 y te da un HUD más claro y algunas ayudas inteligentes. Es una herramienta de **calidad de vida (QoL)**: menos menús, menos clics y más tiempo para jugar de verdad.
 
 ### 🛡️ Seguro por diseño
 
@@ -355,7 +377,15 @@ AION 2 Wingman es un simple script de **AutoHotkey v2**: puedes abrirlo con el B
 
 > ⚠️ Es una herramienta de terceros no oficial: nadie puede garantizar que un programa externo tenga riesgo cero frente a las reglas y el anti-cheat de un juego. Úsala con conciencia y respetando los términos del juego.
 
-### 🧭 La función estrella: Teleport asistido a cualquier Field Boss
+### ⚡ La función estrella: el Asistente de Teleport rápido para cada Field Boss
+
+**Del mapa al jefe en 3 movimientos** (ULTRA-FAST MODE, el predeterminado):
+
+1. **Haz clic en el jefe** en el panel Field Boss (abre el mapa con `M`).
+2. **Haz clic en el Teleport**: Wingman ya ha encontrado el Teleport del jefe en la lista Kibelisk de la izquierda, se ha desplazado hasta él y ha puesto el cursor encima.
+3. **Pulsa `F` dos veces** y sigue la flecha con la **dirección de vuelo** hacia el jefe.
+
+El **NORMAL MODE**, la ruta guiada completa, sigue a un clic en los Ajustes:
 
 Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego a Field Boss, buscar el jefe en una lista larga, encontrar el Teleport más cercano y volar en la dirección correcta. **Wingman lo convierte en unos pocos clics guiados:**
 
@@ -366,6 +396,8 @@ Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego 
 5. `Esc` cancela en cualquier momento. En las mazmorras el panel se oculta.
 
 ⚡ **Pensado para la velocidad.** Una vez elegido el jefe no hay que apuntar ni leer nada: **haz clic izquierdo sin parar**. En cada paso el cursor ya está en el punto correcto y los clics fuera de tiempo entre pasos se bloquean. En cuanto hagas clic en el Teleport, **pulsa `F` sin parar**: el ratón queda bloqueado unos segundos, así ningún clic erróneo estropea la salida.
+
+🚀 **ULTRA-FAST MODE en detalle.** Wingman desplaza solo la lista Kibelisk hasta encontrar el Teleport. La dirección de vuelo ya está fijada para casi todos los jefes; si no, se calcula desde el icono del jefe más cercano al Teleport, y puedes cambiarla para cada jefe en la lista. El modo se cambia en *Ajustes > Field Boss > Búsqueda y Teleport*; la Home muestra el que está en uso.
 
 <img src="docs/images/guide-step1.jpg" alt="Teleport asistido, paso 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport asistido: el Teleport más cercano" width="100%">
@@ -430,7 +462,7 @@ Cada elemento del HUD y de las herramientas se ajusta a tu gusto, en **aspecto**
 
 ## 🇫🇷 Français
 
-**AION 2 Wingman** est un programme Windows écrit en **AutoHotkey v2**. Il tourne à côté d'AION 2 et t'offre un HUD plus clair et quelques aides intelligentes.
+**AION 2 Wingman** est un programme Windows écrit en **AutoHotkey v2**. Il tourne à côté d'AION 2 et t'offre un HUD plus clair et quelques aides intelligentes. C'est un outil de **qualité de vie (QoL)** : moins de menus, moins de clics, plus de temps pour vraiment jouer.
 
 ### 🛡️ Sûr par conception
 
@@ -447,7 +479,15 @@ AION 2 Wingman est un simple script **AutoHotkey v2** : tu peux l'ouvrir avec le
 
 > ⚠️ C'est un outil tiers non officiel : personne ne peut garantir qu'un programme externe soit sans aucun risque face aux règles et à l'anti-triche d'un jeu. Utilise-le en connaissance de cause et dans le respect des conditions du jeu.
 
-### 🧭 La fonction phare : Teleport assisté vers n'importe quel Field Boss
+### ⚡ La fonction phare : l'Assistant Teleport rapide pour chaque Field Boss
+
+**De la carte au boss en 3 gestes** (ULTRA-FAST MODE, par défaut) :
+
+1. **Clique le boss** dans le panneau Field Boss (ouvre la carte avec `M`).
+2. **Clique le Teleport** : Wingman a déjà trouvé le Teleport du boss dans la liste Kibelisk à gauche, a fait défiler jusqu'à lui et y a placé le curseur.
+3. **Appuie deux fois sur `F`** et suis la flèche de **direction de vol** vers le boss.
+
+Le **NORMAL MODE**, le parcours guidé complet, reste à un clic dans les Paramètres :
 
 Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Exploration puis Field Boss, de chercher le boss dans une longue liste, de trouver le Teleport le plus proche et de voler dans la bonne direction. **Wingman en fait quelques clics guidés :**
 
@@ -458,6 +498,8 @@ Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Explo
 5. `Esc` annule à tout moment. Dans les donjons, le panneau reste masqué.
 
 ⚡ **Pensé pour la vitesse.** Une fois le boss choisi, rien à viser ni à lire : **clique gauche en rafale**. À chaque étape le curseur est déjà au bon endroit et les clics à contretemps entre les étapes sont bloqués. Dès que le Teleport est cliqué, **spamme `F`** : la souris reste bloquée quelques secondes, aucun mauvais clic ne peut gâcher le départ.
+
+🚀 **ULTRA-FAST MODE en détail.** Wingman fait défiler tout seul la liste Kibelisk jusqu'au Teleport. La direction de vol est déjà réglée pour presque tous les boss, sinon elle est calculée depuis l'icône de boss la plus proche du Teleport, et tu peux la changer pour chaque boss dans la liste. Le mode se change dans *Paramètres > Field Boss > Recherche et Teleport* ; la Home indique celui en cours.
 
 <img src="docs/images/guide-step1.jpg" alt="Teleport assisté, étape 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport assisté : le Teleport le plus proche" width="100%">
@@ -522,7 +564,7 @@ Chaque élément du HUD et des outils se règle à ton goût, en **apparence** c
 
 ## 🇩🇪 Deutsch
 
-**AION 2 Wingman** ist ein Windows-Programm in **AutoHotkey v2**. Es läuft neben AION 2 und bietet ein klareres HUD sowie einige smarte Helfer.
+**AION 2 Wingman** ist ein Windows-Programm in **AutoHotkey v2**. Es läuft neben AION 2 und bietet ein klareres HUD sowie einige smarte Helfer. Es ist ein **Quality-of-Life-Tool (QoL)**: weniger Menüs, weniger Klicks, mehr Zeit zum Spielen.
 
 ### 🛡️ Sicher durch Bauweise
 
@@ -539,7 +581,15 @@ AION 2 Wingman ist ein einfaches **AutoHotkey-v2**-Skript: Du kannst es mit dem 
 
 > ⚠️ Es ist ein inoffizielles Drittanbieter-Tool: Niemand kann garantieren, dass ein externes Programm gegenüber den Regeln und dem Anti-Cheat eines Spiels völlig risikofrei ist. Nutze es bewusst und im Rahmen der Nutzungsbedingungen.
 
-### 🧭 Die Hauptfunktion: Assistierter Teleport zu jedem Field Boss
+### ⚡ Die Hauptfunktion: der schnelle Teleport-Assistent für jeden Field Boss
+
+**Von der Karte zum Boss in 3 Schritten** (ULTRA-FAST MODE, Standard):
+
+1. **Klicke den Boss** im Field-Boss-Panel an (Karte mit `M` öffnen).
+2. **Klicke den Teleport** an: Wingman hat den Teleport des Bosses schon in der Kibelisk-Liste links gefunden, dorthin gescrollt und den Cursor daraufgesetzt.
+3. **Drücke zweimal `F`** und folge dem Pfeil mit der **Flugrichtung** zum Boss.
+
+Der **NORMAL MODE**, die vollständige geführte Route, ist in den Einstellungen nur einen Klick entfernt:
 
 Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration und dann Field Boss gehen, den Boss in einer langen Liste suchen, den nächsten Teleport finden und in die richtige Richtung fliegen. **Wingman macht daraus ein paar geführte Klicks:**
 
@@ -550,6 +600,8 @@ Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration u
 5. `Esc` bricht jederzeit ab. In Dungeons bleibt das Panel ausgeblendet.
 
 ⚡ **Auf Tempo gebaut.** Ist der Boss gewählt, musst du nichts mehr zielen oder lesen: **einfach weiter Linksklick spammen**. Bei jedem Schritt steht der Cursor schon richtig, und Klicks zur falschen Zeit zwischen den Schritten werden blockiert. Sobald der Teleport angeklickt ist, **F spammen**: Die Maus bleibt ein paar Sekunden gesperrt, damit kein Fehlklick den Abflug stört.
+
+🚀 **ULTRA-FAST MODE im Detail.** Wingman scrollt die Kibelisk-Liste selbst, bis der Teleport gefunden ist. Die Flugrichtung ist für fast alle Bosse schon eingestellt, sonst wird sie aus dem Boss-Symbol berechnet, das dem Teleport am nächsten ist; pro Boss änderbar in der Boss-Liste. Modus wechseln unter *Einstellungen > Field Boss > Suche und Teleport*; die Home-Seite zeigt den aktiven Modus.
 
 <img src="docs/images/guide-step1.jpg" alt="Assistierter Teleport, Schritt 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Assistierter Teleport: der nächste Teleport" width="100%">
@@ -614,7 +666,7 @@ Jedes Element von HUD und Tools lässt sich nach deinem Geschmack einstellen, in
 
 ## 🇧🇷 Português
 
-**AION 2 Wingman** é um programa para Windows escrito em **AutoHotkey v2**. Ele roda junto com o AION 2 e oferece um HUD mais claro e algumas ajudas inteligentes.
+**AION 2 Wingman** é um programa para Windows escrito em **AutoHotkey v2**. Ele roda junto com o AION 2 e oferece um HUD mais claro e algumas ajudas inteligentes. É uma ferramenta de **qualidade de vida (QoL)**: menos menus, menos cliques e mais tempo para jogar de verdade.
 
 ### 🛡️ Seguro por natureza
 
@@ -631,7 +683,15 @@ O AION 2 Wingman é um simples script **AutoHotkey v2**: você pode abri-lo no B
 
 > ⚠️ É uma ferramenta de terceiros não oficial: ninguém pode garantir que um programa externo tenha risco zero diante das regras e do anti-cheat de um jogo. Use com consciência e respeitando os termos do jogo.
 
-### 🧭 A função principal: Teleport assistido para qualquer Field Boss
+### ⚡ A função principal: o Assistente de Teleport rápido para cada Field Boss
+
+**Do mapa ao chefe em 3 movimentos** (ULTRA-FAST MODE, o padrão):
+
+1. **Clique no chefe** no painel Field Boss (abra o mapa com `M`).
+2. **Clique no Teleport**: o Wingman já encontrou o Teleport do chefe na lista Kibelisk à esquerda, rolou até ele e colocou o cursor em cima.
+3. **Aperte `F` duas vezes** e siga a seta com a **direção de voo** até o chefe.
+
+O **NORMAL MODE**, a rota guiada completa, continua a um clique nas Configurações:
 
 Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e depois Field Boss, procurar o chefe numa lista longa, achar o Teleport mais próximo e voar na direção certa. **O Wingman transforma isso em poucos cliques guiados:**
 
@@ -642,6 +702,8 @@ Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e 
 5. `Esc` cancela a qualquer momento. Nas masmorras o painel fica oculto.
 
 ⚡ **Feito para ser rápido.** Escolhido o chefe, não precisa mirar nem ler nada: **clique com o botão esquerdo sem parar**. Em cada passo o cursor já está no ponto certo e os cliques fora de hora entre os passos são bloqueados. Assim que clicar no Teleport, **aperte `F` sem parar**: o mouse fica travado por alguns segundos, então nenhum clique errado atrapalha a partida.
+
+🚀 **ULTRA-FAST MODE em detalhe.** O Wingman rola sozinho a lista Kibelisk até achar o Teleport. A direção de voo já vem definida para quase todos os chefes; senão, é calculada pelo ícone de chefe mais próximo do Teleport, e você pode mudá-la para cada chefe na lista. Troque o modo em *Configurações > Field Boss > Busca e Teleport*; a Home mostra o modo em uso.
 
 <img src="docs/images/guide-step1.jpg" alt="Teleport assistido, passo 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Teleport assistido: o Teleport mais próximo" width="100%">
@@ -706,7 +768,7 @@ Cada elemento do HUD e das ferramentas se ajusta ao seu gosto, na **aparência**
 
 ## 🇷🇺 Русский
 
-**AION 2 Wingman** — программа для Windows на **AutoHotkey v2**. Она работает рядом с AION 2 и добавляет понятный HUD и несколько умных помощников.
+**AION 2 Wingman** — программа для Windows на **AutoHotkey v2**. Она работает рядом с AION 2 и добавляет понятный HUD и несколько умных помощников. Это инструмент для **удобства игры (QoL)**: меньше меню, меньше кликов, больше времени на саму игру.
 
 ### 🛡️ Безопасен по устройству
 
@@ -723,7 +785,15 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
 
 > ⚠️ Это неофициальный сторонний инструмент: никто не может гарантировать, что внешняя программа абсолютно безопасна с точки зрения правил и античита игры. Пользуйтесь осознанно и в рамках условий игры.
 
-### 🧭 Главная функция: телепорт с подсказками к любому Field Boss
+### ⚡ Главная функция: быстрый помощник телепорта к любому Field Boss
+
+**С карты к боссу за 3 действия** (ULTRA-FAST MODE, по умолчанию):
+
+1. **Кликните босса** на панели Field Boss (карта открывается клавишей `M`).
+2. **Кликните Teleport**: Wingman уже нашёл телепорт босса в списке Kibelisk слева, прокрутил к нему и поставил на него курсор.
+3. **Дважды нажмите `F`** и следуйте стрелке с **направлением полёта** к боссу.
+
+**NORMAL MODE** — полный пошаговый маршрут — остаётся в одном клике в настройках:
 
 Обычно, чтобы добраться до Field Boss, нужно открыть карту, перейти в Exploration, затем в Field Boss, найти босса в длинном списке, найти ближайший Teleport и лететь в нужную сторону. **Wingman превращает это в несколько кликов с подсказками:**
 
@@ -734,6 +804,8 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
 5. `Esc` отменяет в любой момент. В подземельях панель скрыта.
 
 ⚡ **Сделано для скорости.** После выбора босса не нужно ни целиться, ни читать: **просто жмите левый клик без остановки**. На каждом шаге курсор уже стоит в нужной точке, а лишние клики между шагами блокируются. Как только кликнули по Teleport, **жмите `F` без остановки**: мышь на несколько секунд заблокирована, и никакой случайный клик не помешает отправлению.
+
+🚀 **ULTRA-FAST MODE подробнее.** Wingman сам прокручивает список Kibelisk, пока не найдёт Teleport. Направление полёта уже задано почти для всех боссов, иначе оно рассчитывается по значку босса, ближайшему к Teleport; для каждого босса его можно изменить в списке боссов. Режим меняется в *Настройки > Field Boss > Поиск и Teleport*; на странице Home виден текущий режим.
 
 <img src="docs/images/guide-step1.jpg" alt="Телепорт с подсказками, шаг 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="Телепорт с подсказками: ближайший Teleport" width="100%">
@@ -798,7 +870,7 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
 
 ## 🇰🇷 한국어
 
-**AION 2 Wingman**은 **AutoHotkey v2**로 만든 Windows 프로그램입니다. AION 2와 함께 실행되며 더 보기 쉬운 HUD와 몇 가지 똑똑한 보조 기능을 제공합니다.
+**AION 2 Wingman**은 **AutoHotkey v2**로 만든 Windows 프로그램입니다. AION 2와 함께 실행되며 더 보기 쉬운 HUD와 몇 가지 똑똑한 보조 기능을 제공합니다. **편의성(QoL)** 도구입니다: 메뉴와 클릭은 줄이고, 게임하는 시간은 늘립니다.
 
 ### 🛡️ 구조적으로 안전
 
@@ -815,7 +887,15 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
 
 > ⚠️ 비공식 서드파티 도구입니다. 외부 프로그램이 게임 규칙과 안티치트에 대해 위험이 전혀 없다고 누구도 보장할 수 없으니, 게임 이용 약관을 지키며 신중하게 사용하세요.
 
-### 🧭 핵심 기능: 모든 Field Boss로 가는 텔레포트 안내
+### ⚡ 핵심 기능: 모든 Field Boss로 가는 빠른 텔레포트 도우미
+
+**지도에서 보스까지 3단계** (ULTRA-FAST MODE, 기본값):
+
+1. Field Boss 패널에서 **보스를 클릭** (`M`으로 지도 열기).
+2. **Teleport 클릭**: Wingman이 왼쪽 Kibelisk 목록에서 보스의 Teleport를 이미 찾아 스크롤하고 커서를 올려 두었습니다.
+3. **`F`를 두 번** 누르고 보스로 가는 **비행 방향** 화살표를 따라가세요.
+
+전체 안내 경로인 **NORMAL MODE**도 설정에서 클릭 한 번으로 선택할 수 있습니다:
 
 보통 Field Boss에 가려면 지도를 열고, Exploration과 Field Boss로 들어가, 긴 목록에서 보스를 찾고, 가장 가까운 Teleport를 찾은 다음, 올바른 방향으로 날아가야 합니다. **Wingman은 이것을 몇 번의 안내된 클릭으로 바꿉니다:**
 
@@ -826,6 +906,8 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
 5. `Esc`로 언제든 취소할 수 있습니다. 던전에서는 패널이 숨겨집니다.
 
 ⚡ **속도를 위해 설계.** 보스를 고른 뒤에는 조준하거나 읽을 필요가 없습니다: **왼쪽 클릭을 계속 연타**하세요. 단계마다 커서가 이미 정확한 위치에 있고, 단계 사이의 엉뚱한 클릭은 차단됩니다. Teleport를 클릭했다면 **`F`를 연타**하세요. 몇 초 동안 마우스가 잠겨 잘못된 클릭이 출발을 방해하지 않습니다.
+
+🚀 **ULTRA-FAST MODE 자세히.** Wingman이 Teleport를 찾을 때까지 Kibelisk 목록을 스스로 스크롤합니다. 비행 방향은 대부분의 보스에 이미 설정되어 있고, 없으면 Teleport에 가장 가까운 보스 아이콘으로 계산하며, 보스 목록에서 보스별로 바꿀 수 있습니다. 모드는 *설정 > Field Boss > 검색 및 Teleport*에서 바꾸며, Home에 현재 모드가 표시됩니다.
 
 <img src="docs/images/guide-step1.jpg" alt="텔레포트 안내 1단계" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="텔레포트 안내: 가장 가까운 Teleport" width="100%">
@@ -890,7 +972,7 @@ HUD와 도구의 모든 요소를 **모양**과 **동작** 모두 원하는 대�
 
 ## 🇨🇳 简体中文
 
-**AION 2 Wingman** 是一个用 **AutoHotkey v2** 编写的 Windows 程序，与 AION 2 同时运行，提供更清晰的 HUD 和一些实用的辅助功能。
+**AION 2 Wingman** 是一个用 **AutoHotkey v2** 编写的 Windows 程序，与 AION 2 同时运行，提供更清晰的 HUD 和一些实用的辅助功能。 这是一款**提升游戏体验（QoL）**的工具：更少的菜单、更少的点击，更多真正游戏的时间。
 
 ### 🛡️ 设计上就安全
 
@@ -907,7 +989,15 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
 
 > ⚠️ 这是非官方的第三方工具：没有人能保证外部程序在游戏规则和反作弊面前完全零风险，请在遵守游戏服务条款的前提下谨慎使用。
 
-### 🧭 核心功能：前往任意 Field Boss 的辅助传送
+### ⚡ 核心功能：前往任意 Field Boss 的快速传送助手
+
+**从地图到首领只需 3 步**（ULTRA-FAST MODE，默认）：
+
+1. 在 Field Boss 面板中**点击首领**（按 `M` 打开地图）。
+2. **点击 Teleport**：Wingman 已在左侧 Kibelisk 列表中找到该首领的 Teleport，自动滚动过去并把光标放在上面。
+3. **按两次 `F`**，然后跟随指向首领的**飞行方向**箭头。
+
+完整引导路线 **NORMAL MODE** 仍可在设置中一键选择：
 
 通常要前往 Field Boss，你需要打开地图、进入 Exploration 再进入 Field Boss、在长长的列表中找首领、找到最近的 Teleport，再朝正确方向飞行。**Wingman 把这些变成几次有引导的点击：**
 
@@ -918,6 +1008,8 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
 5. 随时按 `Esc` 取消。在副本中面板会隐藏。
 
 ⚡ **为速度而设计。** 选好首领后无需瞄准、无需阅读：**只管连续点击左键**。每一步光标都已在正确位置，步骤之间的多余点击会被拦截。点击 Teleport 后，**连按 `F`**：鼠标会锁定几秒，任何误点都不会耽误出发。
+
+🚀 **ULTRA-FAST MODE 详解。** Wingman 会自动滚动 Kibelisk 列表直到找到 Teleport。大多数首领的飞行方向已预先设置，否则根据离 Teleport 最近的首领图标计算，也可在首领列表中为每个首领修改。在 *设置 > Field Boss > 搜索与 Teleport* 中切换模式；Home 页面会显示当前模式。
 
 <img src="docs/images/guide-step1.jpg" alt="辅助传送 第 1 步" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="辅助传送：最近的 Teleport" width="100%">
@@ -982,7 +1074,7 @@ HUD 和工具的每一个元素都能按你的喜好调整**外观**和**行为*
 
 ## 🇯🇵 日本語
 
-**AION 2 Wingman** は **AutoHotkey v2** で作られた Windows プログラムです。AION 2 と一緒に動き、見やすい HUD と便利な補助機能を追加します。
+**AION 2 Wingman** は **AutoHotkey v2** で作られた Windows プログラムです。AION 2 と一緒に動き、見やすい HUD と便利な補助機能を追加します。 **快適さ（QoL）を上げる**ツールです：メニューもクリックも減らして、遊ぶ時間を増やします。
 
 ### 🛡️ 仕組みからして安全
 
@@ -999,7 +1091,15 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
 
 > ⚠️ 非公式のサードパーティ製ツールです。外部プログラムがゲームの規約やアンチチートに対して完全にノーリスクだと保証できる人はいません。利用規約を守り、理解したうえでご利用ください。
 
-### 🧭 目玉機能：どの Field Boss へもテレポートをアシスト
+### ⚡ 目玉機能：どの Field Boss へも行ける高速テレポートアシスタント
+
+**マップからボスまで 3 ステップ**（ULTRA-FAST MODE、デフォルト）：
+
+1. Field Boss パネルで**ボスをクリック**（`M` でマップを開く）。
+2. **Teleport をクリック**：Wingman が左の Kibelisk リストでボスの Teleport をすでに見つけ、スクロールしてカーソルを合わせています。
+3. **`F` を 2 回**押して、ボスへの**飛行方向**の矢印に従うだけ。
+
+完全なガイド付きルートの **NORMAL MODE** も、設定からワンクリックで選べます：
 
 普段は Field Boss に行くために、マップを開き、Exploration から Field Boss へ進み、長いリストからボスを探し、最寄りの Teleport を見つけて正しい方向へ飛ぶ必要があります。**Wingman はこれを数回のガイド付きクリックにします：**
 
@@ -1010,6 +1110,8 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
 5. `Esc` でいつでもキャンセル。ダンジョンではパネルは表示されません。
 
 ⚡ **スピード重視の設計。** ボスを選んだら、狙うことも読むことも不要です：**左クリックを連打するだけ**。各ステップでカーソルはすでに正しい位置にあり、ステップ間の余計なクリックはブロックされます。Teleport をクリックしたら **`F` を連打**。数秒間マウスがロックされるので、誤クリックで出発が邪魔されることはありません。
+
+🚀 **ULTRA-FAST MODE の詳細。** Wingman は Teleport が見つかるまで Kibelisk リストを自動でスクロールします。飛行方向はほとんどのボスで設定済みで、未設定なら Teleport に最も近いボスアイコンから計算し、ボスリストでボスごとに変更できます。モードは *設定 > Field Boss > 検索と Teleport* で切り替え、Home に現在のモードが表示されます。
 
 <img src="docs/images/guide-step1.jpg" alt="テレポートアシスト 手順 1" width="100%">
 <img src="docs/images/guide-teleport.jpg" alt="テレポートアシスト：最寄りの Teleport" width="100%">

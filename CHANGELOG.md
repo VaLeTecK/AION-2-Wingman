@@ -4,6 +4,30 @@ Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descriz
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
 A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal del pacchetto.
 
+## v1.05
+
+### 🇬🇧 English
+- **Quality of life first**: the new **Fast Teleport Assistant** takes you from the map to any Field Boss in 3 moves: click the boss, click the Teleport, press F twice.
+- New **ULTRA-FAST MODE** for the Assisted Teleport, now the default (Settings > Field Boss > Search and Teleport, switch between NORMAL MODE and ULTRA-FAST MODE). Click the boss in the panel and Wingman finds that boss's reference Teleport right away in the Kibelisk list on the left: click it and press F twice. Wingman scrolls the list by itself until it finds the Teleport (36 scrolls per step by default, adjustable in the same menu). NORMAL MODE works as before and can be chosen in the same menu; the Home page shows which mode is in use.
+- Flight direction after the Teleport: in ULTRA-FAST MODE it is calculated on the fly from the boss icon nearest to the Teleport. The directions of 20 Altgard bosses are already set, so the arrow is ready right away; for every boss you can also choose it yourself (Automatic or one of the 8 directions), and that choice applies in both modes.
+- Boss list editor: new **Teleport** and **Direction** fields for every boss, with the reference Teleports of all Altgard bosses already filled in.
+- Settings got a more modern look: taller lists without grid lines, alternating rows, values highlighted in the theme color, a full-row menu on the left, and with dark themes also dark headers, scrollbars, buttons, drop-down menus and title bar.
+- Readability: values, status and messages in Settings automatically get enough contrast with every theme (for example the gold of the "principale" theme on white).
+- Your settings and theme now really survive every new version: Wingman remembers which values you chose yourself (in Settings, in the Setup or by editing the CONFIG) and carries only those over, while everything else gets the new defaults. Fixes the theme and settings going back to default after an update, especially when the Setup had been used.
+- Setup: new question to choose the Teleport assistant (ULTRA-FAST or NORMAL); questions now suggest what you already chose (theme, profile, features on at startup), including a theme of your own, and its choices are saved as yours.
+- README and quick-guide infographics updated for the Fast Teleport Assistant in all 10 languages.
+
+### 🇮🇹 Italiano
+- **Prima di tutto la qualità della vita**: il nuovo **Assistente Teleport veloce** ti porta dalla mappa a qualsiasi Field Boss in 3 mosse: click sul boss, click sul Teleport, F due volte.
+- Nuova **ULTRA-FAST MODE** per il Teleport assistito, ora predefinita (Impostazioni > Field Boss > Ricerca e Teleport, scelta tra NORMAL MODE e ULTRA-FAST MODE). Clicchi il boss nel pannello e Wingman trova subito nella lista Kibelisk a sinistra il Teleport di riferimento di quel boss: lo clicchi e premi F due volte. Wingman scorre da solo la lista finché non trova il Teleport (36 scrollate per volta di default, regolabili nello stesso menu). La NORMAL MODE funziona come prima e si sceglie nello stesso menu; la Home mostra la modalità in uso.
+- Direzione di volo dopo il Teleport: in ULTRA-FAST MODE si calcola al volo dall'icona del boss più vicina al Teleport. Le direzioni di 20 boss di Altgard sono già impostate, così la freccia è subito pronta; per ogni boss puoi anche sceglierla tu (Automatica o una delle 8 direzioni), e la scelta vale in entrambe le modalità.
+- Editor dell'elenco boss: nuovi campi **Teleport** e **Direzione** per ogni boss, con i Teleport di riferimento di tutti i boss di Altgard già inseriti.
+- Impostazioni con un aspetto più moderno: elenchi con righe più alte e senza griglia, righe alternate, valori evidenziati con il colore del tema, menu a sinistra con selezione a riga intera e, con i temi scuri, anche intestazioni, barre di scorrimento, pulsanti, menu a tendina e barra del titolo scuri.
+- Leggibilità: valori, stato e messaggi delle Impostazioni hanno automaticamente il contrasto giusto con ogni tema (per esempio l'oro del tema "principale" sul bianco).
+- Le tue impostazioni e il tema ora restano davvero a ogni nuova versione: Wingman ricorda quali valori hai scelto tu (nelle Impostazioni, nel Setup o modificando la CONFIG) e porta avanti solo quelli, mentre il resto prende i nuovi valori predefiniti. Risolve il ritorno di tema e impostazioni ai valori di default dopo un aggiornamento, soprattutto se era stato usato il Setup.
+- Setup: nuova domanda per scegliere l'assistente Teleport (ULTRA-FAST o NORMAL); le domande propongono quello che hai già scelto (tema, profilo, funzioni accese all'avvio), anche un tema tuo, e le sue scelte vengono salvate come tue.
+- README e infografiche della guida rapida aggiornati per l'Assistente Teleport veloce in tutte le 10 lingue.
+
 ## v1.04
 
 ### 🇬🇧 English

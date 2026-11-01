@@ -23,7 +23,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.04"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.05"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -642,6 +642,16 @@ global FieldBossZoomBack     := 1        ; ...e poi in avanti: allo zoom minimo 
 global FieldBossZoomOutWheel := "WheelDown"  ; direzione della rotellina che fa zoom INDIETRO sulla mappa
                                              ; ("WheelDown" o "WheelUp")
 
+; Modalità del Teleport (dopo il click su un boss nel pannello):
+;   "normal"    = NORMAL MODE: apre la lista Field Boss del gioco, trova il boss, cerca sulla mappa
+;                 il Teleport più vicino e ti guida click dopo click fino al Travel
+;   "ultrafast" = ULTRA-FAST MODE: cerca subito nella lista Kibelisk (a sinistra) il Teleport di
+;                 riferimento del boss (Elenco boss): lo clicchi e premi F 2 volte. La direzione si
+;                 calcola dall'icona del boss più vicina al Teleport (o è quella scelta per il boss).
+global FieldBossTeleportMode := "ultrafast"
+global FieldBossUltraScrollStep := 36    ; ULTRA-FAST: scrollate a ogni passo nella lista dei Teleport.
+                                         ; Più alto = ricerca più veloce (36 = consigliato)
+
 ; Pannello dei loot del gioco: quando selezioni un boss il gioco apre a destra il riquadro
 ; con i drop, che può coprire il Teleport più vicino. Per chiuderlo basta un click su un
 ; punto vuoto della mappa (un click semplice non sposta la mappa).
@@ -663,34 +673,38 @@ global FieldBossCheckEvery   := 300      ; ms tra un controllo "mappa aperta?" e
 ;   Grado:       "verde" | "blu" | "oro"  = colore della prima icona dei drop del boss
 ;   Importanza:  0 = nessun simbolo
 ;                1 = 👑 massima   2 = 💎 superiore   3 = 🔥 importante   4 = ⭐ minore
+;   Teleport:    il Teleport della lista Kibelisk da cercare in ULTRA-FAST MODE (come nel gioco,
+;                con il numero: "48. Steel Hammer Workcamp"). Vuoto = quello predefinito
+;   Direzione:   dove volare dopo il Travel: "auto" = dall'icona del boss più vicina al Teleport,
+;                oppure "N" "NE" "E" "SE" "S" "SW" "W" "NW"
 ;   Per aggiungere un boss: copia una riga, cambia i valori, lascia la virgola alla fine
 ;   (tranne l'ultima riga della lista).
-;    Nome boss                            Grado     Importanza
+;    Nome boss                            Grado     Imp. Teleport                                     Direzione
 global FieldBossList := [
-    ["Black Warrior Aed",                 "verde",  0],
-    ["Berserker Vargor",                  "verde",  0],
-    ["Blood Warrior Lannar",              "verde",  0],
-    ["Faithful Rajit",                    "verde",  0],
-    ["Melted Danar",                      "verde",  0],
-    ["High Overseer Nutah",               "blu",    0],
-    ["Blue Wave Kelpina",                 "blu",    0],
-    ["Deceiver Trid",                     "blu",    0],
-    ["Predator Garsan",                   "blu",    0],
-    ["Addicted Hardirun",                 "blu",    0],
-    ["Special Operations Leader Linx",    "blu",    0],
-    ["Advisor Resana",                    "blu",    0],
-    ["Veteran Shujakan",                  "blu",    0],
-    ["Immortal Gartua",                   "oro",    1],
-    ["High Commander Lagta",              "oro",    2],
-    ["Silent Dartan",                     "oro",    3],
-    ["Soul Ruler Kashapa",                "oro",    3],
-    ["Sharp Shylak",                      "oro",    3],
-    ["Dark Shadow Vishwada",              "oro",    3],
-    ["Drakan Battalion Weapon Guruta",    "oro",    3],
-    ["Desecrator Newbold",                "oro",    4],
-    ["Visionary Karuka",                  "oro",    4],
-    ["Specter Archon Axios",              "oro",    4],
-    ["Executioner Barthien",              "oro",    4]
+    ["Black Warrior Aed",                  "verde",  0,  "8. Neglected Crematorium",                  "NE"],
+    ["Berserker Vargor",                   "verde",  0,  "13. Temporary Retreat",                     "W"],
+    ["Blood Warrior Lannar",               "verde",  0,  "22. Moslan Forest Dry Shade",               "SE"],
+    ["Faithful Rajit",                     "verde",  0,  "13. Temporary Retreat",                     "W"],
+    ["Melted Danar",                       "verde",  0,  "5. Creion Campsite",                        "E"],
+    ["High Overseer Nutah",                "blu",    0,  "35. Briskwind Shelter",                     "auto"],
+    ["Blue Wave Kelpina",                  "blu",    0,  "32. Healing Spring",                        "N"],
+    ["Deceiver Trid",                      "blu",    0,  "27. Victorious Daeva's Statue",             "SE"],
+    ["Predator Garsan",                    "blu",    0,  "21. Forest Hideout",                        "S"],
+    ["Addicted Hardirun",                  "blu",    0,  "48. Steel Hammer Workcamp",                 "auto"],
+    ["Special Operations Leader Linx",     "blu",    0,  "40. Graverobber Campsite",                  "N"],
+    ["Advisor Resana",                     "blu",    0,  "36. Hidden Cave",                           "auto"],
+    ["Veteran Shujakan",                   "blu",    0,  "59. Outskirts Stall",                       "NW"],
+    ["Immortal Gartua",                    "oro",    1,  "15. Remote Island",                         "E"],
+    ["High Commander Lagta",               "oro",    2,  "57. Kumrica's Cellar",                      "W"],
+    ["Silent Dartan",                      "oro",    3,  "40. Graverobber Campsite",                  "NW"],
+    ["Soul Ruler Kashapa",                 "oro",    3,  "54. Idun's Lake",                           "auto"],
+    ["Sharp Shylak",                       "oro",    3,  "58. Collapsed Hall of Fame",                "SE"],
+    ["Dark Shadow Vishwada",               "oro",    3,  "57. Kumrica's Cellar",                      "W"],
+    ["Drakan Battalion Weapon Guruta",     "oro",    3,  "51. Steel Hammer Temporary Trading Post",   "E"],
+    ["Desecrator Newbold",                 "oro",    4,  "41. Fissure Cave",                          "N"],
+    ["Visionary Karuka",                   "oro",    4,  "57. Kumrica's Cellar",                      "W"],
+    ["Specter Archon Axios",               "oro",    4,  "44. Basfelt Ruins Cliff",                   "N"],
+    ["Executioner Barthien",               "oro",    4,  "54. Idun's Lake",                           "W"]
 ]
 ; Aspetto avanzato del pannello (colori dei gradi, simboli di importanza e di stato,
 ; coordinate di riferimento, tempi interni): in fondo allo script, classe FieldBossTool.
@@ -951,6 +965,40 @@ ThemeApply() {
 }
 
 UiC(role) => ThemeUi.Has(role) ? ThemeUi[role] : "FF00FF"
+
+; Colore del ruolo "role" reso leggibile sullo sfondo del ruolo "bgRole": se il contrasto è basso
+; (es. oro chiaro su bianco) viene scurito o schiarito quanto basta. Restituisce RRGGBB.
+UiOn(role, bgRole := "WinBg") => Format("{:06X}", ReadableRGB(ColorToRGB(UiC(role)), ColorToRGB(UiC(bgRole))))
+
+; Luminanza relativa (WCAG) di un colore RGB
+RelLum(c) {
+    out := 0
+    for i, w in [0.2126, 0.7152, 0.0722] {
+        v := ((c >> (16 - (i - 1) * 8)) & 0xFF) / 255
+        out += w * (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)
+    }
+    return out
+}
+
+ContrastRGB(a, b) {
+    la := RelLum(a), lb := RelLum(b)
+    return (Max(la, lb) + 0.05) / (Min(la, lb) + 0.05)
+}
+
+; fg con almeno "need" di contrasto su bg (4.5 = testo normale ben leggibile)
+ReadableRGB(fg, bg, need := 4.5) {
+    static cache := Map()
+    k := fg "|" bg "|" need
+    if cache.Has(k)
+        return cache[k]
+    out := fg, toward := RelLum(bg) > 0.18 ? 0x000000 : 0xFFFFFF
+    loop 20 {
+        if (ContrastRGB(out, bg) >= need)
+            break
+        out := LerpRGB(fg, toward, A_Index * 0.05)
+    }
+    return cache[k] := out
+}
 HudC(name) => ThemeHud.Has(name) ? ThemeHud[name] : GetGlobalVar(name)
 
 ThemeApply()
@@ -1072,18 +1120,19 @@ BuildHud()
 ; HUD overlay accendibile/spegnibile come i tool (Ctrl+Shift+\)
 Hud := HudTool()
 
-; Tasti attivi solo con il gioco in primo piano (il tasto arriva comunque al gioco).
-; Con l'HUD spento i segnali vengono ignorati.
+; Tools: controlli sullo schermo attivi solo con il gioco in primo piano
+HiddenCube := HiddenCubeTool()
+FieldBoss  := FieldBossTool()
+
+; Tasti attivi solo con il gioco in primo piano (il tasto o il click arriva comunque al gioco).
+; Con l'HUD spento i segnali vengono ignorati. Creati DOPO i tool: se il segnale è il click sinistro,
+; il blocco dei click del Field Boss (creato prima) ha la precedenza durante la guida.
 HotIfWinActive("ahk_exe " GameExe)
 if (CombatKey != "")
     Hotkey("~*" CombatKey, (*) => Hud.On && CombatHUD.Signal())
 if (LootKey != "")
     Hotkey("~*" LootKey, (*) => Hud.On && LootHUD.Signal())
 HotIfWinActive()
-
-; Tools: controlli sullo schermo attivi solo con il gioco in primo piano
-HiddenCube := HiddenCubeTool()
-FieldBoss  := FieldBossTool()
 
 HotIfWinActive("ahk_exe " GameExe)
 if (HiddenCubeTestKey != "")
@@ -2363,6 +2412,146 @@ RoundCtl(ctrl, r) {
         , "Int", r, "Int", r, "Ptr"), "Int", true)
 }
 
+; ---------------- Stile moderno di finestre, elenchi e menu (solo grafica) ----------------
+; Elenchi con righe alte, senza griglia, righe alternate e valori evidenziati; menu a sinistra
+; con selezione a riga intera; con i temi scuri anche intestazioni, barre di scorrimento,
+; pulsanti, menu a tendina e barra del titolo diventano scuri. Se Windows non lo supporta,
+; resta l'aspetto classico (nessun errore).
+UiIsDark() {
+    try c := ColorToRGB(UiC("WinField"))
+    catch
+        return true
+    return (((c >> 16) & 0xFF) * 299 + ((c >> 8) & 0xFF) * 587 + (c & 0xFF) * 114) < 128000
+}
+
+SetCtlTheme(hwnd, name) {
+    try DllCall("uxtheme\SetWindowTheme", "Ptr", hwnd, "Str", name, "Ptr", 0)
+}
+
+ModernWindow(g, valueCols := "") {
+    dark := UiIsDark()
+    for hwnd, c in g {
+        switch c.Type {
+            case "ListView": ModernList(c, IsObject(valueCols) && valueCols.Has(hwnd) ? valueCols[hwnd] : -1)
+            case "TreeView": ModernTree(c)
+            case "Button":   SetCtlTheme(hwnd, dark ? "DarkMode_Explorer" : "Explorer")
+            case "DDL", "ComboBox": SetCtlTheme(hwnd, dark ? "DarkMode_CFD" : "CFD")
+            case "Edit":     SetCtlTheme(hwnd, dark ? "DarkMode_Explorer" : "Explorer")   ; barre di scorrimento
+        }
+    }
+    ; barra del titolo: scura con i temi scuri, e su Windows 11 dello stesso colore dell'intestazione
+    try DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", g.Hwnd, "Int", 20, "Int*", dark ? 1 : 0, "Int", 4)
+    try DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", g.Hwnd, "Int", 35, "UInt*", RgbToColorRef(ColorToRGB(UiC("Bg"))), "Int", 4)
+    try DllCall("dwmapi\DwmSetWindowAttribute", "Ptr", g.Hwnd, "Int", 36, "UInt*", RgbToColorRef(ColorToRGB(UiC("Text"))), "Int", 4)
+}
+
+; Elenco moderno. valueCol = colonna dei valori (da 0, evidenziata col colore d'accento), -1 = nessuna
+ModernList(lv, valueCol := -1, rowH := 32) {
+    dark := UiIsDark()
+    lv.Opt("-Grid")
+    SendMessage(0x1036, 0x10020, 0x10020, lv)          ; LVM_SETEXTENDEDLISTVIEWSTYLE: riga intera + doppio buffer
+    SetCtlTheme(lv.Hwnd, dark ? "DarkMode_Explorer" : "Explorer")
+    ModernHeader(lv)                                    ; intestazione delle colonne con i colori del tema
+    ; altezza delle righe: un elenco di immagini "vuoto" alto rowH
+    il := DllCall("comctl32\ImageList_Create", "Int", 1, "Int", Round(rowH * A_ScreenDPI / 96), "UInt", 0x20, "Int", 1, "Int", 0, "Ptr")
+    if il
+        lv.SetImageList(il, 1)
+    lv.OnNotify(-12, ModernListDraw.Bind(valueCol))     ; NM_CUSTOMDRAW: righe alternate e colori del tema
+}
+
+ModernListDraw(valueCol, lv, lParam) {
+    P := A_PtrSize, base := 3 * P                       ; NMLVCUSTOMDRAW (32 e 64 bit)
+    stage := NumGet(lParam, base, "UInt")
+    if (stage = 0x1 || stage = 0x10001)                 ; CDDS_PREPAINT / CDDS_ITEMPREPAINT
+        return 0x20                                     ; CDRF_NOTIFYITEMDRAW / CDRF_NOTIFYSUBITEMDRAW
+    if (stage != 0x30001)                               ; CDDS_SUBITEM | CDDS_ITEMPREPAINT
+        return 0
+    row := NumGet(lParam, base + 2 * P + 16, "UPtr")
+    sub := NumGet(lParam, base + 5 * P + 24, "Int")
+    try {
+        field := ColorToRGB(UiC("WinField")), txt := ColorToRGB(UiC("WinText"))
+        bk := (row & 1) ? LerpRGB(field, txt, 0.05) : field
+        fg := ReadableRGB((sub = valueCol) ? ColorToRGB(UiC("Accent")) : txt, bk)
+        NumPut("UInt", RgbToColorRef(fg), lParam, base + 5 * P + 16)
+        NumPut("UInt", RgbToColorRef(bk), lParam, base + 5 * P + 20)
+    }
+    return 0x2                                          ; CDRF_NEWFONT: usa i colori impostati
+}
+
+; Intestazione delle colonne disegnata con i colori del tema (Windows la lascerebbe chiara, o con
+; il testo nero sulle barre scure). Si "sottoclassa" solo l'intestazione e la si dipinge da sé:
+; l'elenco (click, selezione) resta del tutto intatto.
+ModernHeader(lv) {
+    static cb := 0
+    if !(hdr := SendMessage(0x101F, 0, 0, lv))        ; LVM_GETHEADER
+        return
+    if !cb
+        cb := CallbackCreate(ModernHeaderProc, , 6)
+    DllCall("comctl32\SetWindowSubclass", "Ptr", hdr, "Ptr", cb, "UPtr", 1, "UPtr", 0)
+}
+
+ModernHeaderProc(hwnd, msg, wParam, lParam, id, ref) {
+    if (msg = 0x14)                                     ; WM_ERASEBKGND: ci pensa WM_PAINT
+        return 1
+    if (msg = 0xF) {                                    ; WM_PAINT
+        ps := Buffer(80, 0)
+        hdc := DllCall("BeginPaint", "Ptr", hwnd, "Ptr", ps, "Ptr")
+        try ModernHeaderPaint(hwnd, hdc)
+        DllCall("EndPaint", "Ptr", hwnd, "Ptr", ps)
+        return 0
+    }
+    return DllCall("comctl32\DefSubclassProc", "Ptr", hwnd, "UInt", msg, "UPtr", wParam, "Ptr", lParam, "Ptr")
+}
+
+ModernHeaderPaint(hdr, hdc) {
+    txtRgb := ColorToRGB(UiC("WinText"))
+    bgRgb := LerpRGB(ColorToRGB(UiC("WinField")), txtRgb, 0.10)
+    sep := RgbToColorRef(LerpRGB(bgRgb, txtRgb, 0.25)), acc := RgbToColorRef(ColorToRGB(UiC("Accent")))
+    rc := Buffer(16, 0)
+    DllCall("GetClientRect", "Ptr", hdr, "Ptr", rc)
+    W := NumGet(rc, 8, "Int"), H := NumGet(rc, 12, "Int")
+    ModernFill(hdc, rc.Ptr, RgbToColorRef(bgRgb))
+    font := SendMessage(0x31, 0, 0, hdr)                ; WM_GETFONT
+    old := font ? DllCall("SelectObject", "Ptr", hdc, "Ptr", font, "Ptr") : 0
+    DllCall("SetBkMode", "Ptr", hdc, "Int", 1)          ; TRANSPARENT
+    DllCall("SetTextColor", "Ptr", hdc, "UInt", RgbToColorRef(ReadableRGB(txtRgb, bgRgb, 7)))
+    P := A_PtrSize, r := Buffer(16, 0), t := Buffer(16, 0), line := Buffer(16, 0)
+    loop SendMessage(0x1200, 0, 0, hdr) {               ; HDM_GETITEMCOUNT
+        i := A_Index - 1
+        if !SendMessage(0x1207, i, r.Ptr, hdr)          ; HDM_GETITEMRECT
+            continue
+        x1 := NumGet(r, 0, "Int"), x2 := NumGet(r, 8, "Int")
+        if (x2 - x1 < 4)                                ; colonna nascosta
+            continue
+        txt := Buffer(512, 0), hi := Buffer(80, 0)
+        NumPut("UInt", 0x2, hi, 0)                      ; HDI_TEXT
+        NumPut("Ptr", txt.Ptr, hi, 8), NumPut("Int", 255, hi, 8 + 2 * P)
+        SendMessage(0x120B, i, hi.Ptr, hdr)             ; HDM_GETITEMW
+        NumPut("Int", x1 + 8, "Int", 0, "Int", x2 - 6, "Int", H - 2, t)
+        DllCall("DrawTextW", "Ptr", hdc, "Ptr", txt.Ptr, "Int", -1, "Ptr", t.Ptr, "UInt", 0x8024)   ; VCENTER|SINGLELINE|END_ELLIPSIS
+        NumPut("Int", x2 - 1, "Int", 6, "Int", x2, "Int", H - 6, line)          ; separatore
+        ModernFill(hdc, line.Ptr, sep)
+    }
+    NumPut("Int", 0, "Int", H - 2, "Int", W, "Int", H, line)                    ; linea d'accento sotto
+    ModernFill(hdc, line.Ptr, acc)
+    if old
+        DllCall("SelectObject", "Ptr", hdc, "Ptr", old)
+}
+
+ModernFill(hdc, pRect, colorRef) {
+    br := DllCall("CreateSolidBrush", "UInt", colorRef, "Ptr")
+    DllCall("FillRect", "Ptr", hdc, "Ptr", pRect, "Ptr", br)
+    DllCall("DeleteObject", "Ptr", br)
+}
+
+; Menu ad albero moderno: voci più alte, selezione e passaggio del mouse a riga intera
+ModernTree(tv, itemH := 32) {
+    SetCtlTheme(tv.Hwnd, UiIsDark() ? "DarkMode_Explorer" : "Explorer")
+    SendMessage(0x112C, 0x4, 0x4, tv)                   ; TVM_SETEXTENDEDSTYLE: TVS_EX_DOUBLEBUFFER
+    tv.Opt("+0x1000")                                   ; TVS_FULLROWSELECT
+    SendMessage(0x111B, Round(itemH * A_ScreenDPI / 96), 0, tv)   ; TVM_SETITEMHEIGHT
+}
+
 ; Crea una regione poligonale da una lista di coordinate x1, y1, x2, y2, ... (max 8 punti)
 PolygonRgn(coords*) {
     static buf := Buffer(64)                 ; riutilizzato: niente allocazioni a ogni fotogramma
@@ -2495,6 +2684,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     static ScrollWaitSec := 10
     static ScrollSettle := 250
     static MapPanDelay := 700
+    static UltraCaptureDelay := 450                    ; ULTRA-FAST: attesa max prima della foto della mappa
     static ZoomSettle := 500
     static LootCloseDelay := 300
     static BossSnapRadius := 260
@@ -2512,6 +2702,10 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     static StatusOrder := ["on", "off"]
     static StatusInfo  := Map("on",  {label: "Attivi",     sym: "●", color: "FF5A4F", dim: "4A1C1A"}
                             , "off", {label: "Non attivi", sym: "○", color: "8A93A0", dim: "2A3038"})
+    ; direzioni della bussola (8 settori, da Est in senso antiorario) e codici usati nell'Elenco boss
+    static CompassDirs := [["EST", "→"], ["NORD-EST", "↗"], ["NORD", "↑"], ["NORD-OVEST", "↖"]
+                         , ["OVEST", "←"], ["SUD-OVEST", "↙"], ["SUD", "↓"], ["SUD-EST", "↘"]]
+    static DirCodes    := ["AUTO", "N", "NE", "E", "SE", "S", "SW", "W", "NW"]
     static Tiers       := Map(1, {sym: "👑", color: "FFD54A"}
                             , 2, {sym: "💎", color: "7FD4FF"}
                             , 3, {sym: "🔥", color: "FF7A3D"}
@@ -2640,7 +2834,9 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             g := StrLower(Trim(b.Length >= 2 ? b[2] : ""))
             if !FieldBossTool.Grades.Has(g)                 ; grado scritto male: oro
                 g := "oro"
-            this.Bosses[b[1]] := {grade: g, tier: b.Length >= 3 ? b[3] : 0}
+            tele := b.Length >= 4 && Trim(b[4]) != "" ? Trim(b[4]) : FieldBossTool.DefTele(b[1])
+            dir := b.Length >= 5 ? StrUpper(Trim(b[5])) : "AUTO"
+            this.Bosses[b[1]] := {grade: g, tier: b.Length >= 3 ? b[3] : 0, tele: tele, dir: dir}
             this.Status[b[1]] := old.Has(b[1]) ? old[b[1]] : ""   ; "on" / "off" / "" (non ancora letto)
             this.BossNorm.Push({name: b[1], n: FieldBossTool.Norm(b[1])})
         }
@@ -2775,7 +2971,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             this.Cancel := true
             return
         }
-        if FieldBossGuideOnOpen                 ; guida automatica all'apertura (disattivata di default)
+        if (FieldBossGuideOnOpen && FieldBossTeleportMode != "ultrafast")   ; guida automatica all'apertura (disattivata di default)
             this.Step := 0, this.Request(ObjBindMethod(this, "GuideToFieldBoss"), FieldBossTool.MapOpenDelay)
     }
 
@@ -2883,19 +3079,254 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         if !onIcon
             return
         this.TeleportGuard()                             ; mouse fermo qualche secondo: niente click sbagliati prima di F
-        ; il gioco blocca i tasti simulati: il Travel lo premi tu
+        dir := this.BossDir(name)                        ; direzione scelta a mano nell'Elenco boss...
+        if !IsObject(dir)                                ; ...altrimenti dal Teleport verso il boss sulla mappa
+            dir := FieldBossTool.Compass(d.boss.x - best.x, d.boss.y - best.y, this.Geo().s)
+        this.TravelAndDir(dir, name)
+    }
+
+    ; Il gioco blocca i tasti simulati: il Travel lo premi tu. Poi (se attiva) la freccia della direzione.
+    TravelAndDir(dir, name) {
         if !FieldBossDirHint {
             this.WaitTravel("", name)                    ; attende comunque il Travel per sbloccare i click
             return
         }
-        dir := FieldBossTool.Compass(d.boss.x - best.x, d.boss.y - best.y, this.Geo().s)
         if this.WaitTravel(dir, name) {
             this.HintHide()
+            if !IsObject(dir)
+                return
             if FieldBossDirDelay
                 SetTimer(this.DirDelayFn := ObjBindMethod(this, "DirShow", dir, name), -FieldBossDirDelay)
             else
                 this.DirShow(dir, name)
         }
+    }
+
+    ; ---------------- ULTRA-FAST MODE ----------------
+    ; Click sul boss nel pannello -> lo script trova nella lista Kibelisk (a sinistra) il Teleport di
+    ; riferimento del boss -> click sul Teleport -> F (2 volte) per il Travel. Poi la direzione.
+    FindTeleportFast(name) {
+        this.Step := 0                          ; le fasi ripartono da 1 a ogni boss scelto
+        tele := this.Bosses.Has(name) ? this.Bosses[name].tele : ""
+        if (tele = "")
+            return this.HintShow(Tr("Nessun Teleport di riferimento"), Tr("Impostalo in Field Boss > Elenco boss ({1})", name), "err", 4000)
+        if (this.MapVisible() && this.InDungeon())
+            return
+        if !this.TeleListVisible() && !this.GuideToKibelisk()
+            return
+        this.HintShow(Tr("Cerco {1}...", tele), Tr("Scorro la lista dei Teleport"), "wait")
+        it := this.SearchTele(tele)
+        if !it {
+            if !this.Cancel
+                this.HintShow(Tr("Teleport non trovato"), Tr("{1} non è nella lista del gioco", tele), "err", 3000)
+            return
+        }
+        g := this.Geo(), r := this.Rc(FieldBossTool.RcList, g), tol := Round(FieldBossTool.NameTolerance * g.s)
+        ok := this.ClickPhase(it, Tr("Clicca il TELEPORT"), tele "   ·   " name, 0
+            , (x, y, w) => this.IsPanel(w) ? -1 : (x >= r[1] && x <= r[1] + r[3] && Abs(y - it.y) <= tol))
+        if !ok
+            return
+        this.TeleportGuard()                    ; mouse fermo qualche secondo: niente click sbagliati prima di F
+        dir := this.BossDir(name)               ; direzione scelta a mano nell'Elenco boss...
+        cap := "", presses := 0, down := GetKeyState(FieldBossTravelKey, "P")
+        if (!IsObject(dir) && FieldBossDirHint) {
+            ; ...altrimenti dall'icona del boss più vicina al Teleport. La mappa va "fotografata" appena il
+            ; gioco l'ha centrata sul Teleport, prima che tu parta: si aspetta poco, e se premi già F si
+            ; fotografa subito. Le pressioni di F contano comunque per il Travel.
+            t0 := A_TickCount
+            while (!this.Cancel && A_TickCount - t0 < FieldBossTool.UltraCaptureDelay) {
+                isDown := GetKeyState(FieldBossTravelKey, "P")
+                if (isDown && !down)
+                    presses += 1
+                down := isDown
+                if presses
+                    break
+                Sleep(PerfPollMs)
+            }
+            g := this.Geo(), c := this.Pt(FieldBossTool.PtBossCenter, g)
+            cap := this.CaptureMap({x: c[1], y: c[2], rx: Round(700 * g.s), ry: Round(520 * g.s)})
+        }
+        if !this.WaitTravel(IsObject(dir) ? dir : "", name, presses, down)
+            return
+        this.HintHide()
+        if !FieldBossDirHint
+            return
+        t0 := A_TickCount
+        if (!IsObject(dir) && IsObject(cap))
+            dir := this.NearestBossDir(cap)     ; analisi della foto (a mappa già chiusa)
+        if !IsObject(dir)
+            return this.HintShow(Tr("Direzione del boss non trovata"), Tr("Puoi sceglierla per {1} in Field Boss > Elenco boss", name), "err", 4000)
+        wait := FieldBossDirDelay - (A_TickCount - t0)
+        if (wait > 0)
+            SetTimer(this.DirDelayFn := ObjBindMethod(this, "DirShow", dir, name), -wait)
+        else
+            this.DirShow(dir, name)
+    }
+
+    ; La lista a sinistra è quella dei Teleport (Kibelisk)? Righe numerate: "48. Steel Hammer Workcamp"
+    TeleListVisible() {
+        n := 0
+        for it in this.ReadTele()
+            if (it.num && ++n >= 2)
+                return true
+        return false
+    }
+
+    ; Porta il cursore sul tab Kibelisk e aspetta il tuo click (se il tab non si legge, lo clicchi tu)
+    GuideToKibelisk() {
+        pt := this.FindTab("kibel")
+        if IsObject(pt) {
+            ok := this.ClickPhase(pt, Tr("Clicca {1}", "KIBELISK"), Tr("Apro la lista dei Teleport"), FieldBossTool.GuideClickSec
+                                , (x, y, w) => this.IsPanel(w) ? -1 : true)
+            if !ok
+                return false
+            wait := 3000
+        } else {                                 ; tab non letto: mouse e click liberi finché non apri la lista
+            wasBlocked := this.BlockClicks, this.BlockClicks := false, this.LockPt := ""
+            this.HintShow(Tr("Apri la lista dei Teleport"), Tr("Clicca il tab KIBELISK in alto"), "go")
+            wait := FieldBossTool.GuideClickSec * 1000
+        }
+        deadline := A_TickCount + wait, chk := A_TickCount, found := false
+        while (!this.Cancel && A_TickCount < deadline && this.StillOnMap(&chk)) {
+            if (found := this.TeleListVisible())
+                break
+            Sleep(200)
+        }
+        if !IsObject(pt) {
+            this.BlockClicks := wasBlocked
+            if (FieldBossLockMouse && wasBlocked) {
+                MouseGetPos(&mx, &my)
+                this.LockPt := {x: mx, y: my}
+            }
+        }
+        if (!found && !this.Cancel)
+            this.HintShow(Tr("Lista dei Teleport non trovata"), Tr("Clicca il tab KIBELISK in alto"), "err", 3000)
+        return found
+    }
+
+    ; Posizione (centro) di un tab in alto letto con l'OCR: "" se non c'è
+    FindTab(key) {
+        g := this.Geo()
+        for line in this.Ocr(this.Rc(FieldBossTool.RcTabs, g), g).Lines
+            for w in line.Words
+                if InStr(FieldBossTool.Norm(w.Text), key)
+                    return {x: w.x + w.w // 2, y: w.y + w.h // 2}
+        return ""
+    }
+
+    ; Legge la lista Kibelisk: {num, n (nome normalizzato), x, y} per riga
+    ReadTele() {
+        g := this.Geo(), out := []
+        for line in this.Ocr(this.Rc(FieldBossTool.RcList, g), g).Lines {
+            txt := "", x1 := 1e9, y1 := 1e9, x2 := -1e9, y2 := -1e9
+            for w in line.Words {
+                if RegExMatch(w.Text, "i)^[\d.,]+m$")      ; scarta la distanza (es. 2,096m)
+                    continue
+                txt .= (txt = "" ? "" : " ") w.Text
+                x1 := Min(x1, w.x), y1 := Min(y1, w.y), x2 := Max(x2, w.x + w.w), y2 := Max(y2, w.y + w.h)
+            }
+            txt := Trim(RegExReplace(txt, "[.…]+$"))
+            if (txt = "")
+                continue
+            num := 0, nm := txt
+            if RegExMatch(txt, "^(\d{1,3})\s*[.,:]?\s*(.*)$", &m)
+                num := Integer(m[1]), nm := m[2]
+            n := FieldBossTool.Norm(nm)
+            if (!num && StrLen(n) < 4)
+                continue
+            out.Push({num: num, n: n, x: (x1 + x2) // 2, y: (y1 + y2) // 2})
+        }
+        return out
+    }
+
+    static TeleFind(items, tnum, tn) {
+        for it in items {
+            if (tnum && it.num) {
+                if (it.num != tnum)
+                    continue
+                if (tn = "" || StrLen(it.n) < 3 || SubStr(it.n, 1, 3) = SubStr(tn, 1, 3) || FieldBossTool.Matches(it.n, tn))
+                    return it
+            } else if (tn != "" && FieldBossTool.Matches(it.n, tn))
+                return it
+        }
+        return 0
+    }
+
+    ; Cerca il Teleport nella lista: i numeri delle righe dicono da che parte scorrere; a fine lista
+    ; (righe che non cambiano più) si ferma. Riserva: scrolli tu e lo riconosce appena compare.
+    SearchTele(tele) {
+        tnum := RegExMatch(tele, "^\s*(\d{1,3})", &m) ? Integer(m[1]) : 0
+        tn := FieldBossTool.Norm(RegExReplace(tele, "^\s*\d{1,3}\s*[.,:]?\s*"))
+        step := Max(1, FieldBossUltraScrollStep)
+        sweep := "Down", prev := "", stuck := 0, miss := 0, lastDir := "Down"
+        loop 90 {
+            if this.Cancel
+                return 0
+            items := this.ReadTele()
+            if (it := FieldBossTool.TeleFind(items, tnum, tn))
+                return it
+            lo := 1000, hi := 0, sig := ""
+            for i in items {
+                sig .= i.num ":" i.n ":" (i.y // 8) "|"     ; anche la posizione: si accorge pure degli scroll piccoli
+                if i.num
+                    lo := Min(lo, i.num), hi := Max(hi, i.num)
+            }
+            if (prev != "" && sig = prev) {              ; lo scroll precedente non ha mosso la lista
+                if (++stuck = 1) {                       ; riprova con uno scroll più ampio
+                    this.Wheel(lastDir, step * 2)
+                    continue
+                }
+                if ((!tnum || !hi) && sweep = "Down") {  ; senza numeri: in fondo, poi si risale
+                    sweep := "Up", lastDir := "Up", stuck := 0, prev := ""
+                    this.Wheel("Up", step)
+                    continue
+                }
+                break                                    ; fine lista: il Teleport non c'è
+            }
+            stuck := 0, prev := sig
+            n := step
+            if (tnum && hi) {                            ; i numeri dicono da che parte scorrere
+                dir := tnum > hi ? "Down" : tnum < lo ? "Up" : ""
+                if (dir = "") {                          ; dovrebbe essere a schermo ma non l'ho letto:
+                    if (++miss > 4)                      ; scroll minimo e rilettura
+                        break
+                    dir := Mod(miss, 2) ? "Down" : "Up", n := 1
+                }
+            } else
+                dir := sweep
+            lastDir := dir
+            this.Wheel(dir, n)
+        }
+        this.HintShow(Tr("Scrolla la lista dei Teleport"), Tr("Cerco {1}: lo riconosco appena compare", tele), "wait")
+        deadline := A_TickCount + FieldBossTool.ScrollWaitSec * 1000
+        it := 0, chk := A_TickCount
+        while (!it && !this.Cancel && A_TickCount < deadline && this.StillOnMap(&chk)) {
+            it := FieldBossTool.TeleFind(this.ReadTele(), tnum, tn)
+            Sleep(150)
+        }
+        return it
+    }
+
+    ; Direzione calcolata al volo: Teleport = icona viola più vicina al centro della mappa (dove il
+    ; gioco porta il Teleport scelto), boss = teschio (rosso o grigio) più vicino a quel Teleport.
+    ; "" = nessun boss trovato.
+    NearestBossDir(cap := "") {
+        d := this.AnalyzeMap(IsObject(cap) ? cap : this.CaptureMap(), true), g := IsObject(cap) ? cap.g : this.Geo()
+        c := this.Pt(FieldBossTool.PtBossCenter, g), tele := {x: c[1], y: c[2]}
+        bestD := (FieldBossTool.BossSnapRadius * g.s) ** 2
+        for p in d.purple {
+            dd := (p.x - c[1]) ** 2 + (p.y - c[2]) ** 2
+            if (dd <= bestD)
+                bestD := dd, tele := p
+        }
+        boss := "", bestD := 1e18, skulls := d.red.Clone()
+        skulls.Push(d.grey*)
+        for p in skulls {
+            dd := (p.x - tele.x) ** 2 + (p.y - tele.y) ** 2
+            if (dd < bestD)
+                bestD := dd, boss := p
+        }
+        return IsObject(boss) ? FieldBossTool.Compass(boss.x - tele.x, boss.y - tele.y, g.s) : ""
     }
 
     ; Dopo il click sul Teleport: per FieldBossTeleportLock secondi il mouse non si muove e non clicca
@@ -2918,12 +3349,16 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
 
     ; Aspetta il Travel: il tasto F premuto FieldBossTravelPresses volte (= Teleport fatto).
     ; Se la mappa si chiude dopo almeno una pressione, conta come partito. false = annullato/scaduto.
-    WaitTravel(dir, name) {
+    WaitTravel(dir, name, presses := 0, down := false) {
         need := Max(1, FieldBossTravelPresses), key := StrUpper(FieldBossTravelKey)
+        if (presses >= need)
+            return true
         times := need = 1 ? "" : Tr("{1} volte", need) " "
         sub := IsObject(dir) ? Tr("Poi vola verso {1} per raggiungere {2}", dir.label, name) : Tr("Buona caccia!")
         this.HintShow(Tr("Premi  {1}  {2}per il Travel", key, times), sub, "ok", 0, true)
-        deadline := A_TickCount + FieldBossTravelWait * 1000, presses := 0, down := false, chk := A_TickCount
+        if presses                                         ; F già premuto (ULTRA-FAST)
+            this.HintShow(Tr("Premi ancora  {1}", key), Tr("Pressione {1} di {2}", presses, need), "ok", 0, true)
+        deadline := A_TickCount + FieldBossTravelWait * 1000, chk := A_TickCount
         while (!this.Cancel && A_TickCount < deadline) {
             isDown := GetKeyState(FieldBossTravelKey, "P")
             if (isDown && !down) {                         ; nuova pressione
@@ -2949,11 +3384,43 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     static Compass(dx, dy, s) {
         if (Sqrt(dx * dx + dy * dy) < 25 * s)
             return {label: Tr("il boss: è proprio qui"), short: Tr("QUI"), arrow: "◉"}
-        static dirs := [["EST", "→"], ["NORD-EST", "↗"], ["NORD", "↑"], ["NORD-OVEST", "↖"]
-                      , ["OVEST", "←"], ["SUD-OVEST", "↙"], ["SUD", "↓"], ["SUD-EST", "↘"]]
         ang := DllCall("msvcrt\atan2", "Double", -dy, "Double", dx, "Cdecl Double") * 57.29578   ; gradi, 0 = Est, 90 = Nord
-        i := Mod(Round(ang / 45) + 8, 8) + 1
-        return {label: Tr(dirs[i][1]), short: Tr(dirs[i][1]), arrow: dirs[i][2]}
+        return FieldBossTool.DirAt(Mod(Round(ang / 45) + 8, 8) + 1)
+    }
+
+    static DirAt(i) {
+        d := FieldBossTool.CompassDirs[i]
+        return {label: Tr(d[1]), short: Tr(d[1]), arrow: d[2]}
+    }
+
+    ; Direzione scelta a mano per il boss nell'Elenco boss ("" = automatica)
+    static DirFromCode(code) {
+        static idx := Map("E", 1, "NE", 2, "N", 3, "NW", 4, "W", 5, "SW", 6, "S", 7, "SE", 8)
+        code := StrUpper(Trim(code))
+        return idx.Has(code) ? FieldBossTool.DirAt(idx[code]) : ""
+    }
+
+    BossDir(name) => this.Bosses.Has(name) ? FieldBossTool.DirFromCode(this.Bosses[name].dir) : ""
+
+    ; Teleport di riferimento predefinito (ULTRA-FAST MODE) per i boss di Altgard:
+    ; usato quando nell'Elenco boss il Teleport è vuoto
+    static DefTele(name) {
+        static m := Map(
+            "blackwarrioraed", "8. Neglected Crematorium",       "berserkervargor", "13. Temporary Retreat",
+            "bloodwarriorlannar", "22. Moslan Forest Dry Shade", "faithfulrajit", "13. Temporary Retreat",
+            "melteddanar", "5. Creion Campsite",                 "highoverseernutah", "35. Briskwind Shelter",
+            "bluewavekelpina", "32. Healing Spring",             "deceivertrid", "27. Victorious Daeva's Statue",
+            "predatorgarsan", "21. Forest Hideout",              "addictedhardirun", "48. Steel Hammer Workcamp",
+            "specialoperationsleaderlinx", "40. Graverobber Campsite", "advisorresana", "36. Hidden Cave",
+            "veteranshujakan", "59. Outskirts Stall",            "immortalgartua", "15. Remote Island",
+            "highcommanderlagta", "57. Kumrica's Cellar",        "silentdartan", "40. Graverobber Campsite",
+            "soulrulerkashapa", "54. Idun's Lake",               "sharpshylak", "58. Collapsed Hall of Fame",
+            "darkshadowvishwada", "57. Kumrica's Cellar",        "drakanbattalionweaponguruta", "51. Steel Hammer Temporary Trading Post",
+            "desecratornewbold", "41. Fissure Cave",             "visionarykaruka", "57. Kumrica's Cellar",
+            "visionarykuruka", "57. Kumrica's Cellar",           "specterarchonaxios", "44. Basfelt Ruins Cliff",
+            "executionerbarthien", "54. Idun's Lake")
+        n := FieldBossTool.Norm(name)
+        return m.Has(n) ? m[n] : ""
     }
 
     ; ---------------- Indicazione della direzione (in alto al centro) ----------------
@@ -3313,23 +3780,38 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     ; ---------------- Lettura schermo (colori mappa) ----------------
     ; Cerca gruppi di pixel viola (Teleport) e rossi (teschio boss attivo).
     ; Il boss è dove il gioco centra la mappa; se lì vicino c'è un teschio rosso, usa quello.
-    DetectMapIcons() {
+    ; grey = true: cerca anche i teschi grigi (boss non attivi). Serve solo per la direzione in
+    ; ULTRA-FAST MODE e per il test della mappa: è più lento.
+    DetectMapIcons(grey := false) => this.AnalyzeMap(this.CaptureMap(), grey)
+
+    ; "Foto" della zona mappa (veloce): l'analisi dei colori si può fare anche dopo, a mappa chiusa.
+    ; around = {x, y, rx, ry}: solo un rettangolo attorno a quel punto (più veloce)
+    CaptureMap(around := "") {
         g  := this.Geo(), s := g.s, m := FieldBossTool.MapMargins
         x0 := g.x + Round(m[1] * s), y0 := g.y + Round(m[2] * s)
-        w  := g.w - Round((m[1] + m[3]) * s), h := g.h - Round((m[2] + m[4]) * s)
+        x1 := g.x + g.w - Round(m[3] * s), y1 := g.y + g.h - Round(m[4] * s)
+        if IsObject(around)
+            x0 := Max(x0, around.x - around.rx), y0 := Max(y0, around.y - around.ry)
+          , x1 := Min(x1, around.x + around.rx), y1 := Min(y1, around.y + around.ry)
+        w := Max(1, x1 - x0), h := Max(1, y1 - y0)
         hint := IsObject(this.Hint) && DllCall("IsWindowVisible", "Ptr", this.Hint.Hwnd)
         if hint                                        ; il riquadro istruzioni non deve coprire i Teleport
             this.Hint.Hide(), Sleep(40)
         buf := FieldBossTool.Capture(x0, y0, w, h)
         if hint
             this.Hint.Show("NA")
-
         px1 := px2 := py1 := py2 := -1                 ; esclude il pannello
         if (this.Shown && IsObject(this.Panel)) {
             this.Panel.GetPos(&ppx, &ppy, &ppw, &pph)
             px1 := ppx - x0, py1 := ppy - y0, px2 := px1 + ppw, py2 := py1 + pph
         }
-        step := Max(2, Round(3 * s)), purple := [], red := [], y := 0
+        return {buf: buf, x0: x0, y0: y0, w: w, h: h, px1: px1, px2: px2, py1: py1, py2: py2, g: g}
+    }
+
+    AnalyzeMap(cap, grey := false) {
+        buf := cap.buf, x0 := cap.x0, y0 := cap.y0, w := cap.w, h := cap.h, g := cap.g, s := g.s
+        px1 := cap.px1, px2 := cap.px2, py1 := cap.py1, py2 := cap.py2
+        step := Max(2, Round(3 * s)), purple := [], red := [], gray := [], y := 0
         while (y < h) {
             base := y * w, x := 0, inY := (y >= py1 && y <= py2)
             while (x < w) {
@@ -3340,6 +3822,14 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
                         purple.Push(x0 + x, y0 + y)
                     else if (r >= 150 && gg <= 70 && b <= 80 && r - gg >= 100)
                         red.Push(x0 + x, y0 + y)
+                    else if grey {                         ; grigio neutro medio (riempimento del teschio)
+                        hi := r > gg ? (r > b ? r : b) : (gg > b ? gg : b)
+                        if (hi >= 120 && hi <= 170) {
+                            lo := r < gg ? (r < b ? r : b) : (gg < b ? gg : b)
+                            if (hi - lo <= 8)
+                                gray.Push(x0 + x, y0 + y)
+                        }
+                    }
                 }
                 x += step
             }
@@ -3356,7 +3846,53 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             if (dd <= bestD)
                 bestD := dd, boss := c
         }
-        return {purple: tele, red: skull, boss: boss}
+        gskull := grey ? FieldBossTool.GreySkulls(FieldBossTool.ClusterBox(gray, rad), buf, w, h, x0, y0, s, step) : []
+        return {purple: tele, red: skull, grey: gskull, boss: boss}
+    }
+
+    ; Come Cluster, ma con l'ingombro di ogni gruppo (x1..x2, y1..y2)
+    static ClusterBox(pts, rad) {
+        cl := [], i := 1
+        while (i < pts.Length) {
+            px := pts[i], py := pts[i + 1], placed := false
+            for c in cl
+                if (Abs(px - c.sx / c.n) <= rad && Abs(py - c.sy / c.n) <= rad) {
+                    c.sx += px, c.sy += py, c.n += 1, placed := true
+                    c.x1 := Min(c.x1, px), c.x2 := Max(c.x2, px), c.y1 := Min(c.y1, py), c.y2 := Max(c.y2, py)
+                    break
+                }
+            if !placed
+                cl.Push({sx: px, sy: py, n: 1, x1: px, x2: px, y1: py, y2: py})
+            i += 2
+        }
+        for c in cl
+            c.x := Round(c.sx / c.n), c.y := Round(c.sy / c.n)
+        return cl
+    }
+
+    ; Teschi grigi: gruppi di grigio neutro grandi come l'icona (circa 30-55 x 25-50 px a 1440p)
+    ; e con il bordo scuro attorno. Scarta testi (bassi e larghi), nebbia e mare (troppo grandi).
+    static GreySkulls(cl, buf, bw, bh, x0, y0, s, step) {
+        out := [], k := step * step / (s * s), r := Round(35 * s)
+        for c in cl {
+            area := c.n * k, cw := (c.x2 - c.x1 + step) / s, ch := (c.y2 - c.y1 + step) / s
+            if (area < 110 || area > 450 || ch < 22 || ch > 50 || cw < 28 || cw > 58 || cw > 1.8 * ch)
+                continue
+            dark := 0, yy := Max(0, c.y - y0 - r), y2 := Min(bh - 1, c.y - y0 + r)
+            while (yy <= y2) {
+                xx := Max(0, c.x - x0 - r), x2 := Min(bw - 1, c.x - x0 + r)
+                while (xx <= x2) {
+                    v := NumGet(buf, (yy * bw + xx) * 4, "UInt")
+                    if ((v & 0xFF) <= 45 && ((v >> 8) & 0xFF) <= 45 && ((v >> 16) & 0xFF) <= 45)
+                        dark += 1
+                    xx += step
+                }
+                yy += step
+            }
+            if (dark * k >= 80)
+                out.Push({x: c.x, y: c.y})
+        }
+        return out
     }
 
     ; Raggruppa punti vicini (array piatto x,y,x,y...) e restituisce i centri dei gruppi grandi
@@ -3420,7 +3956,10 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
 
     Wheel(dir, n) {
         r := this.Rc(FieldBossTool.RcList, this.Geo())
-        this.MoveTo(r[1] + r[3] // 2, r[2] + r[4] // 2)
+        x := r[1] + r[3] // 2, y := r[2] + r[4] // 2
+        this.MoveTo(x + 2, y)                   ; piccolo movimento sopra la lista: il gioco la "sente" sotto il mouse
+        Sleep(30)
+        this.MoveTo(x, y)
         Sleep(30)
         SendInput("{Wheel" dir " " n "}")
         Sleep(FieldBossTool.ScrollSettle)
@@ -3734,7 +4273,10 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.BlockClicks := FieldBossBlockClicks && this.Running && this.On   ; click bloccati da qui al Travel
         if (this.Running && this.On)
             this.StartLock()                    ; mouse bloccato subito, da qui al Travel
-        this.Request(() => this.FindBoss(name))
+        if (FieldBossTeleportMode = "ultrafast")
+            this.Request(() => this.FindTeleportFast(name))
+        else
+            this.Request(() => this.FindBoss(name))
     }
 
     ; Trasparenza: torna opaco solo quando il mouse, dopo essere uscito dal pannello, ci rientra
@@ -3772,19 +4314,25 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     ; ---------------- Diagnosi ----------------
     ; Riquadri: viola = Teleport trovati, rosso = teschi attivi, giallo = posizione del boss
     DebugMap() {
-        d := this.DetectMapIcons()
+        d := this.DetectMapIcons(true)
         for p in d.purple
             FieldBossTool.Mark(p.x, p.y, "C040FF")
         for p in d.red
             FieldBossTool.Mark(p.x, p.y, "FF3030")
+        for p in d.grey
+            FieldBossTool.Mark(p.x, p.y, "E8E8E8")
         FieldBossTool.Mark(d.boss.x, d.boss.y, "FFE040", 28)
-        ShowTip(Tr("Teleport: {1}   Teschi rossi: {2}", d.purple.Length, d.red.Length), 3000)
+        ShowTip(Tr("Teleport: {1}   Teschi rossi: {2}", d.purple.Length, d.red.Length) "   ☠ " d.grey.Length, 3000)
     }
 
     DebugScan() {
         s := Tr("Lingua OCR: {1}`nMappa aperta: {2}", this.OcrLang, this.MapVisible() ? Tr("sì") : Tr("no")) "`n"
-        for it in this.ReadList()
-            s .= it.text "  [" (it.status = "" ? "?" : it.status) "]  @ " it.x "," it.y "`n"
+        if (FieldBossTeleportMode = "ultrafast")
+            for it in this.ReadTele()
+                s .= (it.num ? it.num ". " : "") it.n "  @ " it.x "," it.y "`n"
+        else
+            for it in this.ReadList()
+                s .= it.text "  [" (it.status = "" ? "?" : it.status) "]  @ " it.x "," it.y "`n"
         ShowTip(s, 6000)
     }
 
@@ -3897,7 +4445,7 @@ class SettingsEditor {
             ["Leggenda", "La barra dei tasti in cima allo schermo con la mappa aperta.",
                 ["FieldBossShowLegend", "FieldBossLegendScale", "FieldBossLegendY", "FieldBossLegendAlpha"]],
             ["Ricerca e Teleport", "Come lo script trova il boss nella lista e il Teleport più vicino.",
-                ["FieldBossListScroll", "FieldBossFindTeleport", "FieldBossAutoZoomOut", "FieldBossZoomOut",
+                ["FieldBossTeleportMode", "FieldBossUltraScrollStep", "FieldBossListScroll", "FieldBossFindTeleport", "FieldBossAutoZoomOut", "FieldBossZoomOut",
                  "FieldBossZoomBack", "FieldBossZoomOutWheel", "FieldBossCloseLoot", "FieldBossLootClickDist"]],
             ["Travel e direzione", "Dopo il click sul Teleport: pressioni di F per partire e freccia con la direzione del boss.",
                 ["FieldBossTravelPresses", "FieldBossTravelWait", "FieldBossTeleportLock", "FieldBossDirHint", "FieldBossDirSeconds",
@@ -4022,6 +4570,7 @@ class SettingsEditor {
         "FieldBossStartCollapsed", "Parte ridotto", "FieldBossPickAction", "Dopo la scelta di un boss", "FieldBossFadeAlpha", "Opacità in modalità fade",
         "FieldBossShowLegend", "Leggenda visibile", "FieldBossLegendScale", "Dimensione leggenda", "FieldBossLegendY", "Distanza dall'alto",
         "FieldBossLegendAlpha", "Opacità leggenda",
+        "FieldBossTeleportMode", "Modalità Teleport", "FieldBossUltraScrollStep", "Scrollate lista Teleport",
         "FieldBossListScroll", "Scrollate lista boss", "FieldBossFindTeleport", "Cerca il Teleport più vicino",
         "FieldBossAutoZoomOut", "Zoom indietro automatico", "FieldBossZoomOut", "Scrollate di zoom indietro", "FieldBossZoomBack", "Scrollate di ritorno",
         "FieldBossZoomOutWheel", "Rotellina per lo zoom indietro", "FieldBossCloseLoot", "Chiudi il riquadro dei loot",
@@ -4044,7 +4593,8 @@ class SettingsEditor {
         "CombatShape", ["cerchio", "quadrato", "rettangolo", "triangolo", "trapezio"],
         "FieldBossPickAction", ["fade", "collapse", "none"],
         "FieldBossCloseLoot", ["zoom", "always", "never"],
-        "FieldBossZoomOutWheel", ["WheelDown", "WheelUp"])
+        "FieldBossZoomOutWheel", ["WheelDown", "WheelUp"],
+        "FieldBossTeleportMode", ["normal", "ultrafast"])
     static Multi := Map("LootAnim", ["ring", "pulse", "spin", "glow"], "CombatAnim", ["ring", "pulse", "spin", "glow"])
 
     ; Nomi mostrati nei menu a tendina (stesso ordine di Enums): emoji + valore
@@ -4076,6 +4626,8 @@ class SettingsEditor {
             for i, c in this.Enums["Language"]
                 if (c = value)
                     return this.LangNames[i]
+        if (name = "FieldBossTeleportMode")
+            return value = "ultrafast" ? "⚡  ULTRA-FAST MODE" : "🧭  NORMAL MODE"
         if (name = "Theme" && SubStr(value, 1, 5) = "user:")
             return "⭐  " SubStr(value, 6)
         if (name = "Theme" && this.ThemeIcons.Has(value))
@@ -4129,7 +4681,7 @@ class SettingsEditor {
         "FieldBossCheckEvery", [100, 5000, 1], "FieldBossHintScale", [0.3, 4, 0], "FieldBossHintBottom", [0, 2000, 1],
         "FieldBossPanelScale", [0.5, 4, 0], "FieldBossPanelMarginR", [0, 3000, 1], "FieldBossPanelOffsetY", [-1500, 1500, 1],
         "FieldBossFadeAlpha", [0, 255, 1], "FieldBossLegendScale", [0.3, 4, 0], "FieldBossLegendY", [0, 100, 1], "FieldBossLegendAlpha", [0, 255, 1],
-        "FieldBossListScroll", [1, 200, 1], "FieldBossZoomOut", [0, 50, 1], "FieldBossZoomBack", [0, 50, 1], "FieldBossLootClickDist", [20, 500, 1],
+        "FieldBossListScroll", [1, 200, 1], "FieldBossUltraScrollStep", [1, 200, 1], "FieldBossZoomOut", [0, 50, 1], "FieldBossZoomBack", [0, 50, 1], "FieldBossLootClickDist", [20, 500, 1],
         "FieldBossTravelPresses", [1, 5, 1], "FieldBossTravelWait", [1, 600, 1], "FieldBossDirSeconds", [1, 300, 1],
         "FieldBossDirDelay", [0, 60000, 1], "FieldBossDirTop", [0, 2000, 1], "FieldBossDirScale", [0.3, 4, 0])
 
@@ -4242,8 +4794,9 @@ class SettingsEditor {
             if RegExMatch(l, "^global\s+FieldBossList\s*:=\s*\[") {       ; elenco boss (più righe)
                 this.BossFrom := i
                 while (++i < last && !RegExMatch(this.Lines[i], "^\]"))
-                    if RegExMatch(this.Lines[i], '^\s*\["(.*?)",\s*"(\w+)"(?:,\s*(\d+))?\s*\]', &m)
-                        this.Bosses.Push({name: m[1], grade: StrLower(m[2]), tier: m[3] = "" ? 0 : Integer(m[3])})
+                    if RegExMatch(this.Lines[i], '^\s*\["(.*?)",\s*"(\w+)"(?:,\s*(\d+))?(?:,\s*"(.*?)")?(?:,\s*"(\w*)")?\s*\]', &m)
+                        this.Bosses.Push({name: m[1], grade: StrLower(m[2]), tier: m[3] = "" ? 0 : Integer(m[3])
+                                        , tele: m[4] != "" ? m[4] : FieldBossTool.DefTele(m[1]), dir: this.DirCode(m[5])})
                 this.BossTo := i
             } else if (SubStr(l, 1, 7) = "global ") {
                 desc := this.Describe(i)
@@ -4495,6 +5048,7 @@ class SettingsEditor {
         else
             this.LV.ModifyCol(1, 330), this.LV.ModifyCol(2, 260), this.LV.ModifyCol(3, 240), this.LV.ModifyCol(4, 26)
         this.LV.OnEvent("ItemSelect", (c, row, sel) => sel ? this.SelectRow(row) : 0)
+        this.LV.OnEvent("Click", (c, row) => (row && this.LV.GetText(row, 3) != this.Cur) ? this.SelectRow(row) : 0)   ; anche col click diretto
 
         ; ---- dettaglio: nome, descrizione ----
         g.SetFont("s11 bold c" UiC("WinText"), "Segoe UI")
@@ -4546,8 +5100,8 @@ class SettingsEditor {
 
         ; ---- editor dell'elenco boss (nascosto finché non si sceglie "Elenco boss") ----
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
-        this.BLV := g.AddListView("x" X " y152 w" CW " h330 -Multi Grid Background" UiC("WinField"), [Tr("Nome boss"), Tr("Grado"), Tr("Importanza")])
-        this.BLV.ModifyCol(1, 440), this.BLV.ModifyCol(2, 160), this.BLV.ModifyCol(3, 236)
+        this.BLV := g.AddListView("x" X " y152 w" CW " h330 -Multi Grid Background" UiC("WinField"), [Tr("Nome boss"), Tr("Grado"), Tr("Importanza"), Tr("Teleport")])
+        this.BLV.ModifyCol(1, 290), this.BLV.ModifyCol(2, 110), this.BLV.ModifyCol(3, 150), this.BLV.ModifyCol(4, 286)
         this.BLV.OnEvent("ItemSelect", (c, row, sel) => sel ? this.SelectBoss(row) : 0)
         bl1 := g.AddText("x" X " y498 w60 h26 0x200", Tr("Nome"))
         this.BName := g.AddEdit("x" (X + 64) " y496 w380")
@@ -4560,14 +5114,22 @@ class SettingsEditor {
         this.BTier := g.AddDropDownList("x" (X + 706) " y496 w156", this.TierNames())
         this.BTier.OnEvent("Change", (*) => this.BossChanged())
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
-        this.BAdd := g.AddButton("x" X " y538 w170 h30", Tr("+ Aggiungi boss"))
+        bl4 := g.AddText("x" X " y538 w62 h26 0x200", Tr("Teleport"))
+        this.BTele := g.AddEdit("x" (X + 64) " y536 w380")
+        this.BTele.OnEvent("Change", (*) => this.BossChanged())
+        bl5 := g.AddText("x" (X + 456) " y538 w100 h26 0x200", Tr("Direzione"))
+        this.BDir := g.AddDropDownList("x" (X + 560) " y536 w302", this.DirNames())
+        this.BDir.OnEvent("Change", (*) => this.BossChanged())
+        this.BAdd := g.AddButton("x" X " y578 w170 h30", Tr("+ Aggiungi boss"))
         this.BAdd.OnEvent("Click", (*) => this.BossAdd())
-        this.BDel := g.AddButton("x" (X + 178) " y538 w170 h30", Tr("- Rimuovi boss"))
+        this.BDel := g.AddButton("x" (X + 178) " y578 w170 h30", Tr("- Rimuovi boss"))
         this.BDel.OnEvent("Click", (*) => this.BossDel())
         g.SetFont("s9 norm c" UiC("WinSub"), "Segoe UI")
-        this.BHelp := g.AddText("x" X " y580 w" CW " h60", Tr("Grado = colore della prima icona dei drop.  Importanza = simbolo nel pannello.`n"
+        this.BHelp2 := g.AddText("x" X " y616 w" CW " h20", Tr("Teleport = quello da cliccare nella lista Kibelisk in ULTRA-FAST MODE.  Direzione = dove volare dopo il Travel."))
+        this.BHelp := g.AddText("x" X " y638 w" CW " h44", Tr("Grado = colore della prima icona dei drop.  Importanza = simbolo nel pannello.`n"
             . "Scrivi il nome intero come in gioco (anche se il gioco lo tronca con `"...`"). Il pannello li ordina dalla A alla Z."))
-        this.BossCtrls := [this.BLV, this.BName, this.BGrade, this.BTier, this.BAdd, this.BDel, this.BHelp, bl1, bl2, bl3]
+        this.BossCtrls := [this.BLV, this.BName, this.BGrade, this.BTier, this.BTele, this.BDir, this.BAdd, this.BDel, this.BHelp, this.BHelp2
+                         , bl1, bl2, bl3, bl4, bl5]
 
         ; ---- pannello Preset ----
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
@@ -4679,6 +5241,9 @@ class SettingsEditor {
         b := g.AddButton("x" (W - 136) " y" (H - 46) " w124 h34", Tr("Chiudi"))
         b.OnEvent("Click", (*) => this.Close())
 
+        ModernWindow(g, Map(this.LV.Hwnd, 1))             ; elenco principale: colonna "Valore" evidenziata
+        SendMessage(0x101E, this.LV.GetCount("Col") - 1, -2, this.LV)   ; ultima colonna fino al bordo
+        SendMessage(0x101E, 3, -2, this.BLV), SendMessage(0x101E, 2, -2, this.PLV), SendMessage(0x101E, 2, -2, this.TLV)
         this.Win := g
         this.EditorShow("")
         this.ShowBossEditor(false)
@@ -4817,13 +5382,17 @@ class SettingsEditor {
             tool := GetGlobalVar(card.tool)
             on := IsObject(tool) && tool.On
             card.ctrl.Opt("+Background" (on ? UiC("Go") : UiC("Row")))
-            card.ctrl.SetFont("c" (on ? UiC("Deep") : UiC("Muted")))
-            card.ctrl.Text := "`n" card.icon "  " card.label "`n" (on ? "●  ON" : "○  OFF")
+            card.ctrl.SetFont("c" (on ? UiOn("Deep", "Go") : UiOn("Muted", "Row")))
+            mode := card.tool = "FieldBoss" ? "   ·   " (this.FbUltra() ? "⚡ ULTRA-FAST" : "🧭 NORMAL") : ""
+            card.ctrl.Text := "`n" card.icon "  " card.label "`n" (on ? "●  ON" : "○  OFF") mode
         }
         this.HomeInfo.Text := "AION 2 Wingman " AppVersion "   ·   " Tr("Tema") ": " this.EnumText("Theme", this.Unq(this.Val("Theme")))
+            . "   ·   Field Boss: " this.EnumText("FieldBossTeleportMode", this.FbUltra() ? "ultrafast" : "normal")
             . "`n" (this.Basic ? Tr("Modalità Base: solo le opzioni principali. Passa ad Avanzata per personalizzare ogni dettaglio.")
                                : Tr("Modalità Avanzata: tutte le opzioni di personalizzazione."))
     }
+
+    static FbUltra() => this.Cfg.Has("FieldBossTeleportMode") ? this.Unq(this.Val("FieldBossTeleportMode")) = "ultrafast" : FieldBossTeleportMode = "ultrafast"
 
     static HomeToggle(tool, label, *) {
         ToggleTool(GetGlobalVar(tool), label)
@@ -4911,7 +5480,7 @@ class SettingsEditor {
         "HudEnabled", 1, "ColorActive", 1, "Bar1Enabled", 1, "Bar2Enabled", 1, "IconMirror", 1, "CombatIconEnabled", 1,
         "LootShape", 1, "CombatShape", 1, "LootEmoji", 1, "CombatEmoji", 1,
         "HiddenCubeEnabled", 1, "HiddenCubeLockMouse", 1, "HiddenCubeAutoClick", 1,
-        "FieldBossEnabled", 1, "FieldBossHideInDungeon", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
+        "FieldBossEnabled", 1, "FieldBossTeleportMode", 1, "FieldBossHideInDungeon", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
         "FieldBossPanelScale", 1, "FieldBossShowLegend", 1, "FieldBossTravelPresses", 1, "FieldBossTeleportLock", 1, "FieldBossDirHint", 1,
         "UpdateMode", 1, "UpdateCheckOnStart", 1)
     static BasicPanels := Map("HOME", 1, "PRESET", 1, "BOSS", 1, "MAINT", 1)
@@ -5274,14 +5843,14 @@ class SettingsEditor {
         this.ExTxt.SetFont("c" UiC("WinText"))
         txt := ""
         if ((why := this.Invalid(name)) != "") {
-            this.ExTxt.SetFont("s10 bold c" UiC("Err"))
+            this.ExTxt.SetFont("s10 bold c" UiOn("Err"))
             this.ExTxt.Text := Tr("Valore non valido:") "`n" why
             return
         }
         switch t {
             case "bool":
                 txt := v = "true" ? "●  " Tr("ATTIVO") : "○  " Tr("DISATTIVATO")
-                this.ExTxt.SetFont(v = "true" ? "c" UiC("Ok") : "c" UiC("Muted"))
+                this.ExTxt.SetFont(v = "true" ? "c" UiOn("Ok") : "c" UiOn("Muted"))
             case "key":
                 txt := u = "" ? Tr("(nessun tasto)") : "[ " StrReplace(FieldBossTool.KeyLabel(u), "+", " ] + [ ") " ]"
             case "color":
@@ -5771,12 +6340,39 @@ class SettingsEditor {
             c.Visible := !on
     }
 
+    ; voci del menu Direzione (stesso ordine di FieldBossTool.DirCodes)
+    static DirNames() {
+        out := [Tr("Automatica (icona più vicina)")]
+        for code in ["N", "NE", "E", "SE", "S", "SW", "W", "NW"] {
+            d := FieldBossTool.DirFromCode(code)
+            out.Push(d.arrow "   " d.short)
+        }
+        return out
+    }
+
+    static DirIndex(code) {
+        for i, c in FieldBossTool.DirCodes
+            if (c = code)
+                return i
+        return 1
+    }
+
+    static TeleShown(b) => b.tele (b.dir != "AUTO" ? "   " FieldBossTool.DirFromCode(b.dir).arrow : "")
+
+    static DirCode(v) {
+        v := StrUpper(Trim(v))
+        for c in FieldBossTool.DirCodes
+            if (c = v)
+                return c
+        return "AUTO"
+    }
+
     static FillBosses(sel := 1) {
         tiers := this.TierNames()
         this.BLV.Opt("-Redraw")
         this.BLV.Delete()
         for b in this.Bosses
-            this.BLV.Add(, b.name, this.EnumText("Grade", b.grade), tiers[Min(b.tier, 4) + 1])
+            this.BLV.Add(, b.name, this.EnumText("Grade", b.grade), tiers[Min(b.tier, 4) + 1], this.TeleShown(b))
         this.BLV.Opt("+Redraw")
         if this.Bosses.Length
             this.BLV.Modify(Min(sel, this.Bosses.Length), "Select Focus Vis"), this.SelectBoss(Min(sel, this.Bosses.Length))
@@ -5789,6 +6385,8 @@ class SettingsEditor {
         this.BName.Value := b.name
         this.BGrade.Choose(b.grade = "verde" ? 1 : b.grade = "blu" ? 2 : 3)
         this.BTier.Choose(Min(b.tier, 4) + 1)
+        this.BTele.Value := b.tele
+        this.BDir.Choose(this.DirIndex(b.dir))
         this.Loading := false
     }
 
@@ -5797,14 +6395,15 @@ class SettingsEditor {
             return
         b := this.Bosses[this.BRow]
         b.name := Trim(StrReplace(this.BName.Value, '"')), b.grade := ["verde", "blu", "oro"][Max(1, this.BGrade.Value)], b.tier := this.BTier.Value - 1
-        this.BLV.Modify(this.BRow, , b.name, this.EnumText("Grade", b.grade), this.BTier.Text)
+        b.tele := Trim(StrReplace(this.BTele.Value, '"')), b.dir := FieldBossTool.DirCodes[Max(1, this.BDir.Value)]
+        this.BLV.Modify(this.BRow, , b.name, this.EnumText("Grade", b.grade), this.BTier.Text, this.TeleShown(b))
         this.BossDirty := true
         this.UpdateStatus()
         this.Live("FieldBossList")
     }
 
     static BossAdd() {
-        this.Bosses.Push({name: Tr("Nuovo boss"), grade: "oro", tier: 0})
+        this.Bosses.Push({name: Tr("Nuovo boss"), grade: "oro", tier: 0, tele: "", dir: "AUTO"})
         this.BossDirty := true
         this.FillBosses(this.Bosses.Length)
         this.BName.Focus()
@@ -6017,7 +6616,7 @@ class SettingsEditor {
         if (name = "FieldBossList") {
             val := []
             for b in this.Bosses
-                val.Push([b.name, b.grade, b.tier])
+                val.Push([b.name, b.grade, b.tier, b.tele, b.dir = "AUTO" ? "auto" : b.dir])
         } else {
             if !this.Cfg.Has(name)
                 return
@@ -6072,7 +6671,8 @@ class SettingsEditor {
         c.SetFont("s10", "Segoe UI")
         c.BackColor := UiC("WinBg")
         c.AddText("w640", Tr("Valori cambiati rispetto al file. Doppio click su una riga per andare all'impostazione."))
-        lv := c.AddListView("w640 h300 -Multi Grid", [Tr("Impostazione"), Tr("Prima"), Tr("Dopo"), ""])
+        lv := c.AddListView("w640 h300 -Multi Grid Background" UiC("WinField"), [Tr("Impostazione"), Tr("Prima"), Tr("Dopo"), ""])
+        ModernList(lv, 2)
         names := []                                       ; riga -> variabile (le etichette non sono uniche)
         for name in this.Pending {
             orig := this.Cfg[name].value
@@ -6131,7 +6731,7 @@ class SettingsEditor {
         n := this.Pending.Count + (this.BossDirty ? 1 : 0)
         this.Status.Text := n ? "● " Tr(n = 1 ? "{1} modifica non salvata" : "{1} modifiche non salvate", n) : Tr("Nessuna modifica")
         this.ChgBtn.Enabled := n > 0
-        this.Status.SetFont(n ? "c" UiC("Err") : "c" UiC("WinSub"))
+        this.Status.SetFont(n ? "c" UiOn("Err") : "c" UiOn("WinSub"))
     }
 
     static Save() {
@@ -6149,6 +6749,7 @@ class SettingsEditor {
         if !this.WriteFile()
             return
         UserData.Persist(this.Pending, this.BossDirty ? this.Bosses : "")   ; resta valido anche dopo un aggiornamento
+        UserData.MarkCustom(this.Pending)                 ; scelte tue: restano a ogni nuova versione
         UserData.Stamp()
         Reload()
     }
@@ -6178,9 +6779,10 @@ class SettingsEditor {
         if (this.BossDirty && this.BossFrom && this.BossTo) {
             nb := []
             for i, b in this.Bosses {
-                q1 := '["' b.name '",', q2 := '"' b.grade '",'
-                nb.Push("    " q1 Format("{:" Max(1, 38 - StrLen(q1)) "}", "") q2 Format("{:" Max(1, 10 - StrLen(q2)) "}", "")
-                      . b.tier "]" (i < this.Bosses.Length ? "," : ""))
+                q1 := '["' b.name '",', q2 := '"' b.grade '",', q3 := b.tier ",", q4 := '"' b.tele '",'
+                nb.Push("    " q1 Format("{:" Max(1, 39 - StrLen(q1)) "}", "") q2 Format("{:" Max(1, 10 - StrLen(q2)) "}", "")
+                      . q3 Format("{:" Max(1, 4 - StrLen(q3)) "}", "") q4 Format("{:" Max(1, 45 - StrLen(q4)) "}", "")
+                      . '"' (b.dir = "AUTO" ? "auto" : b.dir) '"]' (i < this.Bosses.Length ? "," : ""))
             }
             if (this.BossTo - this.BossFrom - 1 > 0)
                 lines.RemoveAt(this.BossFrom + 1, this.BossTo - this.BossFrom - 1)
@@ -14970,6 +15572,252 @@ ru=true = Wingman закрывается сам, когда вы закрыва�
 ko=true = AION 2를 닫으면 Wingman도 스스로 종료\n(게임이 열려 있었던 경우에만; 설정 창이 열려 있으면 종료하지 않음)
 zh=true = 关闭 AION 2 时 Wingman 自动退出\n（仅当游戏曾经打开；设置窗口打开时不会退出）
 ja=true = AION 2 を閉じると Wingman も自動で終了\n（ゲームが開いていた場合のみ。設定が開いている間は終了しません）
+it=Modalità Teleport
+en=Teleport mode
+nap=Modalità Teleport
+bro=Modalità Teleport
+es=Modo Teleport
+fr=Mode Teleport
+de=Teleport-Modus
+pt=Modo Teleport
+ru=Режим Teleport
+ko=Teleport 모드
+zh=Teleport 模式
+ja=Teleport モード
+it=Scrollate lista Teleport
+en=Teleport list scrolls
+nap=Scrollate lista Teleport
+bro=Scrollate lista Teleport
+es=Desplazamientos lista Teleport
+fr=Défilements liste Teleport
+de=Scrolls Teleport-Liste
+pt=Rolagens da lista de Teleport
+ru=Прокрутки списка Teleport
+ko=Teleport 목록 스크롤
+zh=Teleport 列表滚动次数
+ja=Teleport リストのスクロール数
+it=Nessun Teleport di riferimento
+en=No reference Teleport
+nap=Nisciuno Teleport 'e riferimento
+bro=Nessun Teleport di riferimento, bro
+es=Ningún Teleport de referencia
+fr=Aucun Teleport de référence
+de=Kein Referenz-Teleport
+pt=Nenhum Teleport de referência
+ru=Нет опорного Teleport
+ko=기준 Teleport 없음
+zh=没有参考 Teleport
+ja=基準の Teleport がありません
+it=Impostalo in Field Boss > Elenco boss ({1})
+en=Set it in Field Boss > Boss list ({1})
+nap=Miettelo in Field Boss > Elenco boss ({1})
+bro=Settalo in Field Boss > Elenco boss ({1})
+es=Configúralo en Field Boss > Lista de bosses ({1})
+fr=Définis-le dans Field Boss > Liste des boss ({1})
+de=Lege ihn fest unter Field Boss > Boss-Liste ({1})
+pt=Defina em Field Boss > Lista de bosses ({1})
+ru=Укажите его в Field Boss > Список боссов ({1})
+ko=Field Boss > 보스 목록에서 설정하세요 ({1})
+zh=请在 Field Boss > 首领列表 中设置 ({1})
+ja=Field Boss > ボスリスト で設定してください ({1})
+it=Scorro la lista dei Teleport
+en=Scrolling the Teleport list
+nap=Scorro 'a lista d'e Teleport
+bro=Scrollo la lista dei Teleport
+es=Recorriendo la lista de Teleport
+fr=Je fais défiler la liste des Teleport
+de=Ich scrolle die Teleport-Liste
+pt=Rolando a lista de Teleport
+ru=Прокручиваю список Teleport
+ko=Teleport 목록을 스크롤하는 중
+zh=正在滚动 Teleport 列表
+ja=Teleport リストをスクロール中
+it=Teleport non trovato
+en=Teleport not found
+nap=Teleport nun truvato
+bro=Teleport non sgamato
+es=Teleport no encontrado
+fr=Teleport introuvable
+de=Teleport nicht gefunden
+pt=Teleport não encontrado
+ru=Teleport не найден
+ko=Teleport를 찾지 못했어요
+zh=未找到 Teleport
+ja=Teleport が見つかりません
+it=Apro la lista dei Teleport
+en=Opening the Teleport list
+nap=Arapo 'a lista d'e Teleport
+bro=Apro la lista dei Teleport
+es=Abro la lista de Teleport
+fr=J'ouvre la liste des Teleport
+de=Ich öffne die Teleport-Liste
+pt=Abrindo a lista de Teleport
+ru=Открываю список Teleport
+ko=Teleport 목록을 여는 중
+zh=正在打开 Teleport 列表
+ja=Teleport リストを開きます
+it=Apri la lista dei Teleport
+en=Open the Teleport list
+nap=Arape 'a lista d'e Teleport
+bro=Apri la lista dei Teleport
+es=Abre la lista de Teleport
+fr=Ouvre la liste des Teleport
+de=Öffne die Teleport-Liste
+pt=Abra a lista de Teleport
+ru=Откройте список Teleport
+ko=Teleport 목록을 여세요
+zh=打开 Teleport 列表
+ja=Teleport リストを開いてください
+it=Clicca il tab KIBELISK in alto
+en=Click the KIBELISK tab at the top
+nap=Clicca 'o tab KIBELISK ncoppa
+bro=Clicca il tab KIBELISK in alto
+es=Haz clic en la pestaña KIBELISK arriba
+fr=Clique sur l'onglet KIBELISK en haut
+de=Klicke oben auf den Tab KIBELISK
+pt=Clique na aba KIBELISK no topo
+ru=Нажмите вкладку KIBELISK вверху
+ko=위쪽의 KIBELISK 탭을 클릭하세요
+zh=点击上方的 KIBELISK 标签
+ja=上の KIBELISK タブをクリック
+it=Lista dei Teleport non trovata
+en=Teleport list not found
+nap=Lista d'e Teleport nun truvata
+bro=Lista dei Teleport non sgamata
+es=Lista de Teleport no encontrada
+fr=Liste des Teleport introuvable
+de=Teleport-Liste nicht gefunden
+pt=Lista de Teleport não encontrada
+ru=Список Teleport не найден
+ko=Teleport 목록을 찾지 못했어요
+zh=未找到 Teleport 列表
+ja=Teleport リストが見つかりません
+)" "`n"
+        s .= "
+(
+it=Scrolla la lista dei Teleport
+en=Scroll the Teleport list
+nap=Scrolla 'a lista d'e Teleport
+bro=Scrolla la lista dei Teleport
+es=Desplaza la lista de Teleport
+fr=Fais défiler la liste des Teleport
+de=Scrolle die Teleport-Liste
+pt=Role a lista de Teleport
+ru=Прокрутите список Teleport
+ko=Teleport 목록을 스크롤하세요
+zh=滚动 Teleport 列表
+ja=Teleport リストをスクロールしてください
+it=Teleport
+en=Teleport
+nap=Teleport
+bro=Teleport
+es=Teleport
+fr=Teleport
+de=Teleport
+pt=Teleport
+ru=Teleport
+ko=Teleport
+zh=Teleport
+ja=Teleport
+it=Direzione
+en=Direction
+nap=Direzione
+bro=Direzione
+es=Dirección
+fr=Direction
+de=Richtung
+pt=Direção
+ru=Направление
+ko=방향
+zh=方向
+ja=方向
+it=Automatica (icona più vicina)
+en=Automatic (nearest icon)
+nap=Automatica (icona cchiù vicina)
+bro=Automatica (icona più vicina)
+es=Automática (icono más cercano)
+fr=Automatique (icône la plus proche)
+de=Automatisch (nächstes Symbol)
+pt=Automática (ícone mais próximo)
+ru=Автоматически (ближайший значок)
+ko=자동 (가장 가까운 아이콘)
+zh=自动（最近的图标）
+ja=自動（最も近いアイコン）
+it=Teleport = quello da cliccare nella lista Kibelisk in ULTRA-FAST MODE.  Direzione = dove volare dopo il Travel.
+en=Teleport = the one to click in the Kibelisk list in ULTRA-FAST MODE.  Direction = where to fly after the Travel.
+nap=Teleport = chillo 'a cliccà dint'â lista Kibelisk in ULTRA-FAST MODE.  Direzione = addò vulà doppo 'o Travel.
+bro=Teleport = quello da cliccare nella lista Kibelisk in ULTRA-FAST MODE.  Direzione = dove volare dopo il Travel.
+es=Teleport = el que hay que pulsar en la lista Kibelisk en ULTRA-FAST MODE.  Dirección = hacia dónde volar tras el Travel.
+fr=Teleport = celui à cliquer dans la liste Kibelisk en ULTRA-FAST MODE.  Direction = où voler après le Travel.
+de=Teleport = der in der Kibelisk-Liste anzuklickende im ULTRA-FAST MODE.  Richtung = wohin nach dem Travel fliegen.
+pt=Teleport = o que clicar na lista Kibelisk no ULTRA-FAST MODE.  Direção = para onde voar após o Travel.
+ru=Teleport = тот, который нажимать в списке Kibelisk в ULTRA-FAST MODE.  Направление = куда лететь после Travel.
+ko=Teleport = ULTRA-FAST MODE에서 Kibelisk 목록에서 클릭할 곳.  방향 = Travel 후 날아갈 방향.
+zh=Teleport = ULTRA-FAST MODE 下在 Kibelisk 列表中要点击的传送点。  方向 = Travel 之后的飞行方向。
+ja=Teleport = ULTRA-FAST MODE で Kibelisk リストからクリックするもの。  方向 = Travel 後に飛ぶ方向。
+@=FieldBossTeleportMode
+en=Teleport mode (after clicking a boss in the panel):\n"normal"    = NORMAL MODE: opens the game's Field Boss list, finds the boss, looks for the\nnearest Teleport on the map and guides you click by click up to the Travel\n"ultrafast" = ULTRA-FAST MODE: immediately looks for the boss's reference Teleport (Boss list)\nin the Kibelisk list (on the left): click it and press F twice. The direction is\ncalculated from the boss icon nearest to the Teleport (or is the one chosen for the boss).
+nap=Modalità d'o Teleport (doppo 'o click 'ncopp'a nu boss dint'ô pannello):\n"normal"    = NORMAL MODE: arape 'a lista Field Boss d'o juoco, trova 'o boss, cerca 'ncopp'â mappa\n'o Teleport cchiù vicino e te guida click doppo click fino ô Travel\n"ultrafast" = ULTRA-FAST MODE: cerca subbeto dint'â lista Kibelisk (a sinistra) 'o Teleport 'e\nriferimento d'o boss (Elenco boss): 'o cliccate e prieme F 2 vote. 'A direzione se\ncalcola 'a ll'icona d'o boss cchiù vicina ô Teleport (o è chella scigliuta p'ô boss).
+bro=Modalità del Teleport (dopo il click su un boss nel pannello):\n"normal"    = NORMAL MODE: apre la lista Field Boss del gioco, sgama il boss, cerca sulla mappa\nil Teleport più vicino e ti porta click dopo click fino al Travel\n"ultrafast" = ULTRA-FAST MODE: sgama subito nella lista Kibelisk (a sinistra) il Teleport di\nriferimento del boss (Elenco boss): lo clicchi e premi F 2 volte, easy. La direzione si\ncalcola dall'icona del boss più vicina al Teleport (o è quella scelta per il boss).
+es=Modo del Teleport (tras hacer clic en un boss del panel):\n"normal"    = NORMAL MODE: abre la lista Field Boss del juego, encuentra el boss, busca en el mapa\nel Teleport más cercano y te guía clic a clic hasta el Travel\n"ultrafast" = ULTRA-FAST MODE: busca enseguida en la lista Kibelisk (a la izquierda) el Teleport\nde referencia del boss (Lista de bosses): haces clic y pulsas F 2 veces. La dirección se\ncalcula desde el icono del boss más cercano al Teleport (o es la elegida para el boss).
+fr=Mode du Teleport (après le clic sur un boss dans le panneau) :\n"normal"    = NORMAL MODE : ouvre la liste Field Boss du jeu, trouve le boss, cherche sur la carte\nle Teleport le plus proche et te guide clic après clic jusqu'au Travel\n"ultrafast" = ULTRA-FAST MODE : cherche tout de suite dans la liste Kibelisk (à gauche) le Teleport\nde référence du boss (Liste des boss) : tu cliques dessus et appuies 2 fois sur F. La direction\nest calculée depuis l'icône de boss la plus proche du Teleport (ou c'est celle choisie pour le boss).
+de=Teleport-Modus (nach dem Klick auf einen Boss im Panel):\n"normal"    = NORMAL MODE: öffnet die Field-Boss-Liste des Spiels, findet den Boss, sucht auf der Karte\nden nächsten Teleport und führt dich Klick für Klick bis zum Travel\n"ultrafast" = ULTRA-FAST MODE: sucht sofort in der Kibelisk-Liste (links) den Referenz-Teleport\ndes Bosses (Boss-Liste): anklicken und 2-mal F drücken. Die Richtung wird\nvom Boss-Symbol berechnet, das dem Teleport am nächsten ist (oder ist die für den Boss gewählte).
+pt=Modo do Teleport (após clicar num boss no painel):\n"normal"    = NORMAL MODE: abre a lista Field Boss do jogo, encontra o boss, procura no mapa\no Teleport mais próximo e te guia clique a clique até o Travel\n"ultrafast" = ULTRA-FAST MODE: procura na hora na lista Kibelisk (à esquerda) o Teleport de\nreferência do boss (Lista de bosses): você clica e aperta F 2 vezes. A direção é\ncalculada pelo ícone de boss mais próximo do Teleport (ou é a escolhida para o boss).
+ru=Режим Teleport (после клика по боссу на панели):\n"normal"    = NORMAL MODE: открывает список Field Boss в игре, находит босса, ищет на карте\nближайший Teleport и ведёт вас клик за кликом до Travel\n"ultrafast" = ULTRA-FAST MODE: сразу ищет в списке Kibelisk (слева) опорный Teleport\nбосса (Список боссов): нажмите на него и дважды нажмите F. Направление\nрассчитывается по значку босса, ближайшему к Teleport (или выбранное для босса).
+ko=Teleport 모드 (패널에서 보스를 클릭한 뒤):\n"normal"    = NORMAL MODE: 게임의 Field Boss 목록을 열고 보스를 찾은 뒤, 지도에서\n가장 가까운 Teleport를 찾아 Travel까지 클릭 단계별로 안내해요\n"ultrafast" = ULTRA-FAST MODE: 왼쪽 Kibelisk 목록에서 보스의 기준 Teleport(보스 목록)를\n바로 찾아요. 클릭하고 F를 2번 누르면 끝. 방향은 Teleport에\n가장 가까운 보스 아이콘으로 계산해요 (또는 보스에 지정한 방향).
+zh=Teleport 模式（在面板中点击首领之后）：\n"normal"    = NORMAL MODE：打开游戏的 Field Boss 列表，找到首领，在地图上寻找\n最近的 Teleport，并一步步引导你点击直到 Travel\n"ultrafast" = ULTRA-FAST MODE：立即在左侧 Kibelisk 列表中寻找首领的参考 Teleport（首领列表）：\n点击它并按 2 次 F。方向根据离 Teleport\n最近的首领图标计算（或使用为该首领选择的方向）。
+ja=Teleport モード（パネルでボスをクリックした後）：\n"normal"    = NORMAL MODE：ゲームの Field Boss リストを開いてボスを見つけ、マップ上で\n最も近い Teleport を探し、Travel までクリックごとに案内します\n"ultrafast" = ULTRA-FAST MODE：左の Kibelisk リストでボスの基準 Teleport（ボスリスト）を\nすぐに探します。クリックして F を 2 回押すだけ。方向は Teleport に\n最も近いボスアイコンから計算します（またはボスに設定した方向）。
+@=FieldBossUltraScrollStep
+en=ULTRA-FAST: scrolls at each step in the Teleport list.\nHigher = faster search (36 = recommended)
+nap=ULTRA-FAST: scrollate a ogne passo dint'â lista d'e Teleport.\nCchiù àuto = ricerca cchiù veloce (36 = consigliato)
+bro=ULTRA-FAST: scrollate a ogni step nella lista dei Teleport.\nPiù alto = ricerca più veloce (36 = consigliato)
+es=ULTRA-FAST: desplazamientos en cada paso de la lista de Teleport.\nMás alto = búsqueda más rápida (36 = recomendado)
+fr=ULTRA-FAST : défilements à chaque étape dans la liste des Teleport.\nPlus haut = recherche plus rapide (36 = conseillé)
+de=ULTRA-FAST: Scrolls pro Schritt in der Teleport-Liste.\nHöher = schnellere Suche (36 = empfohlen)
+pt=ULTRA-FAST: rolagens a cada passo na lista de Teleport.\nMais alto = busca mais rápida (36 = recomendado)
+ru=ULTRA-FAST: прокруток на каждом шаге в списке Teleport.\nБольше = быстрее поиск (36 = рекомендуется)
+ko=ULTRA-FAST: Teleport 목록에서 한 단계마다 스크롤 횟수.\n높을수록 검색이 빨라요 (36 = 권장)
+zh=ULTRA-FAST：在 Teleport 列表中每一步的滚动次数。\n越高搜索越快（36 = 推荐）
+ja=ULTRA-FAST：Teleport リストで 1 ステップごとのスクロール数。\n高いほど検索が速くなります（36 = 推奨）
+)" "`n"
+        s .= "
+(
+it=Impossibile scrivere le tue impostazioni nello script: si riprova al prossimo avvio.
+en=Could not write your settings into the script: it will retry at the next start.
+nap=Nun se ponno scrivere 'e mpustaziune toje dint'ô script: se riprova â prossima accensione.
+bro=Non riesco a scrivere i tuoi settaggi nello script: riprovo al prossimo avvio.
+es=No se pudieron escribir tus ajustes en el script: se reintentará en el próximo inicio.
+fr=Impossible d'écrire tes paramètres dans le script : nouvel essai au prochain démarrage.
+de=Deine Einstellungen konnten nicht ins Skript geschrieben werden: neuer Versuch beim nächsten Start.
+pt=Não foi possível gravar suas configurações no script: nova tentativa no próximo início.
+ru=Не удалось записать ваши настройки в скрипт: повторная попытка при следующем запуске.
+ko=설정을 스크립트에 쓸 수 없습니다. 다음 실행 때 다시 시도합니다.
+zh=无法将你的设置写入脚本：将在下次启动时重试。
+ja=設定をスクリプトに書き込めませんでした。次回の起動時に再試行します。
+it=Direzione del boss non trovata
+en=Boss direction not found
+nap=Direzione d'o boss nun truvata
+bro=Direzione del boss non sgamata
+es=Dirección del boss no encontrada
+fr=Direction du boss introuvable
+de=Richtung des Bosses nicht gefunden
+pt=Direção do boss não encontrada
+ru=Направление к боссу не найдено
+ko=보스 방향을 찾지 못했어요
+zh=未找到首领方向
+ja=ボスの方向が見つかりません
+it=Puoi sceglierla per {1} in Field Boss > Elenco boss
+en=You can choose it for {1} in Field Boss > Boss list
+nap='A può scegliere pe' {1} in Field Boss > Elenco boss
+bro=Puoi settarla per {1} in Field Boss > Elenco boss
+es=Puedes elegirla para {1} en Field Boss > Lista de bosses
+fr=Tu peux la choisir pour {1} dans Field Boss > Liste des boss
+de=Du kannst sie für {1} unter Field Boss > Boss-Liste festlegen
+pt=Você pode escolhê-la para {1} em Field Boss > Lista de bosses
+ru=Её можно выбрать для {1} в Field Boss > Список боссов
+ko=Field Boss > 보스 목록에서 {1}의 방향을 지정할 수 있어요
+zh=可以在 Field Boss > 首领列表 中为 {1} 设置
+ja=Field Boss > ボスリスト で {1} の方向を選べます
 )" "`n"
         return s
     }
@@ -15027,10 +15875,13 @@ class UserData {
     ; nomi delle versioni precedenti ("Autoloot...", "AutoCombat...") -> nomi attuali
     static Compat(s) => StrReplace(StrReplace(StrReplace(s, "AutoLoot", "Loot"), "Autoloot", "Loot"), "AutoCombat", "Combat")
 
-    ; lunghezza della parte di codice dopo la CONFIG: cambia con le versioni, non con le impostazioni
+    ; impronta della parte di codice dopo la CONFIG (lunghezza + CRC32): cambia a ogni nuova
+    ; versione o build, non con le impostazioni
     static CodeLen() {
         text := FileRead(A_ScriptFullPath, "UTF-8")
-        return StrLen(text) - InStr(text, "FINE CONFIG")
+        code := SubStr(text, InStr(text, "FINE CONFIG"))
+        buf := Buffer(StrPut(code, "UTF-8")), n := StrPut(code, buf, "UTF-8") - 1
+        return StrLen(code) "-" Format("{:08X}", DllCall("ntdll\RtlComputeCrc32", "UInt", 0, "Ptr", buf, "UInt", n, "UInt"))
     }
 
     static Stamp() {
@@ -15056,7 +15907,7 @@ class UserData {
     static BossKey(list) {
         s := ""
         for b in list
-            s .= (s = "" ? "" : "¦") b.name "|" b.grade "|" b.tier
+            s .= (s = "" ? "" : "¦") b.name "|" b.grade "|" b.tier "|" b.tele "|" b.dir
         return s
     }
 
@@ -15064,8 +15915,10 @@ class UserData {
         list := []
         for item in StrSplit(key, "¦") {
             f := StrSplit(item, "|")
-            if (f.Length >= 3 && f[1] != "")
-                list.Push({name: f[1], grade: StrLower(f[2]), tier: Integer(f[3])})
+            if (f.Length >= 3 && f[1] != "")          ; prima della 1.05: senza Teleport e direzione
+                list.Push({name: f[1], grade: StrLower(f[2]), tier: Integer(f[3])
+                         , tele: f.Length >= 4 && f[4] != "" ? f[4] : FieldBossTool.DefTele(f[1])
+                         , dir: SettingsEditor.DirCode(f.Length >= 5 ? f[5] : "")})
         }
         return list
     }
@@ -15096,6 +15949,40 @@ class UserData {
     ;  - stessa versione dello script: settings.ini segue la CONFIG (anche se modificata a mano)
     ;  - versione nuova: rimette nella CONFIG i valori personali e riavvia. Un valore uguale al
     ;    predefinito della versione precedente non era stato personalizzato: resta quello nuovo.
+    ; Impostazioni scelte da te (Impostazioni, Setup, CONFIG modificata a mano): sezione [Custom].
+    ; Solo queste passano alla nuova versione; le altre prendono i nuovi valori predefiniti.
+    ; legacy = true se il file viene da una versione precedente alla 1.05 (nessun elenco ancora).
+    static ReadCustom(&legacy) {
+        out := Map(), legacy := true
+        try sec := IniRead(this.File, "Custom")
+        catch
+            return out
+        for line in StrSplit(sec, "`n", "`r") {
+            if !(p := InStr(line, "="))
+                continue
+            k := SubStr(line, 1, p - 1)
+            if (k = "_v")
+                legacy := false
+            else
+                out[this.Compat(k)] := true
+        }
+        return out
+    }
+
+    ; names = Map o Array di nomi. marker = l'elenco è completo (fine della migrazione da prima della 1.05)
+    static MarkCustom(names, marker := true) {
+        for k, v in names
+            try IniWrite("1", this.File, "Custom", Type(names) = "Map" ? k : v)
+        if marker
+            try IniWrite("2", this.File, "Custom", "_v")
+    }
+
+    ; All'avvio. Tre casi:
+    ;  - nessun file personale: fotografa tutte le impostazioni attuali
+    ;  - stessa versione dello script: settings.ini segue la CONFIG (anche se modificata a mano:
+    ;    i valori cambiati a mano diventano scelte tue)
+    ;  - versione nuova: rimette nella CONFIG le scelte tue ([Custom]) e riavvia. Per i file di prima
+    ;    della 1.05 (senza elenco) è una scelta tua ogni valore diverso dal nuovo predefinito.
     static Restore() {
         this.Init()
         E := SettingsEditor
@@ -15103,44 +15990,87 @@ class UserData {
         catch
             return
         saved := this.ReadSection("Config")
+        custom := this.ReadCustom(&legacy)
         if !saved.Count {
             this.Persist(this.CfgValues(E), E.Bosses)
+            this.MarkCustom([])
             this.Stamp()
             return
         }
         stored := ""
         try stored := IniRead(this.File, "Meta", "CodeLen", "")
-        if (stored != "" && stored + 0 = this.CodeLen()) {
-            for name, it in E.Cfg
-                if (!saved.Has(name) || saved[name] !== it.value)
-                    try IniWrite("v:" it.value, this.File, "Config", name)
-            if (this.ReadBossKey("Bosses") != this.BossKey(E.Bosses))
+        if (stored != "" && stored == this.CodeLen()) {
+            ; le scelte tue valgono più della CONFIG (che può essere stata sostituita da un pacchetto
+            ; scaricato di nuovo); gli altri valori cambiati a mano nella CONFIG diventano scelte tue
+            hand := [], E.Pending := Map()
+            for name, it in E.Cfg {
+                if (saved.Has(name) && saved[name] == it.value)
+                    continue
+                if (saved.Has(name) && custom.Has(name)) {
+                    if (E.Invalid(name, saved[name]) = "")
+                        E.Pending[name] := saved[name]
+                    continue
+                }
+                try IniWrite("v:" it.value, this.File, "Config", name)
+                if saved.Has(name)
+                    hand.Push(name)
+            }
+            if hand.Length
+                this.MarkCustom(hand, !legacy)
+            bk := this.ReadBossKey("Bosses"), cur := this.BossKey(E.Bosses), E.BossDirty := false
+            if (bk != "" && bk != cur && cur = this.ReadBossKey("BossDefaults"))   ; CONFIG sostituita: il tuo elenco
+                E.Bosses := this.BossList(bk), E.BossDirty := true
+            else if (bk != cur)
                 this.Persist(Map(), E.Bosses)
+            if (E.Pending.Count || E.BossDirty) {
+                ok := E.WriteFile(true)
+                E.Pending := Map(), E.BossDirty := false
+                if ok {
+                    Reload()
+                    ExitApp()
+                }
+            }
             return
         }
-        oldDef := this.ReadSection("Defaults"), oldBossDef := this.ReadBossKey("BossDefaults")
+        oldBossDef := this.ReadBossKey("BossDefaults")
         newDef := this.CfgValues(E), newBossDef := this.BossKey(E.Bosses)
         E.Pending := Map(), E.BossDirty := false
+        keep := []
         for name, v in saved {
-            if !E.Cfg.Has(name) || (oldDef.Has(name) && oldDef[name] == v)
+            if !E.Cfg.Has(name)
                 continue
+            if !(custom.Has(name) || (legacy && v !== E.Cfg[name].value))
+                continue
+            keep.Push(name)
             if (v !== E.Cfg[name].value && E.Invalid(name, v) = "")
                 E.Pending[name] := v
         }
+        this.MarkCustom(keep)
         bk := this.ReadBossKey("Bosses")
         if (bk != "" && bk != newBossDef && bk != oldBossDef)
             E.Bosses := this.BossList(bk), E.BossDirty := true
-        ; i valori di questa versione diventano i "predefiniti" con cui confrontare il prossimo aggiornamento
-        try IniDelete(this.File, "Defaults")
-        this.Persist(newDef, newBossDef = "" ? "" : this.BossList(newBossDef), "Defaults")
+        ; elenco boss predefinito di questa versione (per riconoscere il prossimo aggiornamento)
+        try IniDelete(this.File, "Defaults")         ; (prima della 1.05: valori predefiniti, non più usati)
+        try IniDelete(this.File, "BossDefaults")
+        if (newBossDef != "")
+            this.Persist(Map(), this.BossList(newBossDef), "Defaults")
+        ; fotografia completa dei valori in uso con questa versione
+        for name, it in E.Cfg {
+            val := E.Pending.Has(name) ? E.Pending[name] : it.value
+            if (!saved.Has(name) || saved[name] !== val)
+                try IniWrite("v:" val, this.File, "Config", name)
+        }
         if (E.Pending.Count || E.BossDirty) {
             ok := E.WriteFile(true)
             E.Pending := Map(), E.BossDirty := false
-            if ok {
-                this.Stamp()
-                Reload()
-                ExitApp()                       ; (Reload riavvia subito: qui non si arriva)
+            if !ok {                            ; file non scrivibile: si riprova al prossimo avvio
+                SetTimer(() => TrayTip(Tr("Impossibile scrivere le tue impostazioni nello script: si riprova al prossimo avvio."), "AION 2 Wingman", "Iconx"), -4000)
+                return
             }
+            this.Persist(Map(), E.Bosses.Length ? E.Bosses : "")
+            this.Stamp()
+            Reload()
+            ExitApp()                           ; (Reload riavvia subito: qui non si arriva)
         }
         this.Stamp()
     }
