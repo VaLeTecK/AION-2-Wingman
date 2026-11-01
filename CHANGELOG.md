@@ -16,6 +16,7 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 - Your settings and theme now really survive every new version: Wingman remembers which values you chose yourself (in Settings, in the Setup or by editing the CONFIG) and carries only those over, while everything else gets the new defaults. Fixes the theme and settings going back to default after an update, especially when the Setup had been used.
 - Setup: new question to choose the Teleport assistant (ULTRA-FAST or NORMAL); questions now suggest what you already chose (theme, profile, features on at startup), including a theme of your own, and its choices are saved as yours.
 - README and quick-guide infographics updated for the Fast Teleport Assistant in all 10 languages.
+- Fixed an error window ("PCRE execution error -21") that could pop up during the automatic update check when the release notes are long; the background check now never shows errors.
 
 ### 🇮🇹 Italiano
 - **Prima di tutto la qualità della vita**: il nuovo **Assistente Teleport veloce** ti porta dalla mappa a qualsiasi Field Boss in 3 mosse: click sul boss, click sul Teleport, F due volte.
@@ -27,6 +28,7 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 - Le tue impostazioni e il tema ora restano davvero a ogni nuova versione: Wingman ricorda quali valori hai scelto tu (nelle Impostazioni, nel Setup o modificando la CONFIG) e porta avanti solo quelli, mentre il resto prende i nuovi valori predefiniti. Risolve il ritorno di tema e impostazioni ai valori di default dopo un aggiornamento, soprattutto se era stato usato il Setup.
 - Setup: nuova domanda per scegliere l'assistente Teleport (ULTRA-FAST o NORMAL); le domande propongono quello che hai già scelto (tema, profilo, funzioni accese all'avvio), anche un tema tuo, e le sue scelte vengono salvate come tue.
 - README e infografiche della guida rapida aggiornati per l'Assistente Teleport veloce in tutte le 10 lingue.
+- Corretta una finestra di errore ("PCRE execution error -21") che poteva comparire durante il controllo automatico degli aggiornamenti con note di rilascio lunghe; il controllo in background ora non mostra mai errori.
 
 ## v1.04
 

@@ -16143,7 +16143,9 @@ class Updater {
             }
             pos += m.Len
         }
-        notes := RegExMatch(j, '"body"\s*:\s*"((?:[^"\\]|\\.)*)"', &m) ? this.Unescape(m[1]) : ""
+        ; quantificatori possessivi: con note lunghe la versione normale esauriva lo stack di PCRE (errore -21)
+        notes := ""
+        try notes := RegExMatch(j, '"body"\s*:\s*"((?:[^"\\]++|\\.)*+)"', &m) ? this.Unescape(m[1]) : ""
         page := RegExMatch(j, '"html_url"\s*:\s*"(https://github\.com/[^"]*/releases/[^"]*)"', &m) ? m[1] : "https://github.com/" repo "/releases"
         return {tag: tag, ver: ver, zip: zip, notes: Trim(notes, " `r`n"), page: page}
     }
@@ -16175,7 +16177,10 @@ class Updater {
             return
         this.Busy := true
         ShowTip(Tr("Controllo aggiornamenti..."), 1500)
-        info := this.Fetch()
+        info := ""
+        try info := this.Fetch()
+        catch as e
+            this.Err := e.Message
         this.Busy := false
         try IniWrite(A_Now, UserData.File, "Update", "LastCheck")
         if !IsObject(info)
@@ -16265,7 +16270,8 @@ class Updater {
         SetTimer(ObjBindMethod(this, "Background"), -this.EveryMs())   ; prossimo controllo
         if (StrLower(Trim(UpdateMode)) = "spento" || IsObject(this.Latest))
             return                                     ; spento, oppure aggiornamento già trovato e in attesa
-        info := this.Fetch()
+        info := ""
+        try info := this.Fetch()                       ; controllo silenzioso: un errore non deve mai disturbare
         try IniWrite(A_Now, UserData.File, "Update", "LastCheck")
         if (!IsObject(info) || !this.IsNewer(info.ver) || info.zip = "")   ; zip non ancora allegato: si riprova più tardi
             return
