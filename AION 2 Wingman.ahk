@@ -110,8 +110,8 @@ global Language       := "italiano"    ; lingua di impostazioni, avvisi e istruz
 ; Splash all'avvio: al centro dello schermo il nome dell'app, "by VaLeTecK" e, in piccolo, la versione crescono da piccoli
 ; a grandi passando da trasparenti (20%) a pieni (100%), restano un attimo e poi svaniscono.
 global SplashEnabled  := true          ; false = nessuno splash all'avvio
-global SplashHold     := 0.25           ; s in cui resta pieno a schermo prima di svanire
-global SplashScale    := 1.4           ; dimensione (1.0 = normale)
+global SplashHold     := 0              ; s in cui resta pieno a schermo prima di svanire
+global SplashScale    := 1.04          ; dimensione (1.0 = normale)
 
 ; ------------------------------------------------------------------------------
 ; [AGGIORNAMENTI]  Nuove versioni pubblicate come "release" su GitHub.
@@ -15916,9 +15916,11 @@ class UserData {
         for item in StrSplit(key, "¦") {
             f := StrSplit(item, "|")
             if (f.Length >= 3 && f[1] != "")          ; prima della 1.05: senza Teleport e direzione
-                list.Push({name: f[1], grade: StrLower(f[2]), tier: Integer(f[3])
+                list.Push(b := {name: f[1], grade: StrLower(f[2]), tier: Integer(f[3])
                          , tele: f.Length >= 4 && f[4] != "" ? f[4] : FieldBossTool.DefTele(f[1])
                          , dir: SettingsEditor.DirCode(f.Length >= 5 ? f[5] : "")})
+            if (f.Length >= 3 && f[1] != "" && f.Length < 5)
+                b.old := true
         }
         return list
     }
@@ -15967,6 +15969,17 @@ class UserData {
                 out[this.Compat(k)] := true
         }
         return out
+    }
+
+    ; valori predefiniti delle versioni precedenti che sono cambiati: chi li aveva ancora così non li
+    ; aveva scelti, quindi con la migrazione prendono il nuovo valore predefinito
+    static OldDefault(name, v) {
+        static old := Map("SplashHold", ["0.25"], "SplashScale", ["1.4"], "FieldBossPanelScale", ["1.0"])
+        if old.Has(name)
+            for x in old[name]
+                if (x == v)
+                    return true
+        return false
     }
 
     ; names = Map o Array di nomi. marker = l'elenco è completo (fine della migrazione da prima della 1.05)
@@ -16039,7 +16052,7 @@ class UserData {
         for name, v in saved {
             if !E.Cfg.Has(name)
                 continue
-            if !(custom.Has(name) || (legacy && v !== E.Cfg[name].value))
+            if !(custom.Has(name) || (legacy && v !== E.Cfg[name].value && !this.OldDefault(name, v)))
                 continue
             keep.Push(name)
             if (v !== E.Cfg[name].value && E.Invalid(name, v) = "")
@@ -16047,8 +16060,15 @@ class UserData {
         }
         this.MarkCustom(keep)
         bk := this.ReadBossKey("Bosses")
-        if (bk != "" && bk != newBossDef && bk != oldBossDef)
+        if (bk != "" && bk != newBossDef && bk != oldBossDef) {
+            fresh := Map()
+            for b in E.Bosses
+                fresh[b.name] := b
             E.Bosses := this.BossList(bk), E.BossDirty := true
+            for b in E.Bosses                           ; elenco di prima della 1.05: Teleport e direzione nuovi
+                if (b.HasOwnProp("old") && fresh.Has(b.name))
+                    b.tele := fresh[b.name].tele, b.dir := fresh[b.name].dir
+        }
         ; elenco boss predefinito di questa versione (per riconoscere il prossimo aggiornamento)
         try IniDelete(this.File, "Defaults")         ; (prima della 1.05: valori predefiniti, non più usati)
         try IniDelete(this.File, "BossDefaults")
@@ -16194,7 +16214,11 @@ class Updater {
         if (IsObject(SettingsEditor.Win) && (SettingsEditor.Pending.Count || SettingsEditor.BossDirty))
             return MsgBox(Tr("È disponibile AION 2 Wingman {1} (tu hai la {2}).", info.ver, AppVersion) "`n`n"
                 . Tr("Salva o annulla prima le modifiche nelle Impostazioni."), "AION 2 Wingman", "Iconi")
-        notes := info.notes != "" ? "`n`n" Tr("Novità:") "`n" (StrLen(info.notes) > 900 ? SubStr(info.notes, 1, 900) "..." : info.notes) : ""
+        n := info.notes, it := InStr(n, "### 🇮🇹")
+        if it                                           ; note in due lingue: solo quella più vicina alla tua
+            n := (Language = "italiano" || Language = "napoletano" || Language = "bro") ? SubStr(n, it) : SubStr(n, 1, it - 1)
+        n := Trim(RegExReplace(n, "m)^### .*$"), " `r`n")
+        notes := n != "" ? "`n`n" Tr("Novità:") "`n" (StrLen(n) > 900 ? SubStr(n, 1, 900) "..." : n) : ""
         if (MsgBox(Tr("È disponibile AION 2 Wingman {1} (tu hai la {2}).", info.ver, AppVersion) notes "`n`n"
             . Tr("Installarlo adesso? Le tue impostazioni restano."), "AION 2 Wingman", 0x40044) = "Yes")     ; Sì/No + info + sempre in primo piano
             this.Install(info)
@@ -16393,16 +16417,44 @@ class SplashScreen {
         DllCall("gdiplus\GdipCreateStringFormat", "Int", 0, "Int", 0, "Ptr*", &fmt := 0)
         DllCall("gdiplus\GdipSetStringFormatAlign", "Ptr", fmt, "Int", 1)        ; centrato
         DllCall("gdiplus\GdipSetStringFormatLineAlign", "Ptr", fmt, "Int", 1)
+        ; decorazioni del tema: stile delle particelle, emoji ai lati di "by VaLeTecK", nome del tema
+        st := this.ThemeStyle(), this.Style := st.style
         this.PTitle := this.TextPath("AION 2 Wingman", fam, fmt, 1, 120 * k, 0, 10 * k, this.W, 180 * k)
         this.PSub   := this.TextPath("by VaLeTecK", fam, fmt, 0, 46 * k, 0, 186 * k, this.W, 70 * k)
-        this.PVer   := this.TextPath("v" AppVersion, fam, fmt, 0, 20 * k, 0, 254 * k, this.W, 40 * k)
+        this.PVer   := this.TextPath("v" AppVersion "   ·   " st.label, fam, fmt, 0, 20 * k, 0, 254 * k, this.W, 40 * k)
+        b := Buffer(16, 0)
+        DllCall("gdiplus\GdipGetPathWorldBounds", "Ptr", this.PSub, "Ptr", b, "Ptr", 0, "Ptr", 0)
+        sx1 := NumGet(b, 0, "Float"), sx2 := sx1 + NumGet(b, 8, "Float"), isz := 64 * k
+        DllCall("gdiplus\GdipCreateFontFamilyFromName", "WStr", "Segoe UI Emoji", "Ptr", 0, "Ptr*", &efam := 0)
+        if !efam
+            efam := fam
+        this.PIconL := this.TextPath(st.icon, efam, fmt, 0, 38 * k, sx1 - 26 * k - isz, 186 * k, isz, 70 * k)
+        this.PIconR := this.TextPath(st.icon, efam, fmt, 0, 38 * k, sx2 + 26 * k, 186 * k, isz, 70 * k)
+        if (efam != fam)
+            DllCall("gdiplus\GdipDeleteFontFamily", "Ptr", efam)
         DllCall("gdiplus\GdipDeleteStringFormat", "Ptr", fmt)
         DllCall("gdiplus\GdipDeleteFontFamily", "Ptr", fam)
+        ; cuore (per i temi romantici): due curve, centrato in 0,0 e largo circa 1
+        DllCall("gdiplus\GdipCreatePath", "Int", 0, "Ptr*", &heart := 0)
+        DllCall("gdiplus\GdipAddPathBezier", "Ptr", heart, "Float", 0, "Float", 0.5, "Float", -0.6, "Float", 0.1
+              , "Float", -0.55, "Float", -0.5, "Float", 0, "Float", -0.18)
+        DllCall("gdiplus\GdipAddPathBezier", "Ptr", heart, "Float", 0, "Float", -0.18, "Float", 0.55, "Float", -0.5
+              , "Float", 0.6, "Float", 0.1, "Float", 0, "Float", 0.5)
+        DllCall("gdiplus\GdipClosePathFigure", "Ptr", heart)
+        this.PHeart := heart
+        this.Pal := [ColorToRGB(UiC("Accent")), ColorToRGB(UiC("Info")), ColorToRGB(UiC("Ok")), ColorToRGB(UiC("Err")), ColorToRGB(UiC("Go"))]
+        static counts := Map("snow", 46, "embers", 40, "sparkle", 24, "hearts", 22, "leaves", 26, "confetti", 52, "fireworks", 5)
+        this.Parts := []
+        loop (counts.Has(this.Style) ? counts[this.Style] : 0)
+            this.Parts.Push({x: Random(0.0, 1.0), y: Random(0.0, 1.0), s: Random(0.5, 1.0), v: Random(0.6, 1.0)
+                           , ph: Random(0.0, 6.283), c: Random(1, 5)})
 
         DllCall("gdiplus\GdipCreatePen1", "UInt", 0, "Float", 10 * k, "Int", 2, "Ptr*", &pen := 0)
         DllCall("gdiplus\GdipSetPenLineJoin", "Ptr", pen, "Int", 2)
         DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0, "Ptr*", &br := 0)
-        this.Pen := pen, this.Brush := br
+        DllCall("gdiplus\GdipCreatePen1", "UInt", 0, "Float", 3 * k, "Int", 2, "Ptr*", &fx := 0)
+        DllCall("gdiplus\GdipSetPenStartCap", "Ptr", fx, "Int", 2), DllCall("gdiplus\GdipSetPenEndCap", "Ptr", fx, "Int", 2)
+        this.Pen := pen, this.Brush := br, this.FxPen := fx
         this.SizeBuf := Buffer(8), NumPut("Int", this.W, "Int", this.H, this.SizeBuf)
         this.PtSrc := Buffer(8, 0)
 
@@ -16410,6 +16462,138 @@ class SplashScreen {
         this.Fn := ObjBindMethod(this, "Tick")
         this.Tick()
         SetTimer(this.Fn, AnimInterval)
+    }
+
+    ; Stile delle decorazioni in base al tema (i temi tuoi prendono quello del tema da cui derivano,
+    ; es. "halloween Custom"): particelle, emoji e nome mostrato sotto il titolo.
+    static ThemeStyle() {
+        static m := Map("principale", "sparkle", "dark", "sparkle", "bright", "rays", "cuddle", "hearts", "pinkhaze", "hearts"
+            , "egirl", "neon", "vi", "neon", "gladiator", "embers", "templar", "rays", "assassin", "blades", "ranger", "leaves"
+            , "sorcerer", "rings", "spiritmaster", "rings", "cleric", "rays", "chanter", "sparkle", "halloween", "embers"
+            , "natale", "snow", "capodanno", "fireworks", "sanvalentino", "hearts", "carnevale", "confetti", "pasqua", "hearts"
+            , "sanpatrizio", "leaves", "custom", "sparkle")
+        t := Trim(Theme), user := SubStr(StrLower(t), 1, 5) = "user:"
+        name := user ? SubStr(t, 6) : t, low := StrLower(name)
+        icons := SettingsEditor.ThemeIcons
+        for key, style in m
+            if (low = key || InStr(low, key " ") = 1)
+                return {style: style, icon: icons.Has(key) ? icons[key] : "✦", label: name}
+        return {style: "sparkle", icon: user ? "⭐" : "✦", label: name}
+    }
+
+    static Argb(rgb, a) => (Round(Max(0, Min(255, a))) << 24) | (rgb & 0xFFFFFF)
+
+    static Dot(g, x, y, r, rgb, a) {
+        DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", this.Argb(rgb, a))
+        DllCall("gdiplus\GdipFillEllipse", "Ptr", g, "Ptr", this.Brush, "Float", x - r, "Float", y - r, "Float", r * 2, "Float", r * 2)
+    }
+
+    static Oval(g, x, y, rx, ry, rgb, a) {
+        DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", this.Argb(rgb, a))
+        DllCall("gdiplus\GdipFillEllipse", "Ptr", g, "Ptr", this.Brush, "Float", x - rx, "Float", y - ry, "Float", rx * 2, "Float", ry * 2)
+    }
+
+    static Box(g, x, y, w, h, rgb, a) {
+        DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", this.Argb(rgb, a))
+        DllCall("gdiplus\GdipFillRectangle", "Ptr", g, "Ptr", this.Brush, "Float", x - w / 2, "Float", y - h / 2, "Float", w, "Float", h)
+    }
+
+    static Poly(g, pts, rgb, a) {                       ; pts = [x1, y1, x2, y2, ...]
+        b := Buffer(pts.Length * 4)
+        for i, v in pts
+            NumPut("Float", v, b, (i - 1) * 4)
+        DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", this.Argb(rgb, a))
+        DllCall("gdiplus\GdipFillPolygon", "Ptr", g, "Ptr", this.Brush, "Ptr", b, "Int", pts.Length // 2, "Int", 0)
+    }
+
+    static Star(g, x, y, r, rgb, a) {                   ; stellina a 4 punte
+        pts := []
+        loop 8 {
+            ang := (A_Index - 1) * 0.7853982, rr := Mod(A_Index, 2) ? r : r * 0.32
+            pts.Push(x + Cos(ang) * rr, y + Sin(ang) * rr)
+        }
+        this.Poly(g, pts, rgb, a)
+    }
+
+    static Line(g, x1, y1, x2, y2, w, rgb, a) {
+        DllCall("gdiplus\GdipSetPenWidth", "Ptr", this.FxPen, "Float", w)
+        DllCall("gdiplus\GdipSetPenColor", "Ptr", this.FxPen, "UInt", this.Argb(rgb, a))
+        DllCall("gdiplus\GdipDrawLine", "Ptr", g, "Ptr", this.FxPen, "Float", x1, "Float", y1, "Float", x2, "Float", y2)
+    }
+
+    static Ring(g, x, y, rx, ry, w, rgb, a) {
+        DllCall("gdiplus\GdipSetPenWidth", "Ptr", this.FxPen, "Float", w)
+        DllCall("gdiplus\GdipSetPenColor", "Ptr", this.FxPen, "UInt", this.Argb(rgb, a))
+        DllCall("gdiplus\GdipDrawEllipse", "Ptr", g, "Ptr", this.FxPen, "Float", x - rx, "Float", y - ry, "Float", rx * 2, "Float", ry * 2)
+    }
+
+    static Heart(g, x, y, sz, rgb, a) {
+        DllCall("gdiplus\GdipResetWorldTransform", "Ptr", g)
+        DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", x, "Float", y, "Int", 0)
+        DllCall("gdiplus\GdipScaleWorldTransform", "Ptr", g, "Float", sz, "Float", sz, "Int", 0)
+        DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", this.Argb(rgb, a))
+        DllCall("gdiplus\GdipFillPath", "Ptr", g, "Ptr", this.Brush, "Ptr", this.PHeart)
+        DllCall("gdiplus\GdipResetWorldTransform", "Ptr", g)
+    }
+
+    ; Decorazioni animate del tema (t = secondi dall'inizio). Tutto in movimento continuo.
+    static DrawFx(g, t) {
+        W := this.W, H := this.H, k := this.K, pal := this.Pal, acc := pal[1], cx := W / 2, cy := H / 2
+        switch this.Style {
+            case "snow":                                ; natale: neve che scende
+                for p in this.Parts
+                    this.Dot(g, Mod(p.x * W + Sin(t * 2 * p.v + p.ph) * 18 * k + W, W), Mod(p.y * H + t * 150 * k * p.v, H)
+                           , (2.5 + 4 * p.s) * k, 0xFFFFFF, 140 + 100 * p.s)
+            case "embers":                              ; braci che salgono
+                for p in this.Parts
+                    this.Dot(g, p.x * W + Sin(t * 3 * p.v + p.ph) * 12 * k, H - Mod((1 - p.y) * H + t * 170 * k * p.v, H)
+                           , (2 + 3 * p.s) * k, p.c <= 3 ? acc : pal[5], 110 + 130 * Abs(Sin(t * 8 * p.v + p.ph)))
+            case "sparkle":                             ; stelline che brillano
+                for p in this.Parts
+                    this.Star(g, p.x * W, p.y * H, (6 + 11 * p.s) * k * (0.35 + 0.65 * Abs(Sin(t * 4 * p.v + p.ph))), acc, 220)
+            case "hearts":                              ; cuori che scendono ondeggiando
+                for p in this.Parts
+                    this.Heart(g, p.x * W + Sin(t * 2.5 * p.v + p.ph) * 22 * k, Mod(p.y * H + t * 80 * k * p.v, H)
+                             , (12 + 12 * p.s) * k, p.c <= 2 ? acc : pal[p.c], 200)
+            case "leaves":                              ; foglie portate dal vento
+                for p in this.Parts
+                    this.Oval(g, Mod(p.x * W + t * 140 * k * p.v, W), Mod(p.y * H + t * 50 * k * p.v + Sin(t * 3 + p.ph) * 12 * k + H, H)
+                            , (9 + 7 * p.s) * k, (4 + 3 * p.s) * k, p.c <= 3 ? acc : pal[3], 200)
+            case "confetti":                            ; coriandoli colorati
+                for p in this.Parts
+                    this.Box(g, p.x * W + Sin(t * 4 * p.v + p.ph) * 14 * k, Mod(p.y * H + t * 160 * k * p.v, H)
+                           , (5 + 5 * p.s) * k, (2 + 5 * Abs(Sin(t * 7 + p.ph))) * k, pal[p.c], 235)
+            case "fireworks":                           ; fuochi d'artificio: scoppi di punti
+                for i, p in this.Parts {
+                    q := Mod(t + i * 0.31, 1.2) / 1.2, r := (20 + 150 * Sqrt(q)) * k
+                    loop 14 {
+                        ang := A_Index * 0.4487989 + p.ph
+                        this.Dot(g, p.x * W + Cos(ang) * r, p.y * H * 0.8 + 20 * k + Sin(ang) * r * 0.75, (2 + 2 * p.s) * k, pal[p.c], 240 * (1 - q))
+                    }
+                }
+            case "rings":                               ; cerchi arcani che si allargano
+                loop 3 {
+                    q := Mod(t * 0.9 + A_Index / 3, 1)
+                    this.Ring(g, cx, cy, (130 + 470 * q) * k, (45 + 120 * q) * k, (2 + 3 * (1 - q)) * k, A_Index = 2 ? pal[2] : acc, 200 * (1 - q))
+                }
+            case "neon":                                ; linee al neon che scorrono
+                loop 4 {
+                    y := Mod(t * 0.7 + A_Index / 4, 1) * H, col := Mod(A_Index, 2) ? acc : pal[2]
+                    this.Line(g, 0, y, W, y, 12 * k, col, 35)
+                    this.Line(g, 0, y, W, y, 2.5 * k, col, 170)
+                }
+            case "blades":                              ; fendenti in diagonale
+                loop 3 {
+                    q := Mod(t * 1.1 + A_Index * 0.33, 1), x := -0.3 * W + q * 1.6 * W
+                    this.Line(g, x, -10 * k, x - 0.22 * W, H + 10 * k, 10 * k, acc, 40 * (1 - q) + 20)
+                    this.Line(g, x, -10 * k, x - 0.22 * W, H + 10 * k, 2 * k, acc, 220 * (1 - q) + 30)
+                }
+            case "rays":                                ; raggi di luce che ruotano
+                loop 14 {
+                    ang := A_Index * 0.4487989 + t * 0.35, half := 0.06, len := W * 0.75   ; (AHK: w = W, quindi nomi diversi)
+                    this.Poly(g, [cx, cy, cx + Cos(ang - half) * len, cy + Sin(ang - half) * len, cx + Cos(ang + half) * len, cy + Sin(ang + half) * len], acc, 34)
+                }
+        }
     }
 
     static TextPath(text, fam, fmt, style, size, x, y, w, h) {
@@ -16421,32 +16605,43 @@ class SplashScreen {
         return path
     }
 
-    ; fasi: entrata 0,9 s (cresce, 20% -> 100%) | pausa SplashHold s | uscita 0,6 s (svanisce)
+    ; Un'unica animazione fluida: lo zoom non si ferma mai (dall'inizio alla fine, rallentando
+    ; dolcemente), l'opacità sale 20% -> 100% in 0,9 s, resta piena SplashHold s (0 = nessuna pausa)
+    ; e scende a 0 in 0,6 s mentre il testo continua a ingrandirsi.
     static Tick() {
         Critical "On"
         if !IsObject(this.Win)
             return SetTimer(this.Fn, 0)
         t := (A_TickCount - this.T0) / 1000
-        inT := 0.9, hold := Max(0, SplashHold), outT := 0.6
-        if (t < inT) {
-            p := 1 - (1 - t / inT) ** 3                            ; rallenta all'arrivo
-            sc := 0.45 + 0.55 * p, a := 0.2 + 0.8 * p
-        } else if (t < inT + hold) {
-            sc := 1, a := 1
-        } else if (t < inT + hold + outT) {
-            p := (t - inT - hold) / outT
-            sc := 1 + 0.06 * p, a := 1 - p
-        } else
+        inT := 0.9, hold := Max(0, SplashHold), outT := 0.6, total := inT + hold + outT
+        if (t >= total)
             return this.Close()
+        u := t / total
+        sc := 0.45 + 0.63 * (1 - (1 - u) ** 2)                   ; zoom continuo, senza soste
+        if (t < inT)
+            a := 0.2 + 0.8 * Sin(1.5707963 * t / inT)              ; comparsa
+        else if (t < inT + hold)
+            a := 1
+        else
+            a := Cos(1.5707963 * (t - inT - hold) / outT)          ; dissolvenza
 
         g := this.G, cx := this.W / 2, cy := this.H / 2
         DllCall("gdiplus\GdipGraphicsClear", "Ptr", g, "UInt", 0)
         DllCall("gdiplus\GdipResetWorldTransform", "Ptr", g)
+        try this.DrawFx(g, t)                                       ; decorazioni del tema, dietro al testo
+        DllCall("gdiplus\GdipResetWorldTransform", "Ptr", g)
         DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", cx, "Float", cy, "Int", 0)
         DllCall("gdiplus\GdipScaleWorldTransform", "Ptr", g, "Float", sc, "Float", sc, "Int", 0)
         DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", -cx, "Float", -cy, "Int", 0)
-        for item in [[this.PTitle, 0xFF000000 | ColorToRGB(UiC("Accent")), 12], [this.PSub, 0xFF000000 | ColorToRGB(UiC("SubText")), 7]
-                   , [this.PVer, 0xFF000000 | ColorToRGB(UiC("Muted")), 4]] {
+        acc := this.Pal[1]
+        for w in [[30, 0x22], [18, 0x3A]] {                         ; alone del colore d'accento attorno al nome
+            DllCall("gdiplus\GdipSetPenWidth", "Ptr", this.FxPen, "Float", w[1] * this.K)
+            DllCall("gdiplus\GdipSetPenColor", "Ptr", this.FxPen, "UInt", (w[2] << 24) | acc)
+            DllCall("gdiplus\GdipDrawPath", "Ptr", g, "Ptr", this.FxPen, "Ptr", this.PTitle)
+        }
+        for item in [[this.PTitle, 0xFF000000 | acc, 12], [this.PSub, 0xFF000000 | ColorToRGB(UiC("SubText")), 7]
+                   , [this.PVer, 0xFF000000 | ColorToRGB(UiC("Muted")), 4]
+                   , [this.PIconL, 0xFF000000 | acc, 6], [this.PIconR, 0xFF000000 | acc, 6]] {
             DllCall("gdiplus\GdipSetPenWidth", "Ptr", this.Pen, "Float", item[3] * this.K)
             DllCall("gdiplus\GdipSetPenColor", "Ptr", this.Pen, "UInt", 0xE6000000 | ColorToRGB(UiC("Deep")))   ; contorno scuro
             DllCall("gdiplus\GdipDrawPath", "Ptr", g, "Ptr", this.Pen, "Ptr", item[1])
@@ -16464,9 +16659,10 @@ class SplashScreen {
             SetTimer(this.Fn, 0)
         if !IsObject(this.Win)
             return
-        for h in [this.PTitle, this.PSub, this.PVer]
+        for h in [this.PTitle, this.PSub, this.PVer, this.PIconL, this.PIconR, this.PHeart]
             DllCall("gdiplus\GdipDeletePath", "Ptr", h)
         DllCall("gdiplus\GdipDeletePen", "Ptr", this.Pen)
+        DllCall("gdiplus\GdipDeletePen", "Ptr", this.FxPen)
         DllCall("gdiplus\GdipDeleteBrush", "Ptr", this.Brush)
         DllCall("gdiplus\GdipDeleteGraphics", "Ptr", this.G)
         DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.obm)
