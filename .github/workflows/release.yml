@@ -45,24 +45,41 @@ jobs:
           python3 - <<'PY'
           import os, re
           tag = os.environ["TAG"]; repo = os.environ["GITHUB_REPOSITORY"]
-          out, on = [], False
+          link = f"📄 Full changelog / Changelog completo: https://github.com/{repo}/blob/{tag}/CHANGELOG.md"
+          sec, on = [], False
           for line in open("CHANGELOG.md", encoding="utf-8").read().split("\n"):
               if line.strip() == "## v" + tag.lstrip("v"):
                   on = True; continue
               if on and line.startswith("## "):
                   break
-              if not on:
-                  continue
-              if line.startswith("- "):
-                  line = re.split(r"\s+[–-]\s+", line, maxsplit=1)[0].replace("**", "")
-              if line.strip() or (out and out[-1].strip()):
-                  out.append(line)
-          while out and not out[-1].strip():
-              out.pop()
-          out += ["", f"📄 Full changelog / Changelog completo: https://github.com/{repo}/blob/{tag}/CHANGELOG.md"]
-          text = "\n".join(out).strip()
-          if len(text) > 1600:                      # limite di sicurezza per le versioni vecchie
-              text = text[:1500].rsplit("\n", 1)[0] + f"\n…\n\n📄 https://github.com/{repo}/blob/{tag}/CHANGELOG.md"
+              if on:
+                  sec.append(line)
+          def short(line, desc_len):
+              # "- 🆕 **Titolo** – spiegazione" -> "- 🆕 Titolo: prima frase (accorciata)"
+              if not line.startswith("- "):
+                  return line
+              parts = re.split(r"\s+[–-]\s+", line, maxsplit=1)
+              title = parts[0].replace("**", "")
+              if desc_len <= 0 or len(parts) < 2:
+                  return title
+              d = re.split(r"(?<=[.;:!?])\s", parts[1].replace("**", ""), maxsplit=1)[0].rstrip(" .;:")
+              if len(d) > desc_len:
+                  d = d[:desc_len].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
+              return f"{title}: {d}"
+          # note brevi (le versioni fino alla 1.04 vanno in errore con note troppo lunghe):
+          # titolo + piccola descrizione, accorciata finché tutto sta sotto il limite
+          for n in (110, 90, 70, 55, 0):
+              out = []
+              for line in sec:
+                  if line.strip() or (out and out[-1].strip()):
+                      out.append(short(line, n))
+              while out and not out[-1].strip():
+                  out.pop()
+              text = "\n".join(out + ["", link]).strip()
+              if len(text) <= 1700:
+                  break
+          if len(text) > 1700:
+              text = text[:1600].rsplit("\n", 1)[0] + "\n…\n\n" + link
           open("notes.md", "w", encoding="utf-8").write(text + "\n")
           PY
           if [ -s notes.md ]; then gh release edit "$TAG" --notes-file notes.md; fi
