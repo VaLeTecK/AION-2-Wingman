@@ -3846,13 +3846,13 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         if hint                                        ; istruzioni e scheda del boss non devono coprire i Teleport
             this.Hint.Hide()
         if card
-            BossCard.Win.Hide()
+            BossCard.Win.Hide()                        ; istantaneo: la scheda non deve finire nello screenshot
         if (hint || card)
             Sleep(40)
         buf := FieldBossTool.Capture(x0, y0, w, h)
         if hint
             this.Hint.Show("NA")
-        if card
+        if (card && IsObject(BossCard.Win))
             BossCard.Win.Show("NA")
         px1 := px2 := py1 := py2 := -1                 ; esclude il pannello
         if (this.Shown && IsObject(this.Panel)) {
@@ -4538,13 +4538,10 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
                     try c.Opt("+Background" pair[2]), c.Redraw()
             }
         this.Hover := row
-        if this.HoverFn                                   ; anteprima del boss dopo una breve pausa sulla riga
-            SetTimer(this.HoverFn, 0), this.HoverFn := ""
-        if !IsObject(row)
+        if !IsObject(row)                                 ; fuori dai nomi: la scheda svanisce (fade-out)
             return BossCard.Hide()
         sub := row.HasOwnProp("dungeon") ? row.dungeon.teles[1] : this.Bosses.Has(row.name) ? this.Bosses[row.name].tele : ""
-        this.HoverFn := ObjBindMethod(this, "ShowBossCard", row.name, sub, row)
-        SetTimer(this.HoverFn, -140)
+        this.ShowBossCard(row.name, sub, row)             ; anteprima subito, con fade-in
     }
 
     ; ---------------- Diagnosi ----------------
@@ -17111,46 +17108,69 @@ class ViCountdownBar {
 ; tema, nome e Teleport (o dungeon) sotto. Entra con un piccolo zoom e una dissolvenza.
 ; Le immagini sono in BOSSES\<nome del boss senza spazi e simboli>.png (es. blackwarrioraed.png).
 class BossCard {
-    static Win := "", Fn := "", Img := 0
+    static Win := "", Fn := "", Img := 0, A := 0, Target := 0, Last := 0, Name := "", Sub := ""
 
     static Visible() => IsObject(this.Win) && DllCall("IsWindowVisible", "Ptr", this.Win.Hwnd)
 
     static File(name) => A_ScriptDir "\BOSSES\" FieldBossTool.Norm(name) ".png"
 
+    ; Compare subito accanto al menu con dissolvenza in entrata. Passando da un boss all'altro la
+    ; finestra resta la stessa: si sposta sulla nuova riga e il ritratto cambia con un breve ri-fade.
     static Show(name, sub, px, py, pw, g) {
-        this.Hide()
-        f := this.File(name)
-        if !FileExist(f)
-            return
-        if DllCall("gdiplus\GdipCreateBitmapFromFile", "WStr", f, "Ptr*", &img := 0) || !img
-            return
+        img := this.Bitmap(name)
+        if !img
+            return this.Hide()
         k := g.s * FieldBossPanelScale
-        this.Img := img, this.K := k, this.Name := name, this.Sub := sub
-        this.W := Round(240 * k), this.H := Round(300 * k)
+        W := Round(240 * k), H := Round(300 * k)
         x := px + pw + Round(12 * k)
-        if (x + this.W > g.x + g.w)                          ; niente spazio a destra: a sinistra del menu
-            x := px - this.W - Round(12 * k)
-        y := Max(g.y, Min(py - this.H // 2, g.y + g.h - this.H))   ; centrata sulla riga, dentro lo schermo
-        w := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000 +E0x20 +E0x08000000")
-        w.Show(Format("NA x{} y{} w{} h{}", x, y, this.W, this.H))
-        this.Win := w
-        this.hdc := DllCall("CreateCompatibleDC", "Ptr", 0, "Ptr")
-        bi := Buffer(40, 0)
-        NumPut("UInt", 40, bi, 0), NumPut("Int", this.W, bi, 4), NumPut("Int", -this.H, bi, 8)
-        NumPut("UShort", 1, bi, 12), NumPut("UShort", 32, bi, 14)
-        this.hbm := DllCall("CreateDIBSection", "Ptr", this.hdc, "Ptr", bi, "UInt", 0, "Ptr*", &bits := 0, "Ptr", 0, "UInt", 0, "Ptr")
-        this.obm := DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.hbm, "Ptr")
-        DllCall("gdiplus\GdipCreateFromHDC", "Ptr", this.hdc, "Ptr*", &gr := 0)
-        this.G := gr
-        DllCall("gdiplus\GdipSetSmoothingMode", "Ptr", gr, "Int", 4)
-        DllCall("gdiplus\GdipSetInterpolationMode", "Ptr", gr, "Int", 7)      ; bicubica di alta qualità
-        DllCall("gdiplus\GdipSetPixelOffsetMode", "Ptr", gr, "Int", 2)
-        this.SizeBuf := Buffer(8), NumPut("Int", this.W, "Int", this.H, this.SizeBuf)
-        this.PtSrc := Buffer(8, 0)
-        this.T0 := A_TickCount
-        this.Fn := ObjBindMethod(this, "Tick")
+        if (x + W > g.x + g.w)                               ; niente spazio a destra: a sinistra del menu
+            x := px - W - Round(12 * k)
+        y := Max(g.y, Min(py - H // 2, g.y + g.h - H))       ; centrata sulla riga, dentro lo schermo
+        if (IsObject(this.Win) && (this.W != W || this.H != H))
+            this.Destroy()
+        if !IsObject(this.Win) {
+            this.K := k, this.W := W, this.H := H, this.A := 0
+            w := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000 +E0x20 +E0x08000000")
+            w.Show(Format("NA x{} y{} w{} h{}", x, y, W, H))
+            this.Win := w
+            this.hdc := DllCall("CreateCompatibleDC", "Ptr", 0, "Ptr")
+            bi := Buffer(40, 0)
+            NumPut("UInt", 40, bi, 0), NumPut("Int", W, bi, 4), NumPut("Int", -H, bi, 8)
+            NumPut("UShort", 1, bi, 12), NumPut("UShort", 32, bi, 14)
+            this.hbm := DllCall("CreateDIBSection", "Ptr", this.hdc, "Ptr", bi, "UInt", 0, "Ptr*", &bits := 0, "Ptr", 0, "UInt", 0, "Ptr")
+            this.obm := DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.hbm, "Ptr")
+            DllCall("gdiplus\GdipCreateFromHDC", "Ptr", this.hdc, "Ptr*", &gr := 0)
+            this.G := gr
+            DllCall("gdiplus\GdipSetSmoothingMode", "Ptr", gr, "Int", 4)
+            DllCall("gdiplus\GdipSetInterpolationMode", "Ptr", gr, "Int", 7)      ; bicubica di alta qualità
+            DllCall("gdiplus\GdipSetPixelOffsetMode", "Ptr", gr, "Int", 2)
+            this.SizeBuf := Buffer(8), NumPut("Int", W, "Int", H, this.SizeBuf)
+            this.PtSrc := Buffer(8, 0)
+        } else {
+            DllCall("SetWindowPos", "Ptr", this.Win.Hwnd, "Ptr", 0, "Int", x, "Int", y, "Int", 0, "Int", 0, "UInt", 0x15)
+            if !DllCall("IsWindowVisible", "Ptr", this.Win.Hwnd)
+                this.Win.Show("NA")
+            if (name != this.Name)                           ; nuovo boss: breve ri-dissolvenza del contenuto
+                this.A := Min(this.A, 0.55)
+        }
+        this.Img := img, this.Name := name, this.Sub := sub, this.Target := 1
+        this.Last := A_TickCount
+        if !this.Fn
+            this.Fn := ObjBindMethod(this, "Tick")
         this.Tick()
         SetTimer(this.Fn, 15)
+    }
+
+    ; immagine del boss (GDI+), caricata una volta sola e tenuta in memoria; 0 = manca
+    static Bitmap(name) {
+        static cache := Map()
+        f := this.File(name)
+        if cache.Has(f)
+            return cache[f]
+        img := 0
+        if FileExist(f)
+            DllCall("gdiplus\GdipCreateBitmapFromFile", "WStr", f, "Ptr*", &img)
+        return cache[f] := img
     }
 
     ; Miniatura quadrata con angoli arrotondati e bordo d'accento, già fusa sul colore di fondo del
@@ -17216,7 +17236,9 @@ class BossCard {
         Critical "On"
         if !IsObject(this.Win)
             return SetTimer(this.Fn, 0)
-        q := Min(1, (A_TickCount - this.T0) / 220), e := 1 - (1 - q) ** 3
+        now := A_TickCount, dt := Min(60, now - this.Last), this.Last := now
+        this.A := this.Target ? Min(1, this.A + dt / 160) : Max(0, this.A - dt / 140)   ; fade-in 0,16 s / fade-out 0,14 s
+        q := this.A, e := 1 - (1 - q) ** 3
         g := this.G, k := this.K, W := this.W, H := this.H
         acc := ColorToRGB(UiC("Accent")), deep := ColorToRGB(UiC("Deep"))
         DllCall("gdiplus\GdipGraphicsClear", "Ptr", g, "UInt", 0)
@@ -17261,11 +17283,24 @@ class BossCard {
         DllCall("gdiplus\GdipFlush", "Ptr", g, "Int", 1)
         DllCall("UpdateLayeredWindow", "Ptr", this.Win.Hwnd, "Ptr", 0, "Ptr", 0, "Ptr", this.SizeBuf
             , "Ptr", this.hdc, "Ptr", this.PtSrc, "UInt", 0, "UInt*", (Round(255 * e) << 16) | 0x1000000, "UInt", 2)
-        if (q >= 1)
-            SetTimer(this.Fn, 0)                          ; animazione finita: resta ferma
+        if (!this.Target && q <= 0)
+            return this.Destroy()                         ; dissolvenza in uscita finita
+        if (this.Target && q >= 1)
+            SetTimer(this.Fn, 0)                          ; comparsa finita: resta ferma
     }
 
-    static Hide() {
+    ; Sparisce con dissolvenza (instant = true: subito, senza animazione)
+    static Hide(instant := false) {
+        Critical "On"
+        if !IsObject(this.Win)
+            return
+        if instant
+            return this.Destroy()
+        this.Target := 0, this.Last := A_TickCount
+        SetTimer(this.Fn, 15)
+    }
+
+    static Destroy() {
         Critical "On"
         if this.Fn
             SetTimer(this.Fn, 0)
@@ -17275,10 +17310,9 @@ class BossCard {
         DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.obm)
         DllCall("DeleteObject", "Ptr", this.hbm)
         DllCall("DeleteDC", "Ptr", this.hdc)
-        if this.Img
-            DllCall("gdiplus\GdipDisposeImage", "Ptr", this.Img), this.Img := 0
+        this.Img := 0                                     ; l'immagine resta nella cache di Bitmap()
         this.Win.Destroy()
-        this.Win := ""
+        this.Win := "", this.Name := ""
     }
 }
 
