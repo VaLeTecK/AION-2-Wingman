@@ -4,6 +4,24 @@ Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descriz
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
 A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal del pacchetto.
 
+## v1.06
+
+### 🇬🇧 English
+- 🎲 **Random number** – Press Ctrl+Shift+- (the - key next to the period) or click the new die icon: a big number from 1 to 5 rolls on screen, slows down and "pops" with a glow in your theme color. Range, size, time on screen and position (bottom center-right by default) are adjustable in Settings > Random number.
+- 🖱️ **Clickable random icon** – A small die with the key combination under it, which lights up when the mouse passes over it; it only shows while the game is in the foreground. It can be turned off and moved anywhere from the Settings.
+- 🏰 **Teleport menu in dungeons** – In Krao Cave, Draupnir, Urugugu Canyon, Vakron Sky Island, Fire Temple and Ferocious Horn Den a panel in the Field Boss style lists the dungeon bosses: click one, Wingman finds its Teleport in the list, you click it and press F twice. Where there are alternatives (Thamon, Fire Temple) it uses the first unlocked one. Can be turned off in Settings > Field Boss > General.
+- 🔒 **Locked Teleport check** – Wingman now reads "Bind Complete" / "Binding Incomplete" under each Teleport. In ULTRA-FAST MODE, if the boss's Teleport is not unlocked yet it switches by itself to NORMAL MODE and uses the nearest unlocked Teleport.
+- 🖼️ **Boss images** – Hovering a boss in the Field Boss or dungeon menu shows a preview card next to it (portrait with a glow in your theme color, name and Teleport); once you pick it, its portrait stays in the on-screen instructions and in the flight arrow. All 43 bosses are included (BOSSES folder); can be turned off in Settings > Field Boss > General.
+- ✨ **Hover and zoom in the menus** – Moving the mouse over a boss in the Field Boss and dungeon menus highlights the row and enlarges the name.
+
+### 🇮🇹 Italiano
+- 🎲 **Numero random** – Premi Ctrl+Shift+- (il tasto - accanto al punto) o clicca la nuova icona del dado: a schermo rolla un numero grande da 1 a 5, che rallenta ed "esplode" con un alone nel colore del tema. Intervallo, dimensione, durata e posizione (di default in basso al centro-destra) si regolano in Impostazioni > Numero random.
+- 🖱️ **Icona del random cliccabile** – Un piccolo dado con sotto la combinazione di tasti, che si illumina al passaggio del mouse; compare solo con il gioco in primo piano. Si può spegnere e spostare dove vuoi dalle Impostazioni.
+- 🏰 **Menu Teleport nei dungeon** – In Krao Cave, Draupnir, Urugugu Canyon, Vakron Sky Island, Fire Temple e Ferocious Horn Den un pannello in stile Field Boss elenca i boss del dungeon: ne clicchi uno, Wingman trova il suo Teleport nella lista, lo clicchi e premi F due volte. Dove ci sono alternative (Thamon, Fire Temple) usa il primo sbloccato. Disattivabile in Impostazioni > Field Boss > Generale.
+- 🔒 **Controllo dei Teleport non sbloccati** – Wingman ora legge "Bind Complete" / "Binding Incomplete" sotto ogni Teleport. In ULTRA-FAST MODE, se il Teleport del boss non è ancora sbloccato passa da solo alla NORMAL MODE e usa il Teleport sbloccato più vicino.
+- 🖼️ **Immagini dei boss** – Passando il mouse su un boss nel menu Field Boss o dungeon compare accanto una scheda di anteprima (ritratto con alone nel colore del tema, nome e Teleport); scelto il boss, il suo ritratto resta nelle istruzioni a schermo e nella freccia di volo. Ci sono tutti i 43 boss (cartella BOSSES); disattivabile in Impostazioni > Field Boss > Generale.
+- ✨ **Hover e zoom nei menu** – Passando il mouse su un boss nei menu Field Boss e dungeon la riga si illumina e il nome si ingrandisce.
+
 ## v1.05
 
 ### 🇬🇧 English
