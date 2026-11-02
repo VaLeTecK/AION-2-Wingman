@@ -23,15 +23,15 @@ WAS IST DAS
   Es bewegt nur den Mauszeiger und zeigt dir, was zu tun ist.
 
 PAKETINHALT
-  Setup AION 2 Wingman.bat   Ersteinrichtung (Abhängigkeiten)
+  FIRST RUN QUICK-SETUP.bat  Ersteinrichtung (Abhängigkeiten)
   AION 2 Wingman.ahk         das Programm
   OCR.ahk                    OCR-Bibliothek (für Field Boss)
   README\                    diese Anleitung in mehreren Sprachen
 
 VORAUSSETZUNGEN
   - Windows 10 oder 11
-  - AutoHotkey v2 (wird vom Setup installiert)
-  - Windows-OCR für Englisch (wird vom Setup installiert)
+  - AutoHotkey v2 (wird vom FIRST RUN QUICK-SETUP installiert)
+  - Windows-OCR für Englisch (wird vom FIRST RUN QUICK-SETUP installiert)
   - AION-2-Client auf Englisch (Field Boss liest die englischen Namen)
 
 INSTALLATION
@@ -39,12 +39,12 @@ INSTALLATION
      „Zulassen" anhaken > OK. (Vermeidet Windows-Warnungen.)
   2. ZIP in einen festen Ordner entpacken, z. B. Dokumente\AION 2 Wingman.
      Die Dateien NICHT direkt aus der ZIP starten.
-  3. Doppelklick auf „Setup AION 2 Wingman.bat" und die
-     Administratorabfrage bestätigen. Das Setup prüft und installiert
+  3. Doppelklick auf „FIRST RUN QUICK-SETUP.bat" und die
+     Administratorabfrage bestätigen. Das FIRST RUN QUICK-SETUP prüft und installiert
      alles und kann am Ende eine Desktopverknüpfung anlegen und die
      Wingman starten. Bei „Der Computer wurde durch Windows geschützt":
      „Weitere Informationen" > „Trotzdem ausführen".
-     Während des Setups stellt ein Assistent Sprache, Auflösung,
+     Während des FIRST RUN QUICK-SETUP stellt ein Assistent Sprache, Auflösung,
      Leistung und EIN/AUS-Funktionen ein.
   4. Danach „AION 2 Wingman.ahk" (oder die Verknüpfung) starten. Es
      fordert selbst Administratorrechte an: nötig, um Tasten zu lesen,
@@ -53,7 +53,7 @@ INSTALLATION
 ERSTER START: ZUERST ERLEDIGEN
   - Einstellungen öffnen: Strg+Umschalt+F12 (oder Doppelklick auf das
     grüne „H"-Symbol in der Taskleiste).
-  - Die Sprache wählst du schon im Setup (änderbar unter ⚙️ Allgemein > Sprache).
+  - Die Sprache wählst du schon im FIRST RUN QUICK-SETUP (änderbar unter ⚙️ Allgemein > Sprache).
   - 📦 Preset: FullHD (1080p), 2K (1440p) oder 4K (2160p) passend zu
     deinem Bildschirm anwenden, damit das HUD die richtige Größe hat.
   - Mit „Speichern+Neustart" bestätigen. Mit „LIVE-VORSCHAU" siehst du
@@ -90,7 +90,7 @@ HÄUFIGE PROBLEME
   - Im Spiel passiert nichts: Das Skript arbeitet nur, wenn AION2.exe
     im Vordergrund ist. „H"-Symbol in der Taskleiste prüfen.
   - Field Boss „nicht verfügbar": OCR.ahk fehlt im Ordner oder die
-    englische Windows-OCR fehlt. Setup erneut ausführen.
+    englische Windows-OCR fehlt. FIRST RUN QUICK-SETUP erneut ausführen.
   - HUD zu groß/klein oder verschoben: passendes Preset anwenden.
   - Virenscanner blockiert das Skript: häufiger Fehlalarm bei
     AutoHotkey; Ordner zu den Ausnahmen hinzufügen.

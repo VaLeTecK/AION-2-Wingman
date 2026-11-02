@@ -23,15 +23,15 @@ O QUE É
   cursor e mostra o que fazer. Os cliques são seus.
 
 CONTEÚDO DO PACOTE
-  Setup AION 2 Wingman.bat   configuração do primeiro uso (dependências)
+  FIRST RUN QUICK-SETUP.bat  configuração do primeiro uso (dependências)
   AION 2 Wingman.ahk         o programa
   OCR.ahk                    biblioteca OCR (usada pelo Field Boss)
   README\                    estas instruções em vários idiomas
 
 REQUISITOS
   - Windows 10 ou 11
-  - AutoHotkey v2 (instalado pelo setup)
-  - OCR do Windows em inglês (instalado pelo setup)
+  - AutoHotkey v2 (instalado pelo FIRST RUN QUICK-SETUP)
+  - OCR do Windows em inglês (instalado pelo FIRST RUN QUICK-SETUP)
   - Cliente do AION 2 em inglês (o Field Boss lê os nomes em inglês)
 
 INSTALAÇÃO
@@ -39,7 +39,7 @@ INSTALAÇÃO
      "Desbloquear" > OK. (Evita avisos do Windows.)
   2. Extraia o zip numa pasta fixa, ex. Documentos\AION 2 Wingman.
      NÃO execute os arquivos de dentro do zip.
-  3. Clique duas vezes em "Setup AION 2 Wingman.bat" e aceite o pedido de
+  3. Clique duas vezes em "FIRST RUN QUICK-SETUP.bat" e aceite o pedido de
      administrador. O setup verifica e instala tudo e no final pode
      criar um atalho na área de trabalho e iniciar o Wingman.
      Se aparecer "O Windows protegeu o computador": "Mais informações" >

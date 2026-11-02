@@ -23,15 +23,15 @@ WHAT IT IS
   it only moves the cursor and shows you what to do. You do the clicks.
 
 PACKAGE CONTENTS
-  Setup AION 2 Wingman.bat   first-run setup (dependencies)
+  FIRST RUN QUICK-SETUP.bat  first-run setup (dependencies)
   AION 2 Wingman.ahk         the program
   OCR.ahk                    OCR library (used by the Field Boss tool)
   README\                    these instructions in several languages
 
 REQUIREMENTS
   - Windows 10 or 11
-  - AutoHotkey v2 (installed by the setup)
-  - Windows OCR for English (installed by the setup)
+  - AutoHotkey v2 (installed by the FIRST RUN QUICK-SETUP)
+  - Windows OCR for English (installed by the FIRST RUN QUICK-SETUP)
   - AION 2 client in English (Field Boss reads the English names)
 
 INSTALLATION
@@ -39,11 +39,11 @@ INSTALLATION
      "Unblock" > OK. (Avoids Windows warnings.)
   2. Extract the zip to a permanent folder, e.g. Documents\AION 2 Wingman.
      Do NOT run the files from inside the zip.
-  3. Double-click "Setup AION 2 Wingman.bat" and accept the administrator
-     prompt. The setup checks and installs everything, and at the end
+  3. Double-click "FIRST RUN QUICK-SETUP.bat" and accept the administrator
+     prompt. The FIRST RUN QUICK-SETUP checks and installs everything, and at the end
      can create a desktop shortcut and start Wingman.
      If "Windows protected your PC" appears: "More info" > "Run anyway".
-     During the setup a guided configuration sets language,
+     During the FIRST RUN QUICK-SETUP a guided configuration sets language,
      resolution, performance and ON/OFF features.
   4. Next times, start "AION 2 Wingman.ahk" (or the shortcut). It asks
      for administrator rights by itself: they are needed to read keys
@@ -52,7 +52,7 @@ INSTALLATION
 FIRST LAUNCH: DO THIS FIRST
   - Open the Settings: Ctrl+Shift+F12 (or double-click the green "H"
     icon in the Windows taskbar).
-  - The language is chosen in the setup (change it in ⚙️ General > Language).
+  - The language is chosen in the FIRST RUN QUICK-SETUP (change it in ⚙️ General > Language).
   - 📦 Preset: apply FullHD (1080p), 2K (1440p) or 4K (2160p) to match
     your screen, so the HUD has the right size.
   - "Save and restart" to confirm. With "LIVE PREVIEW" you see changes
@@ -89,7 +89,7 @@ TROUBLESHOOTING
   - Nothing happens in game: the script only works while AION2.exe is
     the foreground window. Check the "H" icon in the taskbar.
   - Field Boss "not available": OCR.ahk missing from the folder or no
-    English Windows OCR. Run the setup again.
+    English Windows OCR. Run the FIRST RUN QUICK-SETUP again.
   - HUD too big/small or misplaced: apply the right preset.
   - Antivirus blocking the script: a common false positive for
     AutoHotkey; add the folder to the exclusions.

@@ -10,7 +10,7 @@
 
 [**⬇ Download the latest release**](../../releases/latest) · 💖 Donate: [**PayPal**](https://www.paypal.com/paypalme/valeteck) · [**Ko-fi**](https://ko-fi.com/VaLeTecK)
 
-📦 **First time?** Extract the zip and double-click **`Setup AION 2 Wingman.bat`**: it installs everything and sets Wingman up for you.
+📦 **First time?** Extract the zip and double-click **`FIRST RUN QUICK-SETUP.bat`**: it installs everything and sets Wingman up for you.
 
 <br>
 
@@ -133,26 +133,26 @@ Every single element of the HUD and of the tools can be tuned to your taste, in 
 
 ### 💻 Requirements
 - Windows 10 or 11
-- AutoHotkey v2 and the English Windows OCR (both installed by the setup)
+- AutoHotkey v2 and the English Windows OCR (both installed by the FIRST RUN QUICK-SETUP)
 - English AION 2 client (for Field Boss)
 
-### 🚀 Installation and first launch: start from the Setup
+### 🚀 Installation and first launch: start from the FIRST RUN QUICK-SETUP
 
-> **After extracting the zip, double-click `Setup AION 2 Wingman.bat` first.**
-> It's the file with "Setup" in its name, in the main folder of the package.
+> **After extracting the zip, double-click `FIRST RUN QUICK-SETUP.bat` first.**
+> It's the file with "QUICK-SETUP" in its name, in the main folder of the package.
 >
-> The Setup installs everything Wingman needs to work 100% (AutoHotkey v2, the Windows OCR, the OCR library) and walks you through a quick first configuration: language, screen resolution, performance, color theme, features ON/OFF and keyboard. At the end it creates a desktop shortcut and starts Wingman with your settings already in place.
+> The FIRST RUN QUICK-SETUP installs everything Wingman needs to work 100% (AutoHotkey v2, the Windows OCR, the OCR library) and walks you through a quick first configuration: language, screen resolution, performance, color theme, features ON/OFF and keyboard. At the end it creates a desktop shortcut and starts Wingman with your settings already in place.
 
 1. Download **`AION-2-Wingman.zip`** from the [latest release](../../releases/latest).
 2. Right-click the zip > **Properties** > tick **Unblock** > OK. This avoids Windows warnings.
 3. Extract it to a **permanent folder**, for example `Documents\AION 2 Wingman`. Don't run it from inside the zip.
-4. Double-click **`Setup AION 2 Wingman.bat`** and accept the administrator prompt. If you see "Windows protected your PC", click *More info* > *Run anyway*.
+4. Double-click **`FIRST RUN QUICK-SETUP.bat`** and accept the administrator prompt. If you see "Windows protected your PC", click *More info* > *Run anyway*.
 5. Follow the guided setup. Pressing Enter always picks the recommended choice.
-6. From then on, start Wingman from the desktop shortcut or with **`AION 2 Wingman.ahk`**. You can run the Setup again at any time from *Settings > 🛠️ Maintenance*.
+6. From then on, start Wingman from the desktop shortcut or with **`AION 2 Wingman.ahk`**. You can run the FIRST RUN QUICK-SETUP again at any time from *Settings > 🛠️ Maintenance*.
 
 | In the package | What it is |
 |---|---|
-| 📦 **`Setup AION 2 Wingman.bat`** | **Start here**: first-time setup |
+| 📦 **`FIRST RUN QUICK-SETUP.bat`** | **Start here**: first-time setup |
 | `AION 2 Wingman.ahk` | the program |
 | `OCR.ahk` | OCR library (used by Field Boss) |
 | `README\` · `INFOGRAPHICS\` | guides in 10 languages |
@@ -184,7 +184,7 @@ The keys still reach the game as usual.
 
 ### ❓ FAQ
 - **Nothing happens in game:** Wingman works only while `AION2.exe` is in the foreground. Check the green "H" icon in the taskbar.
-- **Field Boss "not available":** `OCR.ahk` or the English Windows OCR is missing. Run the setup again.
+- **Field Boss "not available":** `OCR.ahk` or the English Windows OCR is missing. Run the FIRST RUN QUICK-SETUP again.
 - **HUD too big or too small:** apply the right resolution preset in Settings.
 - **Antivirus warning:** this is a common false positive with AutoHotkey scripts. Add the folder to the exclusions.
 
@@ -301,26 +301,26 @@ Ogni singolo elemento dell'HUD e dei tool si regola come vuoi, sia nell'**aspett
 
 ### 💻 Requisiti
 - Windows 10 o 11
-- AutoHotkey v2 e l'OCR inglese di Windows (li installa il setup)
+- AutoHotkey v2 e l'OCR inglese di Windows (li installa il FIRST RUN QUICK-SETUP)
 - Client di AION 2 in inglese (per il Field Boss)
 
-### 🚀 Installazione e primo avvio: si parte dal Setup
+### 🚀 Installazione e primo avvio: si parte dal FIRST RUN QUICK-SETUP
 
-> **Dopo aver estratto lo zip, avvia per primo `Setup AION 2 Wingman.bat` con un doppio click.**
-> È il file con "Setup" nel nome, nella cartella principale del pacchetto.
+> **Dopo aver estratto lo zip, avvia per primo `FIRST RUN QUICK-SETUP.bat` con un doppio click.**
+> È il file con "QUICK-SETUP" nel nome, nella cartella principale del pacchetto.
 >
-> Il Setup installa tutto quello che serve a Wingman per funzionare al 100% (AutoHotkey v2, l'OCR di Windows, la libreria OCR) e ti guida in una breve configurazione iniziale: lingua, risoluzione dello schermo, prestazioni, tema dei colori, funzioni ON/OFF e tastiera. Alla fine crea il collegamento sul desktop e avvia Wingman con le tue impostazioni già pronte.
+> Il FIRST RUN QUICK-SETUP installa tutto quello che serve a Wingman per funzionare al 100% (AutoHotkey v2, l'OCR di Windows, la libreria OCR) e ti guida in una breve configurazione iniziale: lingua, risoluzione dello schermo, prestazioni, tema dei colori, funzioni ON/OFF e tastiera. Alla fine crea il collegamento sul desktop e avvia Wingman con le tue impostazioni già pronte.
 
 1. Scarica **`AION-2-Wingman.zip`** dall'[ultima release](../../releases/latest).
 2. Tasto destro sullo zip > **Proprietà** > spunta **Annulla blocco** > OK. Così eviti gli avvisi di Windows.
 3. Estrailo in una **cartella fissa**, ad esempio `Documenti\AION 2 Wingman`. Non avviarlo da dentro lo zip.
-4. Doppio click su **`Setup AION 2 Wingman.bat`** e accetta la richiesta di amministratore. Se compare "Windows ha protetto il PC", clicca *Ulteriori informazioni* > *Esegui comunque*.
+4. Doppio click su **`FIRST RUN QUICK-SETUP.bat`** e accetta la richiesta di amministratore. Se compare "Windows ha protetto il PC", clicca *Ulteriori informazioni* > *Esegui comunque*.
 5. Segui la configurazione guidata. Premendo Invio scegli sempre l'opzione consigliata.
-6. Da lì in poi avvia Wingman dal collegamento sul desktop o con **`AION 2 Wingman.ahk`**. Il Setup si può rilanciare quando vuoi da *Impostazioni > 🛠️ Manutenzione*.
+6. Da lì in poi avvia Wingman dal collegamento sul desktop o con **`AION 2 Wingman.ahk`**. Il FIRST RUN QUICK-SETUP si può rilanciare quando vuoi da *Impostazioni > 🛠️ Manutenzione*.
 
 | Nel pacchetto | Cos'è |
 |---|---|
-| 📦 **`Setup AION 2 Wingman.bat`** | **Parti da qui**: installazione del primo avvio |
+| 📦 **`FIRST RUN QUICK-SETUP.bat`** | **Parti da qui**: installazione del primo avvio |
 | `AION 2 Wingman.ahk` | il programma |
 | `OCR.ahk` | libreria OCR (serve al Field Boss) |
 | `README\` · `INFOGRAPHICS\` | guide in 10 lingue |
@@ -352,7 +352,7 @@ I tasti arrivano comunque al gioco.
 
 ### ❓ Domande frequenti
 - **In gioco non succede nulla:** Wingman funziona solo con `AION2.exe` in primo piano. Controlla l'icona verde "H" nella barra di Windows.
-- **Field Boss "non disponibile":** manca `OCR.ahk` o l'OCR inglese di Windows. Rilancia il setup.
+- **Field Boss "non disponibile":** manca `OCR.ahk` o l'OCR inglese di Windows. Rilancia il FIRST RUN QUICK-SETUP.
 - **HUD troppo grande o piccolo:** applica il preset di risoluzione giusto nelle Impostazioni.
 - **Avviso dell'antivirus:** è un falso positivo comune con gli script AutoHotkey. Aggiungi la cartella alle esclusioni.
 
@@ -433,21 +433,21 @@ Cada elemento del HUD y de las herramientas se ajusta a tu gusto, en **aspecto**
 
 ### 💻 Requisitos
 - Windows 10 u 11
-- AutoHotkey v2 y el OCR inglés de Windows (los instala el setup)
+- AutoHotkey v2 y el OCR inglés de Windows (los instala el FIRST RUN QUICK-SETUP)
 - Cliente de AION 2 en inglés
 
-### 🚀 Instalación y primer inicio: empieza por el Setup
+### 🚀 Instalación y primer inicio: empieza por el FIRST RUN QUICK-SETUP
 
-> **Después de extraer el zip, ejecuta primero `Setup AION 2 Wingman.bat` con doble clic.** Es el archivo con "Setup" en el nombre, en la carpeta principal del paquete.
+> **Después de extraer el zip, ejecuta primero `FIRST RUN QUICK-SETUP.bat` con doble clic.** Es el archivo con "QUICK-SETUP" en el nombre, en la carpeta principal del paquete.
 >
-> El Setup instala todo lo que Wingman necesita para funcionar al 100% (AutoHotkey v2, el OCR de Windows, la librería OCR) y te guía en una breve configuración inicial: idioma, resolución, rendimiento, tema de colores, funciones ON/OFF y teclado. Al final crea un acceso directo e inicia Wingman ya configurado.
+> El FIRST RUN QUICK-SETUP instala todo lo que Wingman necesita para funcionar al 100% (AutoHotkey v2, el OCR de Windows, la librería OCR) y te guía en una breve configuración inicial: idioma, resolución, rendimiento, tema de colores, funciones ON/OFF y teclado. Al final crea un acceso directo e inicia Wingman ya configurado.
 
 1. Descarga **`AION-2-Wingman.zip`** de la [última release](../../releases/latest).
 2. Clic derecho > **Propiedades** > marca **Desbloquear** > Aceptar.
 3. Extráelo en una carpeta fija (no lo ejecutes desde dentro del zip).
-4. Doble clic en **`Setup AION 2 Wingman.bat`** y acepta el permiso de administrador.
+4. Doble clic en **`FIRST RUN QUICK-SETUP.bat`** y acepta el permiso de administrador.
 5. Sigue la configuración guiada (Intro = opción recomendada).
-6. Después inicia Wingman con el acceso directo o **`AION 2 Wingman.ahk`**. El Setup se puede repetir desde *Ajustes > 🛠️ Mantenimiento*.
+6. Después inicia Wingman con el acceso directo o **`AION 2 Wingman.ahk`**. El FIRST RUN QUICK-SETUP se puede repetir desde *Ajustes > 🛠️ Mantenimiento*.
 
 ### 📖 Guía rápida
 
@@ -535,21 +535,21 @@ Chaque élément du HUD et des outils se règle à ton goût, en **apparence** c
 
 ### 💻 Configuration requise
 - Windows 10 ou 11
-- AutoHotkey v2 et l'OCR anglais de Windows (installés par le setup)
+- AutoHotkey v2 et l'OCR anglais de Windows (installés par le FIRST RUN QUICK-SETUP)
 - Client AION 2 en anglais
 
-### 🚀 Installation et premier lancement : commence par le Setup
+### 🚀 Installation et premier lancement : commence par le FIRST RUN QUICK-SETUP
 
-> **Après avoir extrait le zip, lance d'abord `Setup AION 2 Wingman.bat` par un double-clic.** C'est le fichier avec "Setup" dans le nom, dans le dossier principal du paquet.
+> **Après avoir extrait le zip, lance d'abord `FIRST RUN QUICK-SETUP.bat` par un double-clic.** C'est le fichier avec "QUICK-SETUP" dans le nom, dans le dossier principal du paquet.
 >
-> Le Setup installe tout ce dont Wingman a besoin pour fonctionner à 100 % (AutoHotkey v2, l'OCR de Windows, la bibliothèque OCR) et te guide dans une courte configuration : langue, résolution, performance, thème, fonctions ON/OFF et clavier. À la fin, il crée un raccourci et lance Wingman déjà configuré.
+> Le FIRST RUN QUICK-SETUP installe tout ce dont Wingman a besoin pour fonctionner à 100 % (AutoHotkey v2, l'OCR de Windows, la bibliothèque OCR) et te guide dans une courte configuration : langue, résolution, performance, thème, fonctions ON/OFF et clavier. À la fin, il crée un raccourci et lance Wingman déjà configuré.
 
 1. Télécharge **`AION-2-Wingman.zip`** depuis la [dernière release](../../releases/latest).
 2. Clic droit > **Propriétés** > coche **Débloquer** > OK.
 3. Extrais-le dans un dossier fixe (ne le lance pas depuis le zip).
-4. Double-clic sur **`Setup AION 2 Wingman.bat`** et accepte la demande d'administrateur.
+4. Double-clic sur **`FIRST RUN QUICK-SETUP.bat`** et accepte la demande d'administrateur.
 5. Suis la configuration guidée (Entrée = choix recommandé).
-6. Ensuite, lance Wingman avec le raccourci ou **`AION 2 Wingman.ahk`**. Le Setup peut être relancé depuis *Paramètres > 🛠️ Maintenance*.
+6. Ensuite, lance Wingman avec le raccourci ou **`AION 2 Wingman.ahk`**. Le FIRST RUN QUICK-SETUP peut être relancé depuis *Paramètres > 🛠️ Maintenance*.
 
 ### 📖 Guide rapide
 
@@ -637,21 +637,21 @@ Jedes Element von HUD und Tools lässt sich nach deinem Geschmack einstellen, in
 
 ### 💻 Voraussetzungen
 - Windows 10 oder 11
-- AutoHotkey v2 und die englische Windows-OCR (installiert das Setup)
+- AutoHotkey v2 und die englische Windows-OCR (installiert das FIRST RUN QUICK-SETUP)
 - Englischer AION-2-Client
 
-### 🚀 Installation und erster Start: mit dem Setup beginnen
+### 🚀 Installation und erster Start: mit dem FIRST RUN QUICK-SETUP beginnen
 
-> **Nach dem Entpacken zuerst `Setup AION 2 Wingman.bat` doppelklicken.** Das ist die Datei mit "Setup" im Namen, im Hauptordner des Pakets.
+> **Nach dem Entpacken zuerst `FIRST RUN QUICK-SETUP.bat` doppelklicken.** Das ist die Datei mit "QUICK-SETUP" im Namen, im Hauptordner des Pakets.
 >
-> Das Setup installiert alles, was Wingman für den vollen Betrieb braucht (AutoHotkey v2, die Windows-OCR, die OCR-Bibliothek), und führt dich durch eine kurze Ersteinrichtung: Sprache, Auflösung, Leistung, Farbdesign, Funktionen AN/AUS und Tastatur. Am Ende erstellt es eine Verknüpfung und startet Wingman fertig eingestellt.
+> Das FIRST RUN QUICK-SETUP installiert alles, was Wingman für den vollen Betrieb braucht (AutoHotkey v2, die Windows-OCR, die OCR-Bibliothek), und führt dich durch eine kurze Ersteinrichtung: Sprache, Auflösung, Leistung, Farbdesign, Funktionen AN/AUS und Tastatur. Am Ende erstellt es eine Verknüpfung und startet Wingman fertig eingestellt.
 
 1. **`AION-2-Wingman.zip`** aus der [neuesten Release](../../releases/latest) herunterladen.
 2. Rechtsklick > **Eigenschaften** > **Zulassen** anhaken > OK.
 3. In einen festen Ordner entpacken (nicht aus dem Zip starten).
-4. **`Setup AION 2 Wingman.bat`** doppelklicken und die Administratorabfrage bestätigen.
+4. **`FIRST RUN QUICK-SETUP.bat`** doppelklicken und die Administratorabfrage bestätigen.
 5. Der geführten Einrichtung folgen (Enter = empfohlene Wahl).
-6. Danach Wingman über die Verknüpfung oder **`AION 2 Wingman.ahk`** starten. Das Setup lässt sich unter *Einstellungen > 🛠️ Wartung* erneut starten.
+6. Danach Wingman über die Verknüpfung oder **`AION 2 Wingman.ahk`** starten. Das FIRST RUN QUICK-SETUP lässt sich unter *Einstellungen > 🛠️ Wartung* erneut starten.
 
 ### 📖 Kurzanleitung
 
@@ -739,21 +739,21 @@ Cada elemento do HUD e das ferramentas se ajusta ao seu gosto, na **aparência**
 
 ### 💻 Requisitos
 - Windows 10 ou 11
-- AutoHotkey v2 e o OCR em inglês do Windows (instalados pelo setup)
+- AutoHotkey v2 e o OCR em inglês do Windows (instalados pelo FIRST RUN QUICK-SETUP)
 - Cliente do AION 2 em inglês
 
-### 🚀 Instalação e primeiro uso: comece pelo Setup
+### 🚀 Instalação e primeiro uso: comece pelo FIRST RUN QUICK-SETUP
 
-> **Depois de extrair o zip, execute primeiro `Setup AION 2 Wingman.bat` com dois cliques.** É o arquivo com "Setup" no nome, na pasta principal do pacote.
+> **Depois de extrair o zip, execute primeiro `FIRST RUN QUICK-SETUP.bat` com dois cliques.** É o arquivo com "QUICK-SETUP" no nome, na pasta principal do pacote.
 >
-> O Setup instala tudo o que o Wingman precisa para funcionar 100% (AutoHotkey v2, o OCR do Windows, a biblioteca OCR) e guia uma configuração inicial rápida: idioma, resolução, desempenho, tema, funções ON/OFF e teclado. No final cria um atalho e abre o Wingman já configurado.
+> O FIRST RUN QUICK-SETUP instala tudo o que o Wingman precisa para funcionar 100% (AutoHotkey v2, o OCR do Windows, a biblioteca OCR) e guia uma configuração inicial rápida: idioma, resolução, desempenho, tema, funções ON/OFF e teclado. No final cria um atalho e abre o Wingman já configurado.
 
 1. Baixe **`AION-2-Wingman.zip`** da [última release](../../releases/latest).
 2. Botão direito > **Propriedades** > marque **Desbloquear** > OK.
 3. Extraia em uma pasta fixa (não execute de dentro do zip).
-4. Dois cliques em **`Setup AION 2 Wingman.bat`** e aceite a permissão de administrador.
+4. Dois cliques em **`FIRST RUN QUICK-SETUP.bat`** e aceite a permissão de administrador.
 5. Siga a configuração guiada (Enter = opção recomendada).
-6. Depois abra o Wingman pelo atalho ou por **`AION 2 Wingman.ahk`**. O Setup pode ser repetido em *Configurações > 🛠️ Manutenção*.
+6. Depois abra o Wingman pelo atalho ou por **`AION 2 Wingman.ahk`**. O FIRST RUN QUICK-SETUP pode ser repetido em *Configurações > 🛠️ Manutenção*.
 
 ### 📖 Guia rápido
 
@@ -841,21 +841,21 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
 
 ### 💻 Требования
 - Windows 10 или 11
-- AutoHotkey v2 и английский OCR Windows (их ставит setup)
+- AutoHotkey v2 и английский OCR Windows (их ставит FIRST RUN QUICK-SETUP)
 - Клиент AION 2 на английском
 
-### 🚀 Установка и первый запуск: начните с Setup
+### 🚀 Установка и первый запуск: начните с FIRST RUN QUICK-SETUP
 
-> **После распаковки zip сначала дважды щёлкните `Setup AION 2 Wingman.bat`.** Это файл со словом "Setup" в названии, в главной папке пакета.
+> **После распаковки zip сначала дважды щёлкните `FIRST RUN QUICK-SETUP.bat`.** Это файл со словом "QUICK-SETUP" в названии, в главной папке пакета.
 >
-> Setup установит всё, что нужно Wingman для полноценной работы (AutoHotkey v2, OCR Windows, библиотеку OCR), и проведёт через короткую первичную настройку: язык, разрешение, производительность, тема, функции ВКЛ/ВЫКЛ и клавиатура. В конце он создаст ярлык и запустит уже настроенный Wingman.
+> FIRST RUN QUICK-SETUP установит всё, что нужно Wingman для полноценной работы (AutoHotkey v2, OCR Windows, библиотеку OCR), и проведёт через короткую первичную настройку: язык, разрешение, производительность, тема, функции ВКЛ/ВЫКЛ и клавиатура. В конце он создаст ярлык и запустит уже настроенный Wingman.
 
 1. Скачайте **`AION-2-Wingman.zip`** из [последнего релиза](../../releases/latest).
 2. Правый клик > **Свойства** > отметьте **Разблокировать** > OK.
 3. Распакуйте в постоянную папку (не запускайте из zip).
-4. Дважды щёлкните **`Setup AION 2 Wingman.bat`** и подтвердите запрос администратора.
+4. Дважды щёлкните **`FIRST RUN QUICK-SETUP.bat`** и подтвердите запрос администратора.
 5. Следуйте мастеру (Enter = рекомендуемый вариант).
-6. Затем запускайте Wingman ярлыком или **`AION 2 Wingman.ahk`**. Setup можно перезапустить в *Настройки > 🛠️ Обслуживание*.
+6. Затем запускайте Wingman ярлыком или **`AION 2 Wingman.ahk`**. FIRST RUN QUICK-SETUP можно перезапустить в *Настройки > 🛠️ Обслуживание*.
 
 ### 📖 Краткое руководство
 
@@ -948,14 +948,14 @@ HUD와 도구의 모든 요소를 **모양**과 **동작** 모두 원하는 대�
 
 ### 🚀 설치와 첫 실행: Setup부터 시작하세요
 
-> **zip을 푼 뒤 가장 먼저 `Setup AION 2 Wingman.bat`을 더블클릭하세요.** 패키지 기본 폴더에 있는, 이름에 "Setup"이 들어간 파일입니다.
+> **zip을 푼 뒤 가장 먼저 `FIRST RUN QUICK-SETUP.bat`을 더블클릭하세요.** 패키지 기본 폴더에 있는, 이름에 "QUICK-SETUP"이 들어간 파일입니다.
 >
 > Setup은 Wingman이 완전히 작동하는 데 필요한 모든 것(AutoHotkey v2, Windows OCR, OCR 라이브러리)을 설치하고 언어, 해상도, 성능, 테마, 기능 켜기/끄기, 키보드를 짧게 설정해 줍니다. 마지막에 바로 가기를 만들고 설정이 끝난 Wingman을 실행합니다.
 
 1. [최신 릴리스](../../releases/latest)에서 **`AION-2-Wingman.zip`**을 받습니다.
 2. 우클릭 > **속성** > **차단 해제** 체크 > 확인.
 3. 고정된 폴더에 압축을 풉니다 (zip 안에서 실행하지 마세요).
-4. **`Setup AION 2 Wingman.bat`**을 더블클릭하고 관리자 권한을 허용합니다.
+4. **`FIRST RUN QUICK-SETUP.bat`**을 더블클릭하고 관리자 권한을 허용합니다.
 5. 안내에 따라 설정합니다 (Enter = 권장 선택).
 6. 이후에는 바로 가기나 **`AION 2 Wingman.ahk`**로 실행합니다. Setup은 *설정 > 🛠️ 유지 관리*에서 다시 실행할 수 있습니다.
 
@@ -1048,18 +1048,18 @@ HUD 和工具的每一个元素都能按你的喜好调整**外观**和**行为*
 - AutoHotkey v2 和 Windows 英语 OCR（由安装程序安装）
 - 英文版 AION 2 客户端
 
-### 🚀 安装与首次运行：从 Setup 开始
+### 🚀 安装与首次运行：从 FIRST RUN QUICK-SETUP 开始
 
-> **解压 zip 后，请先双击 `Setup AION 2 Wingman.bat`。** 它就是安装包主文件夹中名字带有 "Setup" 的文件。
+> **解压 zip 后，请先双击 `FIRST RUN QUICK-SETUP.bat`。** 它就是安装包主文件夹中名字带有 "QUICK-SETUP" 的文件。
 >
-> Setup 会安装 Wingman 完整运行所需的一切（AutoHotkey v2、Windows OCR、OCR 库），并引导你完成简短的初始设置：语言、分辨率、性能、主题、功能开关和键盘。最后它会创建桌面快捷方式，并以设置好的状态启动 Wingman。
+> FIRST RUN QUICK-SETUP 会安装 Wingman 完整运行所需的一切（AutoHotkey v2、Windows OCR、OCR 库），并引导你完成简短的初始设置：语言、分辨率、性能、主题、功能开关和键盘。最后它会创建桌面快捷方式，并以设置好的状态启动 Wingman。
 
 1. 从[最新发布](../../releases/latest)下载 **`AION-2-Wingman.zip`**。
 2. 右键 > **属性** > 勾选**解除锁定** > 确定。
 3. 解压到固定文件夹（不要在 zip 里直接运行）。
-4. 双击 **`Setup AION 2 Wingman.bat`** 并允许管理员权限。
+4. 双击 **`FIRST RUN QUICK-SETUP.bat`** 并允许管理员权限。
 5. 按向导完成设置（回车 = 推荐选项）。
-6. 之后用快捷方式或 **`AION 2 Wingman.ahk`** 启动。可在 *设置 > 🛠️ 维护* 中重新运行 Setup。
+6. 之后用快捷方式或 **`AION 2 Wingman.ahk`** 启动。可在 *设置 > 🛠️ 维护* 中重新运行 FIRST RUN QUICK-SETUP。
 
 ### 📖 快速指南
 
@@ -1150,18 +1150,18 @@ HUD とツールのあらゆる要素を、**見た目**も**動作**も好み�
 - AutoHotkey v2 と Windows の英語 OCR（セットアップがインストール）
 - 英語版 AION 2 クライアント
 
-### 🚀 インストールと初回起動：まず Setup から
+### 🚀 インストールと初回起動：まず FIRST RUN QUICK-SETUP から
 
-> **zip を展開したら、最初に `Setup AION 2 Wingman.bat` をダブルクリックしてください。** パッケージのメインフォルダーにある、名前に "Setup" が付いたファイルです。
+> **zip を展開したら、最初に `FIRST RUN QUICK-SETUP.bat` をダブルクリックしてください。** パッケージのメインフォルダーにある、名前に "QUICK-SETUP" が付いたファイルです。
 >
-> Setup は Wingman を完全に動かすために必要なもの（AutoHotkey v2、Windows の OCR、OCR ライブラリ）をすべてインストールし、言語・解像度・パフォーマンス・テーマ・機能のオン/オフ・キーボードの初期設定を案内します。最後にショートカットを作り、設定済みの Wingman を起動します。
+> FIRST RUN QUICK-SETUP は Wingman を完全に動かすために必要なもの（AutoHotkey v2、Windows の OCR、OCR ライブラリ）をすべてインストールし、言語・解像度・パフォーマンス・テーマ・機能のオン/オフ・キーボードの初期設定を案内します。最後にショートカットを作り、設定済みの Wingman を起動します。
 
 1. [最新リリース](../../releases/latest)から **`AION-2-Wingman.zip`** をダウンロード。
 2. 右クリック > **プロパティ** > **許可する** にチェック > OK。
 3. 固定のフォルダーに展開（zip の中から実行しないでください）。
-4. **`Setup AION 2 Wingman.bat`** をダブルクリックし、管理者の確認を許可。
+4. **`FIRST RUN QUICK-SETUP.bat`** をダブルクリックし、管理者の確認を許可。
 5. ガイドに従って設定（Enter = おすすめの選択）。
-6. 以降はショートカットか **`AION 2 Wingman.ahk`** で起動。Setup は *設定 > 🛠️ メンテナンス* からいつでも再実行できます。
+6. 以降はショートカットか **`AION 2 Wingman.ahk`** で起動。FIRST RUN QUICK-SETUP は *設定 > 🛠️ メンテナンス* からいつでも再実行できます。
 
 ### 📖 クイックガイド
 

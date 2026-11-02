@@ -23,7 +23,7 @@
   カーソルを動かして操作を案内するだけで、クリックはご自身で行います。
 
 同梱ファイル
-  Setup AION 2 Wingman.bat   初回セットアップ（必要な依存関係）
+  FIRST RUN QUICK-SETUP.bat  初回セットアップ（必要な依存関係）
   AION 2 Wingman.ahk         本体
   OCR.ahk                    OCR ライブラリ（Field Boss で使用）
   README\                    多言語の説明書
@@ -39,7 +39,7 @@
      （Windows の警告を防げます）
   2. zip を固定のフォルダーに展開します。例：ドキュメント\AION 2 Wingman。
      zip の中から直接実行しないでください。
-  3. 「Setup AION 2 Wingman.bat」をダブルクリックし、管理者権限の確認を
+  3. 「FIRST RUN QUICK-SETUP.bat」をダブルクリックし、管理者権限の確認を
      許可します。すべて確認・インストールし、最後にデスクトップの
      ショートカット作成と起動ができます。
      「Windows によって PC が保護されました」と出たら：「詳細情報」 >

@@ -23,15 +23,15 @@ COS'È
   sposta solo il cursore e ti mostra cosa fare. I click li fai tu.
 
 CONTENUTO DEL PACCHETTO
-  Setup AION 2 Wingman.bat   setup del primo avvio (dipendenze)
+  FIRST RUN QUICK-SETUP.bat  setup del primo avvio (dipendenze)
   AION 2 Wingman.ahk         il programma
   OCR.ahk                    libreria OCR (serve al tool Field Boss)
   README\                    queste istruzioni in più lingue
 
 REQUISITI
   - Windows 10 o 11
-  - AutoHotkey v2 (lo installa il setup)
-  - OCR di Windows in inglese (lo installa il setup)
+  - AutoHotkey v2 (lo installa il FIRST RUN QUICK-SETUP)
+  - OCR di Windows in inglese (lo installa il FIRST RUN QUICK-SETUP)
   - AION 2 in lingua inglese (il Field Boss legge i nomi in inglese)
 
 INSTALLAZIONE
@@ -39,12 +39,12 @@ INSTALLAZIONE
      "Annulla blocco" > OK. (Evita gli avvisi di Windows.)
   2. Estrai lo zip in una cartella fissa, es. Documenti\AION 2 Wingman.
      NON avviare i file da dentro lo zip.
-  3. Doppio click su "Setup AION 2 Wingman.bat" e accetta la richiesta
+  3. Doppio click su "FIRST RUN QUICK-SETUP.bat" e accetta la richiesta
      di amministratore. Il setup controlla e installa tutto e alla fine
      può creare un collegamento sul desktop e avviare Wingman.
      Se compare "Windows ha protetto il PC": "Ulteriori informazioni" >
      "Esegui comunque".
-     Durante il setup una configurazione guidata imposta lingua,
+     Durante il FIRST RUN QUICK-SETUP una configurazione guidata imposta lingua,
      risoluzione, prestazioni e funzioni ON/OFF.
   4. Le volte successive avvia "AION 2 Wingman.ahk" (o il collegamento).
      Chiede da solo i permessi di amministratore: servono per leggere i
@@ -88,7 +88,7 @@ PROBLEMI FREQUENTI
   - Non succede niente in gioco: lo script lavora solo con la finestra
     di AION2.exe in primo piano. Controlla l'icona "H" nella barra.
   - Field Boss "non disponibile": manca OCR.ahk nella cartella o l'OCR
-    inglese di Windows. Rilancia il setup.
+    inglese di Windows. Rilancia il FIRST RUN QUICK-SETUP.
   - HUD troppo grande/piccolo o spostato: applica il preset giusto.
   - Antivirus che blocca lo script: è un falso positivo comune per
     AutoHotkey; aggiungi la cartella alle eccezioni.

@@ -22,7 +22,7 @@
   点击由你自己完成。
 
 压缩包内容
-  Setup AION 2 Wingman.bat   首次运行安装（依赖项）
+  FIRST RUN QUICK-SETUP.bat  首次运行安装（依赖项）
   AION 2 Wingman.ahk         主程序
   OCR.ahk                    OCR 库（Field Boss 使用）
   README\                    多语言说明
@@ -37,7 +37,7 @@
   1. 解压前：右键 zip > 属性 > 勾选"解除锁定" > 确定。（避免 Windows 警告）
   2. 把 zip 解压到固定文件夹，例如 文档\AION 2 Wingman。
      不要直接在 zip 里运行文件。
-  3. 双击 "Setup AION 2 Wingman.bat" 并允许管理员权限。安装程序会检查并
+  3. 双击 "FIRST RUN QUICK-SETUP.bat" 并允许管理员权限。安装程序会检查并
      安装所需内容，最后可创建桌面快捷方式并启动程序。
      如出现"Windows 已保护你的电脑"：点"更多信息" > "仍要运行"。
      安装过程中，向导会设置语言、分辨率、性能和功能开关。

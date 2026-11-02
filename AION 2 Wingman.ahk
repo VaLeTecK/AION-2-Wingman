@@ -23,7 +23,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.06"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.07"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -657,6 +657,9 @@ global FieldBossZoomOutWheel := "WheelDown"  ; direzione della rotellina che fa 
 global FieldBossTeleportMode := "ultrafast"
 global FieldBossUltraScrollStep := 36    ; ULTRA-FAST: scrollate a ogni passo nella lista dei Teleport.
                                          ; Più alto = ricerca più veloce (36 = consigliato)
+global FieldBossUltraFavorites := true   ; ULTRA-FAST: i Teleport dei boss con la priorità più alta (max 10,
+                                         ; il limite dei Favorites del gioco) vanno nei preferiti in cima alla
+                                         ; lista: la prima volta ti fa cliccare la stellina, poi niente più scroll
 
 ; Pannello dei loot del gioco: quando selezioni un boss il gioco apre a destra il riquadro
 ; con i drop, che può coprire il Teleport più vicino. Per chiuderlo basta un click su un
@@ -728,8 +731,12 @@ global RandomScale       := 1.0         ; dimensione del numero (1.0 = normale, 
 global RandomX           := 62          ; posizione del numero: % della larghezza dello schermo (50 = centro)
 global RandomY           := 74          ; posizione del numero: % dell'altezza dello schermo (100 = in basso)
 ; Icona del random: dado con sotto la combinazione di tasti, cliccabile (si illumina al passaggio del
-; mouse). Si vede solo con il gioco in primo piano.
+; mouse). Di default compare solo durante la scelta delle carte del Mysterious Track degli Shugo
+; (Monster Cube): vedi RandomIconMode.
 global RandomIconEnabled := true        ; false = nessuna icona
+global RandomIconMode    := "shugo"     ; quando si vede l'icona:
+                                        ;   "shugo"  = solo durante la scelta delle carte premio degli Shugo
+                                        ;   "always" = sempre, con il gioco in primo piano
 global RandomIconX       := 72          ; posizione dell'icona: % della larghezza dello schermo
 global RandomIconY       := 90          ; posizione dell'icona: % dell'altezza dello schermo
 global RandomIconScale   := 1.0         ; dimensione dell'icona (1.0 = normale)
@@ -745,6 +752,7 @@ global RandomIconScale   := 1.0         ; dimensione dell'icona (1.0 = normale)
 global ChevPi   := 3.14159265358979
 global GameActive := ""                  ; ultimo stato "gioco in primo piano" (per avviare/fermare i tool)
 global HudShown := false                 ; true quando il gioco è in primo piano e l'HUD è visibile
+global Hud := ""                          ; interruttore dell'HUD (HudTool), creato dopo BuildHud
 global HudBuilding := false              ; true mentre BuildHud ricostruisce le finestre dell'HUD
 
 ; Profilo prestazioni: sovrascrive i cicli in ms con quelli del profilo scelto ([PRESTAZIONI])
@@ -1028,7 +1036,7 @@ HudC(name) => ThemeHud.Has(name) ? ThemeHud[name] : GetGlobalVar(name)
 ThemeApply()
 
 ; valori a scelta fissa scritti a mano con maiuscole ("Pulse"): resi minuscoli come si aspetta il codice
-for _n in ["ChevronAnimMode", "ChevronShapeOff", "ChevronShapeOn", "LootShape", "CombatShape", "FieldBossPickAction", "FieldBossCloseLoot"]
+for _n in ["ChevronAnimMode", "ChevronShapeOff", "ChevronShapeOn", "LootShape", "CombatShape", "FieldBossPickAction", "FieldBossCloseLoot", "RandomIconMode"]
     SetGlobalVar(_n, StrLower(Trim(GetGlobalVar(_n))))
 
 global PreviewMode := false              ; true = anteprima dal vivo aperta dalla finestra Impostazioni
@@ -1239,6 +1247,9 @@ FirstRunCheck() {
     SetTimer(() => SettingsEditor.Open(), SplashEnabled ? -2500 : -500)
 }
 FirstRunCheck()
+; dalla 1.07 il setup si chiama "FIRST RUN QUICK-SETUP.bat": via il vecchio file lasciato dagli aggiornamenti
+if FileExist(A_ScriptDir "\FIRST RUN QUICK-SETUP.bat")
+    try FileDelete(A_ScriptDir "\Setup AION 2 Wingman.bat")
 SetTimer(GameWatch, 3000)                    ; autochiusura quando il gioco viene chiuso (AutoExitWithGame)
 Updater.Startup()                            ; aggiornamenti da GitHub (vedi [AGGIORNAMENTI])
 
@@ -1253,7 +1264,7 @@ UpdateVisibility() {
     if HudBuilding                              ; l'HUD si sta ricostruendo: ci pensa BuildHud alla fine
         return
     game := WinActive("ahk_exe " GameExe) != 0
-    show := (game && Hud.On) || PreviewMode     ; in anteprima l'HUD si vede sempre
+    show := (game && IsObject(Hud) && Hud.On) || PreviewMode     ; in anteprima l'HUD si vede sempre
     if (show != HudShown) {
         HudShown := show
         for grp in AllGroups {
@@ -1367,6 +1378,7 @@ class HudChannel {
     }
 
     Signal() {
+        Critical "On"                      ; il Ticker non deve vedere uno stato a metà
         now := NowMs()
         this.LastSignal := now
         if this.IsActive
@@ -1419,6 +1431,9 @@ class HudChannel {
 class ChevronHud {
     __New(win) {
         this.Win         := win
+        this.N     := HudC("ChevronCount"),   this.Mode  := HudC("ChevronAnimMode")
+        this.ShOn  := HudC("ChevronShapeOn"), this.ShOff := HudC("ChevronShapeOff")
+        this.Cycle := Max(1, HudC("ChevronAnimCycle"))     ; letti una volta: BuildHud ricrea l'oggetto
         this.Active      := false
         this.Morph       := 1.0
         this.MorphFrom   := 1.0
@@ -1449,7 +1464,7 @@ class ChevronHud {
             this.Morph := t >= 1 ? this.MorphTarget : Lerp(this.MorphFrom, this.MorphTarget, t)
         }
         ; A riposo quando non c'è più nulla da muovere (OFF raggiunto, oppure ON senza animazione)
-        idle := (this.Morph = this.MorphTarget) && (!this.Active || HudC("ChevronAnimMode") = "none")
+        idle := (this.Morph = this.MorphTarget) && (!this.Active || this.Mode = "none")
         if (idle || HudShown)                    ; con l'HUD nascosto non si disegna
             this.Redraw(now)
         return idle
@@ -1459,10 +1474,9 @@ class ChevronHud {
 
     BuildRgn(now) {
         hRgn := DllCall(Api.CreateRectRgn, "Int", 0, "Int", 0, "Int", 0, "Int", 0, "Ptr")
-        n := HudC("ChevronCount"), mode := HudC("ChevronAnimMode")      ; (il tema di classe può cambiarli)
-        shOn := HudC("ChevronShapeOn"), shOff := HudC("ChevronShapeOff")
+        n := this.N, mode := this.Mode, shOn := this.ShOn, shOff := this.ShOff
         e := Smoothstep(this.Morph)                                   ; transizione con accelerazione morbida
-        p := Mod((now - this.AnimStart) / Max(1, HudC("ChevronAnimCycle")), 1)   ; fase animazione 0..1
+        p := Mod((now - this.AnimStart) / this.Cycle, 1)              ; fase animazione 0..1
 
         flip := 2 * e - 1          ; -1 = verso l'interno, 0 = barra verticale, +1 = verso l'esterno
         w := Lerp(ChevronWidthOn,     ChevronWidthOff,     e)
@@ -1545,8 +1559,8 @@ class LootEffects {
         DllCall("gdiplus\GdipCreatePen1", "UInt", 0, "Float", 1, "Int", 2, "Ptr*", &pen := 0)
         DllCall("gdiplus\GdipCreatePen1", "UInt", 0, "Float", 1, "Int", 2, "Ptr*", &capPen := 0)
         DllCall("gdiplus\GdipSetPenEndCap", "Ptr", capPen, "Int", 2)    ; punta arrotondata (testa dello spin)
-        for p in [pen, capPen]
-            DllCall("gdiplus\GdipSetPenLineJoin", "Ptr", p, "Int", 2)  ; angoli arrotondati (forme poligonali)
+        for hp in [pen, capPen]
+            DllCall("gdiplus\GdipSetPenLineJoin", "Ptr", hp, "Int", 2)  ; angoli arrotondati (forme poligonali)
         DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0, "Ptr*", &brush := 0)
         this.Pen := pen, this.CapPen := capPen, this.Brush := brush
 
@@ -1572,6 +1586,7 @@ class LootEffects {
         DllCall("DeleteDC", "Ptr", this.hdc)
         DllCall("DeleteObject", "Ptr", this.hbm)
         this.G := 0
+        this.Grp.OnColor := "", this.Grp.OnAlpha := ""   ; rompe il ciclo gruppo <-> effetti
     }
 
     SetActive(active) {
@@ -1735,12 +1750,16 @@ class LootEffects {
 
     ; Spin sulle forme poligonali: una "cometa" che percorre il bordo, con scia che sfuma
     SpinShape(k, now, span) {
-        V := this.Verts(this.B / 2), n := V.Length
-        cum := [0]                                              ; distanze progressive lungo il bordo
-        loop n {
-            a := V[A_Index], b := V[Mod(A_Index, n) + 1]
-            cum.Push(cum[A_Index] + Sqrt((b[1] - a[1]) ** 2 + (b[2] - a[2]) ** 2))
+        if !this.HasOwnProp("SpinV") {                          ; bordo fisso: calcolato una volta sola
+            V := this.Verts(this.B / 2), n := V.Length
+            cum := [0]                                          ; distanze progressive lungo il bordo
+            loop n {
+                a := V[A_Index], b := V[Mod(A_Index, n) + 1]
+                cum.Push(cum[A_Index] + Sqrt((b[1] - a[1]) ** 2 + (b[2] - a[2]) ** 2))
+            }
+            this.SpinV := V, this.SpinCum := cum
         }
+        V := this.SpinV, cum := this.SpinCum, n := V.Length
         L := cum[n + 1]
         if (L <= 0)
             return
@@ -1999,6 +2018,8 @@ class HiddenCubeTool {    ; Hidden Cube - by VaLeTecK
         this.LastSeen := 0
         this.Geo      := ""        ; ultima area di gioco usata (per ricalcolare solo se cambia)
         this.hbm      := 0
+        this.Last     := [0, 0, 0]
+        this.LastSetup := 0
         this.Fn       := ObjBindMethod(this, "Scan")
         this.mdc      := DllCall("CreateCompatibleDC", "Ptr", 0, "Ptr")
         OnExit((*) => this.FreeBitmap())
@@ -2072,8 +2093,11 @@ class HiddenCubeTool {    ; Hidden Cube - by VaLeTecK
 
     SetRunning(on) {
         this.Wanted := on
-        if (on && this.On)
+        if (on && this.On) {
+            crit := A_IsCritical
             this.Setup()                   ; la finestra del gioco potrebbe essere stata spostata o ridimensionata
+            Critical(crit ? crit : "Off")  ; Setup accende Critical: si restituisce lo stato di prima
+        }
         run := this.Ready && this.On && this.Wanted       ; la geometria la ricontrolla Scan()
         if (run = this.Running)
             return
@@ -2113,7 +2137,7 @@ class HiddenCubeTool {    ; Hidden Cube - by VaLeTecK
 
     Scan() {
         ; ogni secondo (o se manca la bitmap) ricontrolla posizione e dimensione della finestra del gioco
-        if (!this.hbm || A_TickCount - (this.HasOwnProp("LastSetup") ? this.LastSetup : 0) > 1000) {
+        if (!this.hbm || A_TickCount - this.LastSetup > 1000) {
             this.LastSetup := A_TickCount
             ok := this.Setup() && this.hbm
             Critical "Off"
@@ -2374,6 +2398,10 @@ IconLayout(line1, emoji, line3, textPt, emojiPt, shape, bw, bh) {
 
 ; Larghezza e altezza in pixel di un testo con il font indicato (punti, come nelle Gui)
 TextExtentPx(text, size, bold, font) {
+    static cache := Map()
+    key := text "`n" size "`n" (bold ? 1 : 0) "`n" font
+    if cache.Has(key)
+        return cache[key]
     hdc := DllCall("GetDC", "Ptr", 0, "Ptr")
     hf  := DllCall("CreateFontW", "Int", -Round(size * A_ScreenDPI / 72), "Int", 0, "Int", 0, "Int", 0
         , "Int", bold ? 700 : 400, "UInt", 0, "UInt", 0, "UInt", 0, "UInt", 1, "UInt", 0, "UInt", 0
@@ -2384,7 +2412,7 @@ TextExtentPx(text, size, bold, font) {
     DllCall("SelectObject", "Ptr", hdc, "Ptr", old)
     DllCall("DeleteObject", "Ptr", hf)
     DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdc)
-    return [NumGet(sz, 0, "Int") + 2, NumGet(sz, 4, "Int")]       ; +2: contorno di 1 px per lato
+    return cache[key] := [NumGet(sz, 0, "Int") + 2, NumGet(sz, 4, "Int")]   ; +2: contorno di 1 px per lato
 }
 
 ; Nome della forma (accetta anche i nomi inglesi); sconosciuta = cerchio
@@ -2494,12 +2522,19 @@ ModernListDraw(valueCol, lv, lParam) {
         return 0
     row := NumGet(lParam, base + 2 * P + 16, "UPtr")
     sub := NumGet(lParam, base + 5 * P + 24, "Int")
+    static key := "", pal := ""
     try {
-        field := ColorToRGB(UiC("WinField")), txt := ColorToRGB(UiC("WinText"))
-        bk := (row & 1) ? LerpRGB(field, txt, 0.05) : field
-        fg := ReadableRGB((sub = valueCol) ? ColorToRGB(UiC("Accent")) : txt, bk)
-        NumPut("UInt", RgbToColorRef(fg), lParam, base + 5 * P + 16)
-        NumPut("UInt", RgbToColorRef(bk), lParam, base + 5 * P + 20)
+        k := UiC("WinField") UiC("WinText") UiC("Accent")
+        if (k != key) {                                 ; colori ricalcolati solo al cambio di tema
+            field := ColorToRGB(UiC("WinField")), txt := ColorToRGB(UiC("WinText")), acc := ColorToRGB(UiC("Accent"))
+            pal := []
+            for bk in [field, LerpRGB(field, txt, 0.05)]
+                pal.Push([RgbToColorRef(ReadableRGB(txt, bk)), RgbToColorRef(ReadableRGB(acc, bk)), RgbToColorRef(bk)])
+            key := k
+        }
+        c := pal[(row & 1) + 1]
+        NumPut("UInt", c[sub = valueCol ? 2 : 1], lParam, base + 5 * P + 16)
+        NumPut("UInt", c[3], lParam, base + 5 * P + 20)
     }
     return 0x2                                          ; CDRF_NEWFONT: usa i colori impostati
 }
@@ -2667,10 +2702,11 @@ ColorToRGB(color) {
         , "maroon", 0x800000, "red", 0xFF0000, "purple", 0x800080, "fuchsia", 0xFF00FF
         , "green", 0x008000, "lime", 0x00FF00, "olive", 0x808000, "yellow", 0xFFFF00
         , "navy", 0x000080, "blue", 0x0000FF, "teal", 0x008080, "aqua", 0x00FFFF)
+    static cache := Map()
+    if cache.Has(color)
+        return cache[color]
     c := StrLower(Trim(color))
-    if names.Has(c)
-        return names[c]
-    return Integer("0x" RegExReplace(c, "^(0x|#)"))
+    return cache[color] := names.Has(c) ? names[c] : Integer("0x" RegExReplace(c, "^(0x|#)"))
 }
 
 ; RGB (0xRRGGBB) → COLORREF di Windows (0x00BBGGRR)
@@ -2748,21 +2784,22 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.Cancel  := false
         this.Pending := ""
         this.NextCheck := 0
-        this.Misses  := 0
+        this.ListAt  := 0, this.TeleSnap := ""   ; ultima lettura degli stati / ultima lista Teleport letta
         this.GuardUntil := 0, this.GuardFn := ObjBindMethod(this, "GuardEnd")   ; blocco dopo il click sul Teleport
 
         ; pannello
         this.Panel := "", this.BuiltFor := 0, this.Shown := false
         ; tipo di mappa aperta: "field" / "dungeon" / "" (non ancora chiaro), azzerato alla chiusura
-        this.MapKind := "", this.TabsField := false, this.TitleAt := 0, this.DungeonName := "", this.PanelKind := ""
+        this.MapKind := "", this.TabsField := false, this.TitleAt := 0, this.DungeonName := ""
         this.PW := 0, this.PH := 0, this.PHFull := 0
         this.Rows := [], this.RowByHwnd := Map(), this.Chips := Map(), this.Extras := [], this.Dividers := Map()
         this.Hover := "", this.BtnToggle := "", this.TitleH := 0
         this.Legend := "", this.LegendFor := 0, this.LegendShown := false
         this.Footer := "", this.FooterH := 0, this.FooterGap := 0
+        this.FavCount := -1                     ; preferiti usati nella lista Kibelisk (-1 = non ancora letti)
         this.Hint := "", this.HintFor := 0, this.HintTimed := false, this.Ring := "", this.RingT0 := 0, this.Step := 0
         this.HintHideFn := ObjBindMethod(this, "HintHide")
-        this.Dir := "", this.DirFor := 0, this.DirLeft := 0, this.CurBoss := "", this.HoverFn := ""
+        this.Dir := "", this.DirFor := 0, this.DirLeft := 0, this.CurBoss := "", this.HoverFn := ObjBindMethod(this, "HoverCheck")
         this.BlockClicks := false
         this.LockPt := "", this.LockFn := ObjBindMethod(this, "LockTick")
         this.DirTickFn := ObjBindMethod(this, "DirTick")
@@ -2980,16 +3017,14 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
                     this.HidePanel()
             } else if this.On {
                 this.ShowPanel()
-                this.ReadList()                 ; se c'è la lista Field Boss aggiorna gli stati
+                if (!this.Collapsed && A_TickCount - this.ListAt >= 1500) {   ; stati dei boss: basta ~1,5 s
+                    this.ListAt := A_TickCount
+                    this.ReadList()
+                }
             }
         } else {
-            this.MapKind := "", this.DungeonName := ""   ; alla prossima apertura si riconosce di nuovo il tipo di mappa
+            this.MapKind := "", this.DungeonName := "", this.ListAt := 0   ; alla prossima apertura si riconosce di nuovo il tipo di mappa
             this.HideAll()                      ; mappa chiusa: leggenda e pannello spariscono subito
-        }
-        if (this.Hover != "") {
-            MouseGetPos(,, &win)
-            if (win != this.Panel.Hwnd)
-                this.SetHover("")
         }
     }
 
@@ -3155,6 +3190,12 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             Sleep(1500)
             return this.FindBoss(name)
         }
+        if (FieldBossUltraFavorites && !it.fav && this.FavWanted(tele)) {
+            it := this.AddFavorite(it, tele)       ; la prima volta: stellina -> il Teleport va in cima alla lista
+            if !it
+                return
+        }
+        it := this.ConfirmTele(it, tele)           ; posizione riletta: niente click sulla riga sbagliata
         g := this.Geo(), r := this.Rc(FieldBossTool.RcList, g), tol := Round(FieldBossTool.NameTolerance * g.s)
         ok := this.ClickPhase(it, Tr("Clicca il TELEPORT"), tele "   ·   " name, 0
             , (x, y, w) => this.IsPanel(w) ? -1 : (x >= r[1] && x <= r[1] + r[3] && Abs(y - it.y) <= tol))
@@ -3197,10 +3238,33 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             this.DirShow(dir, name)
     }
 
+    ; Teleport dei boss principali nei Favorites: se la stellina è grigia e c'è posto (max 10) ti fa
+    ; cliccare la stellina (una volta sola per Teleport), poi ritrova la riga (la lista si è spostata).
+    ; Stellina già dorata o preferiti pieni: si continua normalmente. Ritorna la riga da cliccare (0 = annullato)
+    AddFavorite(it, tele) {
+        if (this.FavCount >= 10)
+            return it
+        items := this.ReadTele()
+        st := this.StarAt(it, items.right)
+        if (st.state != "grey")
+            return it
+        tol := Round(FieldBossTool.NameTolerance * this.Geo().s)
+        ok := this.ClickPhase({x: st.x, y: st.y}, Tr("Clicca la STELLA"), Tr("{1}: lo aggiungo ai preferiti (solo la prima volta)", tele), 0
+            , (x, y, w) => this.IsPanel(w) ? -1 : (Abs(x - st.x) <= tol && Abs(y - st.y) <= tol))
+        if !ok
+            return 0
+        if (this.FavCount >= 0)
+            this.FavCount += 1
+        Sleep(250)                                         ; il gioco aggiunge la riga in cima
+        this.HintShow(Tr("Cerco {1}...", tele), Tr("Scorro la lista dei Teleport"), "wait")
+        return this.SearchTele(tele) || it
+    }
+
     ; La lista a sinistra è quella dei Teleport (Kibelisk)? Righe numerate: "48. Steel Hammer Workcamp"
     TeleListVisible() {
-        n := 0
-        for it in this.ReadTele()
+        n := 0, items := this.ReadTele()
+        this.TeleSnap := {t: A_TickCount, items: items}   ; riusata dalla prima lettura di SearchTele
+        for it in items
             if (it.num && ++n >= 2)
                 return true
         return false
@@ -3216,7 +3280,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
                 return false
             wait := 3000
         } else {                                 ; tab non letto: mouse e click liberi finché non apri la lista
-            wasBlocked := this.BlockClicks, this.BlockClicks := false, this.LockPt := ""
+            wasBlocked := this.BlockClicks, wasLocked := IsObject(this.LockPt), this.BlockClicks := false, this.LockPt := ""
             this.HintShow(Tr("Apri la lista dei Teleport"), Tr("Clicca il tab KIBELISK in alto"), "go")
             wait := FieldBossTool.GuideClickSec * 1000
         }
@@ -3228,7 +3292,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         }
         if !IsObject(pt) {
             this.BlockClicks := wasBlocked
-            if (FieldBossLockMouse && wasBlocked) {
+            if wasLocked {
                 MouseGetPos(&mx, &my)
                 this.LockPt := {x: mx, y: my}
             }
@@ -3248,13 +3312,15 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         return ""
     }
 
-    ; Legge la lista Kibelisk: {num, n (nome normalizzato), x, y} per riga
+    ; Legge la lista Kibelisk: {num, n (nome normalizzato), x, y, x2, bound, fav} per riga.
+    ; fav = la riga è nella sezione Favorites (in cima). out.favCount = preferiti usati (-1 = non letto)
     ReadTele() {
-        g := this.Geo(), out := []
+        g := this.Geo(), out := [], out.favCount := -1, out.right := 0
+        sec := "", firstAll := 0
         for line in this.Ocr(this.Rc(FieldBossTool.RcList, g), g).Lines {
             txt := "", x1 := 1e9, y1 := 1e9, x2 := -1e9, y2 := -1e9
             for w in line.Words {
-                if RegExMatch(w.Text, "i)^[\d.,]+m$")      ; scarta la distanza (es. 2,096m)
+                if RegExMatch(w.Text, "i)^[\d.,]+m$") || !RegExMatch(w.Text, "[\p{L}\d]")   ; distanza (2,096m) o simboli (stellina)
                     continue
                 txt .= (txt = "" ? "" : " ") w.Text
                 x1 := Min(x1, w.x), y1 := Min(y1, w.y), x2 := Max(x2, w.x + w.w), y2 := Max(y2, w.y + w.h)
@@ -3265,30 +3331,159 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             num := 0, nm := txt
             if RegExMatch(txt, "^(\d{1,3})\s*[.,:]?\s*(.*)$", &m)
                 num := Integer(m[1]), nm := m[2]
+            else if (RegExMatch(txt, "^([\dSOoIl|]{1,3})\s*[.,]\s*(.+)$", &m) && RegExMatch(m[1], "\d"))   ; "S4." / "l5."
+                num := Integer(StrReplace(StrReplace(StrReplace(StrReplace(StrReplace(StrReplace(m[1], "S", "5"), "O", "0"), "o", "0"), "I", "1"), "l", "1"), "|", "1")), nm := m[2]
             n := FieldBossTool.Norm(nm)
+            if (!num && InStr(n, "favorite")) {           ; "Favorites 3/10" / "No Favorites List"
+                if RegExMatch(txt, "(\d+)\s*/\s*\d+", &f)
+                    out.favCount := Integer(f[1])
+                else if (InStr(n, "nofavorite") = 1)
+                    out.favCount := 0
+                sec := "fav"
+                continue
+            }
+            if (!num && InStr(n, "completelist")) {
+                sec := "all", firstAll := out.Length + 1
+                continue
+            }
             if (!num && InStr(n, "bind")) {           ; riga sotto il nome: "Bind Complete" / "Binding Incomplete"
+                out.right := Max(out.right, x2)
                 if (out.Length && out[out.Length].bound = "")
                     out[out.Length].bound := !InStr(n, "incomplete")
                 continue
             }
             if (!num && StrLen(n) < 4)
                 continue
-            out.Push({num: num, n: n, x: (x1 + x2) // 2, y: (y1 + y2) // 2, bound: ""})
+            out.Push({num: num, n: n, x: (x1 + x2) // 2, y: (y1 + y2) // 2, x2: x2, bound: "", fav: sec = "fav"})
+            out.right := Max(out.right, x2)
         }
+        if (firstAll > 1 && sec != "")                    ; "Complete List" letto ma non "Favorites": sopra = preferiti
+            loop firstAll - 1
+                out[A_Index].fav := true
+        if (out.favCount < 0 && firstAll)
+            out.favCount := firstAll - 1
+        if (out.favCount >= 0)
+            this.FavCount := out.favCount
         return out
     }
 
+    ; Teleport da tenere nei preferiti: quelli dei boss con la priorità più alta (👑 > 💎 > 🔥 > ⭐ > nessuna),
+    ; al massimo 10 (limite dei Favorites del gioco)
+    FavWanted(tele) {
+        if (!this.HasOwnProp("FavSet") || this.FavFor != this.Bosses) {
+            list := []
+            for name, b in this.Bosses
+                if (b.tele != "")
+                    list.Push({t: b.tele, p: b.tier ? b.tier : 9})
+            set := Map(), set.CaseSense := false
+            loop 10 {                                      ; per priorità, senza doppioni
+                p := A_Index
+                for it in list
+                    if (it.p = p && !set.Has(it.t) && set.Count < 10)
+                        set[it.t] := true
+            }
+            this.FavSet := set, this.FavFor := this.Bosses
+        }
+        return this.FavSet.Has(tele)
+    }
+
+    ; Stellina dei preferiti a destra della riga: {state: "gold" | "grey" | "", x, y}
+    StarAt(it, right) {
+        g := this.Geo(), s := g.s, rc := this.Rc(FieldBossTool.RcList, g)
+        x0 := Max(it.x2, right) + Round(4 * s), y0 := it.y - Round(16 * s)
+        w := Max(Round(30 * s), rc[1] + rc[3] + Round(80 * s) - x0), h := Round(56 * s)
+        buf := FieldBossTool.Capture(x0, y0, w, h)           ; coordinate dello schermo (come l'OCR)
+        gold := 0, grey := 0, gx := 0, gy := 0, bx1 := w, bx2 := 0
+        loop h {
+            yy := A_Index - 1, row := yy * w * 4
+            loop w {
+                c := NumGet(buf, row + (A_Index - 1) * 4, "UInt")
+                r := (c >> 16) & 0xFF, gg := (c >> 8) & 0xFF, b := c & 0xFF
+                mx := Max(r, gg, b)
+                if (r > 170 && gg > 120 && b < gg - 45 && r >= gg)       ; oro
+                    gold += 1
+                else if (mx > 150 && mx - Min(r, gg, b) < 28)           ; grigio chiaro
+                    grey += 1
+                else
+                    continue
+                gx += A_Index - 1, gy += yy, bx1 := Min(bx1, A_Index - 1), bx2 := Max(bx2, A_Index - 1)
+            }
+        }
+        n := gold + grey, need := Max(4, Round(6 * s * s))
+        if (n < need || bx2 - bx1 > 40 * s)                 ; niente stellina, o pixel sparsi (non è una stellina)
+            return {state: ""}
+        return {state: gold * 3 >= n ? "gold" : "grey", x: x0 + gx // n, y: y0 + gy // n}   ; la stellina dorata ha anche riflessi chiari
+    }
+
+    ; Riga della lista per il Teleport cercato, tollerante agli errori dell'OCR ("ldun's" per "Idun's",
+    ; lettere scambiate, nomi tagliati dal gioco con "..."). Numero uguale + nome simile = trovato;
+    ; numero non letto = serve un nome molto simile. Tra più candidati vince il più simile
+    ; (a parità, quello dei preferiti, che è in cima).
     static TeleFind(items, tnum, tn) {
+        best := 0, bestSc := 0
         for it in items {
+            sim := tn = "" ? 1 : FieldBossTool.NameSim(it.n, tn)
             if (tnum && it.num) {
                 if (it.num != tnum)
                     continue
-                if (tn = "" || StrLen(it.n) < 3 || SubStr(it.n, 1, 3) = SubStr(tn, 1, 3) || FieldBossTool.Matches(it.n, tn))
-                    return it
-            } else if (tn != "" && FieldBossTool.Matches(it.n, tn))
-                return it
+                if (StrLen(it.n) >= 3 && sim < 0.45)    ; numero uguale ma nome di un altro Teleport
+                    continue
+                sc := 2 + sim
+            } else if (sim >= 0.8)
+                sc := sim
+            else
+                continue
+            if (sc > bestSc + 0.001)
+                best := it, bestSc := sc
         }
-        return 0
+        return best
+    }
+
+    ; somiglianza 0..1 tra due nomi normalizzati: lettere che l'OCR confonde unificate, e se il nome
+    ; letto è tagliato ("steelhammertempora") si confronta solo l'inizio del nome cercato
+    static NameSim(a, b) {
+        static fix := [["rn", "m"], ["vv", "w"], ["l", "i"], ["j", "i"], ["0", "o"]]
+        for f in fix
+            a := StrReplace(a, f[1], f[2]), b := StrReplace(b, f[1], f[2])
+        if (a = "" || b = "")
+            return 0
+        if (StrLen(a) >= 6 && StrLen(a) < StrLen(b))
+            b := SubStr(b, 1, StrLen(a) + 1)
+        return 1 - FieldBossTool.Lev(a, b) / Max(StrLen(a), StrLen(b))
+    }
+
+    static Lev(a, b) {                                  ; distanza di Levenshtein
+        la := StrLen(a), lb := StrLen(b)
+        if !la || !lb
+            return la + lb
+        prev := []
+        loop lb + 1
+            prev.Push(A_Index - 1)
+        loop la {
+            i := A_Index, ca := SubStr(a, i, 1), cur := [i]
+            loop lb
+                cur.Push(Min(prev[A_Index + 1] + 1, cur[A_Index] + 1, prev[A_Index] + (ca = SubStr(b, A_Index, 1) ? 0 : 1)))
+            prev := cur
+        }
+        return prev[lb + 1]
+    }
+
+    ; Prima del click: la riga è ancora lì? (la lista può essere in animazione o essersi spostata
+    ; dopo l'aggiunta ai preferiti). Rilegge finché la posizione è stabile; 0 = sparita.
+    ConfirmTele(it, tele) {
+        tnum := RegExMatch(tele, "^\s*(\d{1,3})", &m) ? Integer(m[1]) : 0
+        tn := FieldBossTool.Norm(RegExReplace(tele, "^\s*\d{1,3}\s*[.,:]?\s*"))
+        tol := Round(10 * this.Geo().s)
+        loop 3 {
+            Sleep(90)
+            it2 := FieldBossTool.TeleFind(this.ReadTele(), tnum, tn)
+            if !it2
+                continue
+            if (Abs(it2.y - it.y) <= tol && Abs(it2.x - it.x) <= tol * 3)
+                return it2                               ; due letture uguali: posizione sicura
+            it := it2                                    ; si è spostata: si ricontrolla
+        }
+        return it
     }
 
     ; Cerca il Teleport nella lista: i numeri delle righe dicono da che parte scorrere; a fine lista
@@ -3301,13 +3496,14 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         loop 90 {
             if this.Cancel
                 return 0
-            items := this.ReadTele()
+            snap := this.TeleSnap, this.TeleSnap := ""
+            items := IsObject(snap) && A_TickCount - snap.t < 400 ? snap.items : this.ReadTele()
             if (it := FieldBossTool.TeleFind(items, tnum, tn))
                 return it
             lo := 1000, hi := 0, sig := ""
             for i in items {
                 sig .= i.num ":" i.n ":" (i.y // 8) "|"     ; anche la posizione: si accorge pure degli scroll piccoli
-                if i.num
+                if (i.num && !i.fav)                     ; i preferiti (in cima) hanno numeri sparsi
                     lo := Min(lo, i.num), hi := Max(hi, i.num)
             }
             if (prev != "" && sig = prev) {              ; lo scroll precedente non ha mosso la lista
@@ -3396,9 +3592,10 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             return true
         times := need = 1 ? "" : Tr("{1} volte", need) " "
         sub := IsObject(dir) ? Tr("Poi vola verso {1} per raggiungere {2}", dir.label, name) : Tr("Buona caccia!")
-        this.HintShow(Tr("Premi  {1}  {2}per il Travel", key, times), sub, "ok", 0, true)
         if presses                                         ; F già premuto (ULTRA-FAST)
             this.HintShow(Tr("Premi ancora  {1}", key), Tr("Pressione {1} di {2}", presses, need), "ok", 0, true)
+        else
+            this.HintShow(Tr("Premi  {1}  {2}per il Travel", key, times), sub, "ok", 0, true)
         deadline := A_TickCount + FieldBossTravelWait * 1000, chk := A_TickCount
         while (!this.Cancel && A_TickCount < deadline) {
             isDown := GetKeyState(FieldBossTravelKey, "P")
@@ -3682,12 +3879,13 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         s := this.Geo().s, rad := Round(30 * s), t := Max(3, Round(5 * s))
         ring := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08080020")
         ring.BackColor := UiC("Go")
-        ring.Show(Format("NA x{} y{} w{} h{}", pt.x - rad, pt.y - rad, rad * 2, rad * 2))
+        ring.Show(Format("Hide x{} y{} w{} h{}", pt.x - rad, pt.y - rad, rad * 2, rad * 2))
         outer := CircleRgnAt(rad, rad, rad * 2), inner := CircleRgnAt(rad, rad, (rad - t) * 2)
         DllCall(Api.CombineRgn, "Ptr", outer, "Ptr", outer, "Ptr", inner, "Int", 4)   ; RGN_DIFF = ciambella
         DllCall(Api.DeleteObject, "Ptr", inner)
         DllCall(Api.SetWindowRgn, "Ptr", ring.Hwnd, "Ptr", outer, "Int", true)
         WinSetTransparent(255, ring.Hwnd)
+        ring.Show("NA")                                  ; mostrato solo dopo la regione: niente quadrato
         this.Ring := ring, this.RingT0 := A_TickCount
         SetTimer(this.RingFn, PerfRingTick)
     }
@@ -3707,12 +3905,19 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     }
 
     ; ---------------- Lettura schermo (OCR) ----------------
+    static OcrBusy := false                       ; un OCR alla volta (anche tra Field Boss e random)
     Ocr(r, g) {
         q := Max(1, Min(3, PerfOcrQuality / g.s))   ; 1080p -> più zoom, 4K -> meno
+        FieldBossTool.OcrBusy := true
         loop 2 {
-            try return OCR.FromRect(r[1], r[2], r[3], r[4], {lang: this.OcrLang, scale: q})
+            try {
+                res := OCR.FromRect(r[1], r[2], r[3], r[4], {lang: this.OcrLang, scale: q})
+                FieldBossTool.OcrBusy := false
+                return res
+            }
             Sleep(60)
         }
+        FieldBossTool.OcrBusy := false
         return {Lines: []}
     }
 
@@ -4023,7 +4228,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     BuildPanel(ch) {
         pal := FieldBossTool.Col
         if IsObject(this.Panel)
-            this.Panel.Destroy()
+            this.SetHover(""), this.Panel.Destroy()   ; scheda e timer dell'hover via prima di distruggere le righe
         this.Shown := false, this.Rows := [], this.RowByHwnd := Map(), this.Chips := Map()
         this.Hover := "", this.Extras := []
 
@@ -4138,11 +4343,11 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     BuildDungeonPanel(ch) {
         pal := FieldBossTool.Col
         if IsObject(this.Panel)
-            this.Panel.Destroy()
+            this.SetHover(""), this.Panel.Destroy()   ; scheda e timer dell'hover via prima di distruggere le righe
         this.Shown := false, this.Rows := [], this.RowByHwnd := Map(), this.Chips := Map()
         this.Hover := "", this.Extras := [], this.Dividers := Map()
         s   := ch / FieldBossTool.BaseH * FieldBossPanelScale
-        pad := Round(10 * s), w := Round(260 * s), bar := Max(3, Round(4 * s)), stW := Round(24 * s)
+        pad := Round(10 * s), w := Round(310 * s), bar := Max(3, Round(4 * s)), stW := Round(24 * s)
         this.RowH := Round(26 * s), this.RowGap := Max(1, Round(3 * s)), this.PadY := pad
         this.PW := w + pad * 2
         P := Gui("+AlwaysOnTop -Caption +ToolWindow +Border -DPIScale +E0x08000000")   ; non ruba il focus
@@ -4162,11 +4367,12 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.Extras.Push(P.AddText(Format("x{} y{} w{} h1 Background{}", pad, y, w, pal.sep)))
         this.RowsY0 := y + Round(9 * s)
         fs := Round(10 * s), y := this.RowsY0, rh := this.RowH
-        for b in FieldBossTool.DungeonBosses(this.DungeonName) {
+        for i, b in FieldBossTool.DungeonBosses(this.DungeonName) {
+            kind := "(" (b.final ? Tr("Boss finale") : Format(Tr("{}° boss"), i)) ")  "   ; tipo di boss prima del nome
             col := b.final ? FieldBossTool.Grades["oro"].color : FieldBossTool.Grades["blu"].color
             bc := P.AddText(Format("x{} y{} w{} h{} Background{}", pad, y, bar, rh, col))
             P.SetFont("s" fs " norm c" col, "Segoe UI")
-            tc := P.AddText(Format("x{} y{} w{} h{} 0x200 Background{}", pad + bar, y, w - bar - stW * 2, rh, pal.row), "   " b.boss)
+            tc := P.AddText(Format("x{} y{} w{} h{} 0x200 Background{}", pad + bar, y, w - bar - stW * 2, rh, pal.row), "   " kind b.boss)
             P.SetFont("s" fs " norm c" col, "Segoe UI Emoji")
             bd := P.AddText(Format("x{} y{} w{} h{} Center 0x200 Background{}", pad + w - stW * 2, y, stW, rh, pal.row)
                           , b.final ? "👑" : b.side = "L" ? "◀" : b.side = "R" ? "▶" : "")
@@ -4226,6 +4432,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             return locked ? this.HintShow(Tr("Teleport non sbloccato"), Tr("Sblocca prima: {1}", all), "err", 4500)
                           : this.HintShow(Tr("Teleport non trovato"), Tr("{1} non è nella lista del gioco", all), "err", 3500)
         }
+        it := this.ConfirmTele(it, found)          ; posizione riletta: niente click sulla riga sbagliata
         g := this.Geo(), r := this.Rc(FieldBossTool.RcList, g), tol := Round(FieldBossTool.NameTolerance * g.s)
         ok := this.ClickPhase(it, Tr("Clicca il TELEPORT"), found "   ·   " b.boss, 0
             , (x, y, w) => this.IsPanel(w) ? -1 : (x >= r[1] && x <= r[1] + r[3] && Abs(y - it.y) <= tol))
@@ -4440,12 +4647,11 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         L.AddText("xm ym h" Round(20 * s) " 0x200 BackgroundTrans", "AION 2 Wingman " AppVersion)
         L.SetFont("s" Round(8 * s) " norm c" UiC("Muted"), "Segoe UI")
         L.AddText("x+" Round(5 * s) " yp h" Round(20 * s) " 0x200 BackgroundTrans", "by VaLeTecK")
-        first := false                                  ; i tasti seguono sempre il titolo "AION 2 Wingman"
         for it in items {
             if (it[1] = "")
                 continue
             L.SetFont("s" fs " bold c" UiC("Deep"), "Segoe UI")
-            L.AddText((first ? "xm ym" : "x+" gap " yp") " Background" UiC("SubText") " Center 0x200 h" Round(20 * s)
+            L.AddText("x+" gap " yp Background" UiC("SubText") " Center 0x200 h" Round(20 * s)
                     , " " FieldBossTool.KeyLabel(it[1]) " ")
             L.SetFont("s" fs " norm c" UiC("Text"), "Segoe UI")
             L.AddText("x+" Round(6 * s) " yp h" Round(20 * s) " 0x200 BackgroundTrans", it[2])
@@ -4453,7 +4659,6 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
                 L.SetFont("s" fs " bold c" (it[3] ? UiC("Ok") : UiC("Err")), "Segoe UI")
                 L.AddText("x+" Round(5 * s) " yp h" Round(20 * s) " 0x200 BackgroundTrans", it[3] ? "ON" : "OFF")
             }
-            first := false
         }
         this.Legend := L
         L.Show("Hide AutoSize")
@@ -4526,18 +4731,25 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.SetHover(this.RowByHwnd.Has(hwnd) ? this.RowByHwnd[hwnd] : "")
     }
 
+    HoverCheck() {
+        MouseGetPos(,, &win)
+        if !this.IsPanel(win)
+            this.SetHover("")
+    }
+
     ; Passaggio del mouse: riga illuminata e nome ingrandito ("zoom"), poi tutto torna com'era
     SetHover(row) {
         if (row = this.Hover)
             return
-        fs := this.HasOwnProp("RowFs") && this.RowFs ? this.RowFs : 10
-        for pair in [[this.Hover, FieldBossTool.Col.row, "s" fs " norm"], [row, FieldBossTool.Col.hover, "s" Round(fs * 1.18) " bold"]]
+        fs := this.HasOwnProp("RowFs") && this.RowFs ? this.RowFs : 10, pal := FieldBossTool.Col
+        for pair in [[this.Hover, pal.row, "s" fs " norm"], [row, pal.hover, "s" Round(fs * 1.18) " bold"]]
             if IsObject(pair[1]) {
                 try pair[1].cells[1].SetFont(pair[3])
                 for c in pair[1].cells
                     try c.Opt("+Background" pair[2]), c.Redraw()
             }
         this.Hover := row
+        SetTimer(this.HoverFn, IsObject(row) ? 100 : 0)   ; uscita verso il gioco: nessun WM_MOUSEMOVE, controlla il timer
         if !IsObject(row)                                 ; fuori dai nomi: la scheda svanisce (fade-out)
             return BossCard.Hide()
         sub := row.HasOwnProp("dungeon") ? row.dungeon.teles[1] : this.Bosses.Has(row.name) ? this.Bosses[row.name].tele : ""
@@ -4665,7 +4877,7 @@ class SettingsEditor {
                  "EnableCombatFadeIn", "EnableCombatFadeOut"]]]],
         ["Numero random", "Numero casuale grande a schermo con animazione di roll, dal tasto o dall'icona cliccabile.",
             ["RandomKey", "RandomMin", "RandomMax", "RandomHold", "RandomScale", "RandomX", "RandomY",
-             "RandomIconEnabled", "RandomIconX", "RandomIconY", "RandomIconScale"]],
+             "RandomIconEnabled", "RandomIconMode", "RandomIconX", "RandomIconY", "RandomIconScale"]],
         ["Hidden Cube", "Quando compare la finestra degli Hidden Cube porta il mouse su `"Open with Key`" e ce lo tiene bloccato.",
             ["HiddenCubeEnabled", "HiddenCubeInterval", "HiddenCubeCheckSlot", "HiddenCubeOffsetX", "HiddenCubeOffsetY",
              "HiddenCubeLockMouse", "HiddenCubeLockInterval", "HiddenCubeRearmTime",
@@ -4681,7 +4893,7 @@ class SettingsEditor {
             ["Leggenda", "La barra dei tasti in cima allo schermo con la mappa aperta.",
                 ["FieldBossShowLegend", "FieldBossLegendScale", "FieldBossLegendY", "FieldBossLegendAlpha"]],
             ["Ricerca e Teleport", "Come lo script trova il boss nella lista e il Teleport più vicino.",
-                ["FieldBossTeleportMode", "FieldBossUltraScrollStep", "FieldBossListScroll", "FieldBossFindTeleport", "FieldBossAutoZoomOut", "FieldBossZoomOut",
+                ["FieldBossTeleportMode", "FieldBossUltraScrollStep", "FieldBossUltraFavorites", "FieldBossListScroll", "FieldBossFindTeleport", "FieldBossAutoZoomOut", "FieldBossZoomOut",
                  "FieldBossZoomBack", "FieldBossZoomOutWheel", "FieldBossCloseLoot", "FieldBossLootClickDist"]],
             ["Travel e direzione", "Dopo il click sul Teleport: pressioni di F per partire e freccia con la direzione del boss.",
                 ["FieldBossTravelPresses", "FieldBossTravelWait", "FieldBossTeleportLock", "FieldBossDirHint", "FieldBossDirSeconds",
@@ -4703,7 +4915,7 @@ class SettingsEditor {
         "FieldBossDungeonPanel", "Menu Teleport nei dungeon", "FieldBossBossImage", "Immagine del boss",
         "RandomKey", "Tasto del numero random", "RandomMin", "Numero minimo", "RandomMax", "Numero massimo",
         "RandomHold", "Durata del risultato (s)", "RandomScale", "Dimensione del numero", "RandomX", "Posizione orizzontale (%)",
-        "RandomY", "Posizione verticale (%)", "RandomIconEnabled", "Icona del random", "RandomIconX", "Icona: posizione orizzontale (%)",
+        "RandomY", "Posizione verticale (%)", "RandomIconEnabled", "Icona del random", "RandomIconMode", "Quando si vede l'icona", "RandomIconX", "Icona: posizione orizzontale (%)",
         "RandomIconY", "Icona: posizione verticale (%)", "RandomIconScale", "Icona: dimensione",
         "ViCountdown", "Easter egg: countdown GTA VI", "ViCountdownDate", "Data di uscita GTA VI",
         "Theme", "Tema dei colori",
@@ -4811,7 +5023,7 @@ class SettingsEditor {
         "FieldBossStartCollapsed", "Parte ridotto", "FieldBossPickAction", "Dopo la scelta di un boss", "FieldBossFadeAlpha", "Opacità in modalità fade",
         "FieldBossShowLegend", "Leggenda visibile", "FieldBossLegendScale", "Dimensione leggenda", "FieldBossLegendY", "Distanza dall'alto",
         "FieldBossLegendAlpha", "Opacità leggenda",
-        "FieldBossTeleportMode", "Modalità Teleport", "FieldBossUltraScrollStep", "Scrollate lista Teleport",
+        "FieldBossTeleportMode", "Modalità Teleport", "FieldBossUltraScrollStep", "Scrollate lista Teleport", "FieldBossUltraFavorites", "Teleport nei preferiti",
         "FieldBossListScroll", "Scrollate lista boss", "FieldBossFindTeleport", "Cerca il Teleport più vicino",
         "FieldBossAutoZoomOut", "Zoom indietro automatico", "FieldBossZoomOut", "Scrollate di zoom indietro", "FieldBossZoomBack", "Scrollate di ritorno",
         "FieldBossZoomOutWheel", "Rotellina per lo zoom indietro", "FieldBossCloseLoot", "Chiudi il riquadro dei loot",
@@ -4835,7 +5047,8 @@ class SettingsEditor {
         "FieldBossPickAction", ["fade", "collapse", "none"],
         "FieldBossCloseLoot", ["zoom", "always", "never"],
         "FieldBossZoomOutWheel", ["WheelDown", "WheelUp"],
-        "FieldBossTeleportMode", ["normal", "ultrafast"])
+        "FieldBossTeleportMode", ["normal", "ultrafast"],
+        "RandomIconMode", ["shugo", "always"])
     static Multi := Map("LootAnim", ["ring", "pulse", "spin", "glow"], "CombatAnim", ["ring", "pulse", "spin", "glow"])
 
     ; Nomi mostrati nei menu a tendina (stesso ordine di Enums): emoji + valore
@@ -4869,6 +5082,8 @@ class SettingsEditor {
                     return this.LangNames[i]
         if (name = "FieldBossTeleportMode")
             return value = "ultrafast" ? "⚡  ULTRA-FAST MODE" : "🧭  NORMAL MODE"
+        if (name = "RandomIconMode")
+            return value = "always" ? "🎲  " Tr("Sempre (gioco in primo piano)") : "🃏  " Tr("Solo sulle carte premio degli Shugo")
         if (name = "Theme" && SubStr(value, 1, 5) = "user:")
             return "⭐  " SubStr(value, 6)
         if (name = "Theme" && this.ThemeIcons.Has(value))
@@ -4993,7 +5208,7 @@ class SettingsEditor {
     static Search := "", SearchFn := "", MaintCtrls := [], MaintInfo := ""
     static ThemeCtrls := [], ThemeRows := [], OvCache := Map(), ThemeKeyMap := ""
     static Bosses := [], BossDirty := false, BossFrom := 0, BossTo := 0, Lines := [], EOL := "`n"
-    static Orig := Map(), RebuildFn := "", PulseFn := ""
+    static Orig := Map(), RebuildFn := "", PulseFn := "", RedrawFn := "", CapIH := "", NumExact := "", ExprNames := []
     static NumMode := false, NumScale := 1, NumCtrls := [], LastProfile := ""
 
     ; ======================================================================
@@ -5049,6 +5264,10 @@ class SettingsEditor {
             }
             i++
         }
+        this.ExprNames := []                              ; valori calcolati (es. -LootOffsetX), riapplicati a ogni modifica
+        for n, it in this.Cfg
+            if (it.type = "expr")
+                this.ExprNames.Push(n)
     }
 
     ; Trova le assegnazioni "Nome := valore" di una riga "global ..." (anche più di una per riga)
@@ -5225,20 +5444,28 @@ class SettingsEditor {
             if (code = cur)
                 this.LangDdl.Choose(i)
         this.LangDdl.OnEvent("Change", (*) => this.LangPicked())
-        ; anteprima: levetta + menu degli elementi + stato HUD (testi a sfondo pieno: niente "doppio testo")
+        ; anteprima: riquadro a sé (bordo + fondo) con levetta, menu degli elementi e stato HUD
+        ; (testi a sfondo pieno: niente "doppio testo")
+        bgRGB := ColorToRGB(UiC("Bg")), accRGB := ColorToRGB(UiC("Accent"))
+        this.PvPanel := Format("{:06X}", LerpRGB(bgRGB, accRGB, 0.10))
+        pvB := g.AddText("x643 y3 w330 h60 Disabled Background" Format("{:06X}", LerpRGB(bgRGB, accRGB, 0.45)))
+        pvF := g.AddText("x644 y4 w328 h58 Disabled Background" this.PvPanel)
+        RoundCtl(pvB, 14), RoundCtl(pvF, 12)
+        for c in [pvF, pvB]                                ; sotto a tutti gli altri controlli
+            DllCall("SetWindowPos", "Ptr", c.Hwnd, "Ptr", 1, "Int", 0, "Int", 0, "Int", 0, "Int", 0, "UInt", 0x13)
         this.PrevTrack := g.AddText("x652 y10 w40 h20 Background" UiC("Row"))
         this.PrevKnob  := g.AddText("x654 y12 w16 h16 BackgroundFFFFFF")
         for c in [this.PrevTrack, this.PrevKnob]
             c.OnEvent("Click", (*) => this.PreviewSet(!PreviewMode))
         RoundCtl(this.PrevTrack, 20), RoundCtl(this.PrevKnob, 16)
         g.SetFont("s10 bold", "Segoe UI")
-        this.PrevChk := g.AddText("x700 y9 w176 h22 0x200 Background" UiC("Bg"), Tr("ANTEPRIMA DAL VIVO"))
+        this.PrevChk := g.AddText("x700 y9 w176 h22 0x200 Background" this.PvPanel, Tr("ANTEPRIMA DAL VIVO"))
         this.PrevChk.OnEvent("Click", (*) => this.PreviewSet(!PreviewMode))
         g.SetFont("s9 bold", "Segoe UI")
         this.PrevElemBtn := g.AddText("x880 y10 w84 h20 Center 0x200", Tr("Elementi") " ▾")
         this.PrevElemBtn.OnEvent("Click", (*) => PreviewMode ? this.ElemToggle() : 0)
         g.SetFont("s9 norm c" UiC("SubText"), "Segoe UI")
-        g.AddText("x652 y38 w82 h18 0x200 Background" UiC("Bg"), Tr("Stato HUD:"))
+        g.AddText("x652 y38 w82 h18 0x200 Background" this.PvPanel, Tr("Stato HUD:"))
         g.SetFont("s9 bold", "Segoe UI")
         this.PrevOn  := g.AddText("x738 y36 w110 h20 Center 0x200", Tr("ON (attivo)"))
         this.PrevOff := g.AddText("x854 y36 w110 h20 Center 0x200", Tr("OFF (inattivo)"))
@@ -5258,7 +5485,7 @@ class SettingsEditor {
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
         this.Search := g.AddEdit("x12 y76 w280 h26 Background" UiC("WinField"))
         DllCall("SendMessage", "Ptr", this.Search.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr", "🔍  " Tr("Cerca un'impostazione..."))   ; EM_SETCUEBANNER
-        this.Search.OnEvent("Change", (*) => this.Loading ? 0 : SetTimer(this.SearchFn := ObjBindMethod(this, "RunSearch"), -250))
+        this.Search.OnEvent("Change", (*) => this.Loading ? 0 : SetTimer(this.SearchFn := this.SearchFn || ObjBindMethod(this, "RunSearch"), -250))
         this.TV := g.AddTreeView("x12 y110 w280 h570 -Lines Background" UiC("WinField"))
         this.TV.OnEvent("ItemSelect", (c, item) => this.SelectNode(item))
         this.LastNode := 0
@@ -5451,7 +5678,7 @@ class SettingsEditor {
         ; ---- pannello Manutenzione ----
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
         this.MaintCtrls := []
-        for it in [["🧙  " Tr("Riesegui l'installazione guidata"), (*) => this.RunSetup()]
+        for it in [["🧙  " Tr("Riesegui il FIRST RUN QUICK-SETUP"), (*) => this.RunSetup()]
                  , ["🔄  " Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow()]
                  , ["🌐  " Tr("Pagina del progetto su GitHub"), (*) => Updater.OpenPage()]
                  , ["🅿️  " Tr("Dona con PayPal"), DonatePayPal]
@@ -5558,7 +5785,7 @@ class SettingsEditor {
         c.GetPos(&x, &y, &w, &h)
         this.HovCur := hwnd, this.HovOrig := [x, y, w, h], this.HovK := 0
         alive := false
-        try alive := this.Glow.Length = 2 && WinExist(this.Glow[1].Hwnd)
+        try alive := this.Glow.Length = 2 && DllCall("IsWindow", "Ptr", this.Glow[1].Hwnd)
         if !alive {
             this.Glow := []
             loop 2 {
@@ -5666,9 +5893,9 @@ class SettingsEditor {
     }
 
     static RunSetup() {
-        bat := A_ScriptDir "\Setup AION 2 Wingman.bat"
+        bat := A_ScriptDir "\FIRST RUN QUICK-SETUP.bat"
         if !FileExist(bat)
-            return MsgBox(Tr("Installazione guidata non trovata: manca `"{1}`" nella cartella di Wingman.", "Setup AION 2 Wingman.bat"), "AION 2 Wingman", "Icon!")
+            return MsgBox(Tr("FIRST RUN QUICK-SETUP non trovato: manca `"{1}`" nella cartella di Wingman.", "FIRST RUN QUICK-SETUP.bat"), "AION 2 Wingman", "Icon!")
         Run('"' bat '"', A_ScriptDir)
     }
 
@@ -5731,7 +5958,7 @@ class SettingsEditor {
         "LootShape", 1, "CombatShape", 1, "LootEmoji", 1, "CombatEmoji", 1,
         "HiddenCubeEnabled", 1, "HiddenCubeLockMouse", 1, "HiddenCubeAutoClick", 1,
         "FieldBossEnabled", 1, "FieldBossTeleportMode", 1, "FieldBossHideInDungeon", 1, "FieldBossDungeonPanel", 1, "FieldBossBossImage", 1,
-        "RandomKey", 1, "RandomIconEnabled", 1, "RandomX", 1, "RandomY", 1, "RandomIconX", 1, "RandomIconY", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
+        "RandomKey", 1, "RandomIconEnabled", 1, "RandomIconMode", 1, "RandomX", 1, "RandomY", 1, "RandomIconX", 1, "RandomIconY", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
         "FieldBossPanelScale", 1, "FieldBossShowLegend", 1, "FieldBossTravelPresses", 1, "FieldBossTeleportLock", 1, "FieldBossDirHint", 1,
         "UpdateMode", 1, "UpdateCheckOnStart", 1)
     static BasicPanels := Map("HOME", 1, "PRESET", 1, "BOSS", 1, "MAINT", 1)
@@ -5775,7 +6002,7 @@ class SettingsEditor {
             return
         this.Basic := basic
         try IniWrite(basic ? "base" : "avanzata", UserData.File, "App", "SettingsMode")
-        SetTimer(ObjBindMethod(this, "Redraw"), -10)
+        SetTimer(this.RedrawFn := this.RedrawFn || ObjBindMethod(this, "Redraw"), -10)
     }
 
     static PaintMode() {
@@ -5886,7 +6113,7 @@ class SettingsEditor {
             c.Visible := false
         for c in this.NumCtrls
             c.Visible := false
-        this.NumMode := false
+        this.NumMode := false, this.NumExact := ""
         if (name = "") {
             this.DName.Text := "", this.DDesc.Value := "", this.ExTxt.Text := ""
             this.Loading := false
@@ -5970,15 +6197,22 @@ class SettingsEditor {
     ; Rimappatura al volo: si mette in ascolto e prende la prossima combinazione premuta
     ; (modificatori Ctrl/Shift/Alt/Win + un tasto). Esc annulla, Canc/Backspace = nessun tasto.
     static CaptureKey() {
-        if (this.Cur = "" || !this.Cfg.Has(this.Cur) || this.Cfg[this.Cur].type != "key")
+        static busy := false
+        name := this.Cur
+        if (busy || name = "" || !this.Cfg.Has(name) || this.Cfg[name].type != "key")
             return
+        busy := true
         this.ECap.Opt("+Background" UiC("Accent")), this.ECap.SetFont("c" UiOn("Deep", "Accent"))
         this.ECap.Text := "🎧  " Tr("In ascolto... premi i tasti")
         this.ECap.Redraw()
         ih := InputHook("L0 T10")
         ih.KeyOpt("{All}", "ES")                                       ; il tasto non arriva alla finestra
         ih.KeyOpt("{LCtrl}{RCtrl}{LShift}{RShift}{LAlt}{RAlt}{LWin}{RWin}", "-E -S")
+        this.CapIH := ih
         ih.Start(), ih.Wait()
+        busy := false, this.CapIH := ""
+        if (!IsObject(this.Win) || this.Cur != name)      ; finestra chiusa/ridisegnata o altra riga scelta durante l'ascolto
+            return
         if (ih.EndReason = "EndKey" && ih.EndKey != "Escape") {
             key := ih.EndKey, mods := ih.EndMods
             if (key = "Delete" || key = "Backspace")
@@ -6015,7 +6249,7 @@ class SettingsEditor {
                 return "[" s "]"
             case "num":
                 if this.NumMode
-                    return this.FmtNum(this.ESlider.Value / this.NumScale)
+                    return this.NumExact != "" ? this.NumExact : this.FmtNum(this.ESlider.Value / this.NumScale)
                 return Trim(this.EEdit.Value)
             case "expr": return Trim(this.EEdit.Value)
             default:      return '"' StrReplace(this.EEdit.Value, '"', '``"') '"'
@@ -6047,8 +6281,8 @@ class SettingsEditor {
         row := this.FindRow(name)
         if row
             this.LV.Modify(row, , this.Label(name), this.Shown(name), name, this.Pending.Has(name) ? "●" : "")
-        if this.IsLook(name)                              ; lingua o tema: ridisegna la finestra
-            this.LookApply()
+        if (this.IsLook(name) && this.Invalid(name) = "")  ; lingua o tema: ridisegna (mentre si scrive: dopo una pausa)
+            this.LookApply(SubStr(name, 1, 10) = "ThemeColor" && this.EEdit.Focused ? 800 : 10)
         if (name = "PerfProfile") {
             if (this.Unq(v) = "manuale" && IsObject(prev := PerfProfileValues(this.LastProfile))) {
                 vals := Map()                             ; "manuale" parte dai valori del profilo di prima
@@ -6078,6 +6312,7 @@ class SettingsEditor {
     static NumChanged() {
         if this.Loading
             return
+        this.NumExact := ""
         this.ENumVal.Text := this.FmtNum(this.ESlider.Value / this.NumScale)
         this.Changed()
     }
@@ -6088,7 +6323,6 @@ class SettingsEditor {
     }
 
     static NumWrite() {
-        lim := this.Limits[this.Cur]
         r := InputBox(Tr("Nuovo valore per `"{1}`"", this.Label(this.Cur)) "`n" this.RangeText(this.Cur)
                     , "AION 2 Wingman", "w360 h150", this.ENumVal.Text)
         if (r.Result != "OK")
@@ -6096,8 +6330,9 @@ class SettingsEditor {
         v := Trim(StrReplace(r.Value, ",", "."))
         if ((why := this.Invalid(this.Cur, v)) != "")
             return MsgBox(Tr("Valore non accettato: {1}.", why), "AION 2 Wingman", "Icon!")
+        this.NumExact := v                                 ; valore scritto a mano: esatto
         this.ESlider.Value := Round((v + 0) * this.NumScale)
-        this.ENumVal.Text := this.FmtNum(v + 0)
+        this.ENumVal.Text := v
         this.Changed()
     }
 
@@ -6119,6 +6354,8 @@ class SettingsEditor {
         this.EditorShow(this.Cur)
         this.UpdateStatus()
         this.Live(this.Cur)
+        if this.IsLook(this.Cur)                          ; lingua/tema: torna l'aspetto del file
+            this.LookApply()
     }
 
     ; ---------------- Esempio visivo ----------------
@@ -6375,10 +6612,10 @@ class SettingsEditor {
     ; scrive i valori attuali nel tema dell'utente "name" (themes.ini)
     static ThemeWrite(name, vals) {
         UserData.Init()
-        try IniDelete(UserData.Themes, name)
+        txt := ""
         for v, x in vals
-            IniWrite("v:" x, UserData.Themes, name, v)
-        IniWrite(FormatTime(, "dd/MM/yyyy HH:mm"), UserData.Themes, name, "_Salvato")
+            txt .= v "=v:" x "`n"
+        IniWrite(txt "_Salvato=" FormatTime(, "dd/MM/yyyy HH:mm"), UserData.Themes, name)   ; sostituisce la sezione in una volta
         this.OvCache := Map()
     }
 
@@ -6534,11 +6771,14 @@ class SettingsEditor {
             }
             vals["HudBaseHeight"] := String(target)
         } else {
+            sec := Map(), sec.CaseSense := false              ; tutta la sezione in una lettura sola
+            try for ln in StrSplit(IniRead(this.PresetFile, name), "`n", "`r")
+                if (p := InStr(ln, "="))
+                    sec[SubStr(ln, 1, p - 1)] := SubStr(ln, p + 1)
             for v in this.Cfg {
                 ; preset salvati con le versioni precedenti: nomi "Autoloot..." / "AutoCombat..."
                 for key in [v, RegExReplace(v, "Loot", "Autoloot", , 1), RegExReplace(v, "^Combat", "AutoCombat")] {
-                    x := ""
-                    try x := IniRead(this.PresetFile, name, key)
+                    x := sec.Has(key) ? sec[key] : ""
                     if (SubStr(x, 1, 2) = "v:") {             ; il prefisso protegge le virgolette dei testi
                         vals[v] := StrReplace(StrReplace(SubStr(x, 3), "Autoloot", "Loot"), "AutoCombat", "Combat")
                         break
@@ -6567,16 +6807,18 @@ class SettingsEditor {
                     this.Pending.Delete(name)
             } else
                 this.Pending[name] := v
+            look := (look ?? false) || this.IsLook(name)
         }
         this.UpdateStatus()
+        if (look ?? false)                                 ; lingua/tema cambiati (preset, import): ridisegna
+            this.LookApply()
         if PreviewMode {
             for name in vals
                 if (this.Cfg.Has(name) && this.Invalid(name) = "")
                     this.Apply(name)
-            for n, it in this.Cfg
-                if (it.type = "expr")
-                    this.Apply(n)
-            ApplyPerfProfile(), RestartPerfTimers()
+            for n in this.ExprNames
+                this.Apply(n)
+            this.ApplyPerf()
             SetTimer(this.RebuildFn, -250)
         }
         return changed
@@ -6596,10 +6838,10 @@ class SettingsEditor {
             if (x = name && MsgBox(Tr("Esiste già un preset `"{1}`". Sovrascriverlo?", name), "AION 2 Wingman", "YesNo Icon?") != "Yes")
                 return
         try {
-            try IniDelete(this.PresetFile, name)
+            txt := ""
             for v, it in this.Cfg                             ; "v:" evita che Windows tolga le virgolette
-                IniWrite("v:" this.Val(v), this.PresetFile, name, v)
-            IniWrite(FormatTime(, "dd/MM/yyyy HH:mm"), this.PresetFile, name, "_Salvato")
+                txt .= v "=v:" this.Val(v) "`n"
+            IniWrite(txt "_Salvato=" FormatTime(, "dd/MM/yyyy HH:mm"), this.PresetFile, name)   ; sostituisce la sezione in una volta
         } catch as e
             return MsgBox(Tr("Salvataggio del preset non riuscito:") "`n" e.Message, "AION 2 Wingman", "Icon!")
         this.FillPresets()
@@ -6725,7 +6967,7 @@ class SettingsEditor {
                     this.Apply(name)
             if this.BossDirty
                 this.Apply("FieldBossList")
-            ApplyPerfProfile(), RestartPerfTimers()
+            this.ApplyPerf()
             this.Rebuild()
             SetTimer(this.PulseFn, 100)
         } else {
@@ -6760,7 +7002,7 @@ class SettingsEditor {
     static ElemShow() {
         if !IsObject(this.Win)
             return
-        if !IsObject(this.ElemWin) || !WinExist(this.ElemWin.Hwnd) {
+        if !IsObject(this.ElemWin) || !DllCall("IsWindow", "Ptr", this.ElemWin.Hwnd) {
             e := Gui("+Owner" this.Win.Hwnd " -Caption +Border +ToolWindow", "Preview")
             e.BackColor := UiC("WinBg"), e.MarginX := 10, e.MarginY := 8
             e.SetFont("s9 bold c" UiC("WinSub"), "Segoe UI")
@@ -6781,12 +7023,24 @@ class SettingsEditor {
             this.ElemWin := e
             this.ElemPaint()
         }
+        static moveHook := false                               ; il menu segue la finestra quando la trascini
+        if !moveHook
+            moveHook := true, OnMessage(0x0003, (wp, lp, msg, hwnd) => (IsObject(this.Win) && hwnd = this.Win.Hwnd) ? this.ElemPlace() : "")
+        this.ElemPlace(true)
+    }
+
+    ; menu "Elementi" agganciato sotto il riquadro dell'anteprima (anche mentre sposti la finestra)
+    static ElemPlace(show := false) {
+        if !(IsObject(this.ElemWin) && DllCall("IsWindow", "Ptr", this.ElemWin.Hwnd))
+            return
+        if (!show && !DllCall("IsWindowVisible", "Ptr", this.ElemWin.Hwnd))
+            return
         WinGetPos(&bx, &by, , &bh, this.PrevElemBtn.Hwnd)      ; sotto il pulsante "Elementi"
         this.ElemWin.Show("NA AutoSize x" bx " y" (by + bh + 32))
     }
 
     static ElemHide() {
-        if (IsObject(this.ElemWin) && WinExist(this.ElemWin.Hwnd))
+        if (IsObject(this.ElemWin) && DllCall("IsWindow", "Ptr", this.ElemWin.Hwnd))
             this.ElemWin.Hide()
     }
 
@@ -6830,7 +7084,7 @@ class SettingsEditor {
         this.PrevTrack.Opt("+Background" (PreviewMode ? UiC("Ok") : UiC("Row")))
         this.PrevTrack.GetPos(&tx, &ty, &tw)
         this.PrevKnob.Move(PreviewMode ? tx + tw - 18 : tx + 2)
-        this.PrevElemBtn.Opt("+Background" (PreviewMode ? UiC("Row") : UiC("Bg")))
+        this.PrevElemBtn.Opt("+Background" (PreviewMode ? UiC("Row") : this.PvPanel))
         this.PrevElemBtn.SetFont("c" (PreviewMode ? UiC("Text") : UiC("Muted")))
         for c in [this.PrevTrack, this.PrevKnob, this.PrevChk, this.PrevElemBtn]
             c.Redraw()
@@ -6863,22 +7117,15 @@ class SettingsEditor {
 
     ; valore modificato: in anteprima lo applica e ricostruisce le interfacce (dopo una breve pausa)
     static Live(name) {
-        if !PreviewMode
+        if (!PreviewMode || this.IsLook(name))            ; lingua/tema: Redraw ricostruisce già l'anteprima
             return
         if (name != "FieldBossList" && this.Invalid(name) != "")     ; valore non valido: non lo applica
             return
         this.Apply(name)
-        for n, it in this.Cfg                             ; valori calcolati (es. -LootOffsetX)
-            if (it.type = "expr")
-                this.Apply(n)
-        if (SubStr(name, 1, 4) = "Perf" || name = "AnimInterval" || InStr(name, "Interval") || name = "FieldBossCheckEvery") {
-            for v in PerfVars                             ; ricorda i valori del file prima del profilo
-                if !this.Orig.Has(v)
-                    this.Orig[v] := GetGlobalVar(v)
-            ApplyPerfProfile()
-            RestartPerfTimers()
-            return
-        }
+        for n in this.ExprNames                           ; valori calcolati (es. -LootOffsetX)
+            this.Apply(n)
+        if (SubStr(name, 1, 4) = "Perf" || name = "AnimInterval" || InStr(name, "Interval") || name = "FieldBossCheckEvery")
+            return this.ApplyPerf()
         if (SubStr(name, 1, 6) = "Splash") {              ; splash: lo rimostra con i nuovi valori
             if SplashEnabled
                 SplashScreen.Show()
@@ -6896,10 +7143,17 @@ class SettingsEditor {
     static Rebuild() {
         if !PreviewMode
             return
-        BuildHud()
+        try BuildHud()
+        catch as e {                                      ; senza questo HudBuilding resta true e UpdateVisibility non fa più nulla
+            global HudBuilding := false
+            ShowTip("Preview: " e.Message, 3000)
+            return
+        }
         UpdateVisibility()
-        if PreviewHudOn
-            try CombatHUD.Signal(), LootHUD.Signal()
+        if PreviewHudOn {
+            try CombatHUD.Signal()
+            try LootHUD.Signal()
+        }
         FieldBoss.LoadBossList()
         FieldBoss.PreviewShow()
     }
@@ -6976,15 +7230,14 @@ class SettingsEditor {
                  , this.Invalid(name) != "" ? Tr("non valido") : "")
         }
         if this.BossDirty {
-            n := 0
-            for b in this.Bosses
-                n++
+            n := this.Bosses.Length
             names.Push("FieldBossList")
             lv.Add(, Tr("Elenco boss"), Tr("(come nel file)"), Tr("{1} boss, modificato", n), "")
         }
         lv.ModifyCol(1, 230), lv.ModifyCol(2, 160), lv.ModifyCol(3, 160), lv.ModifyCol(4, 80)
         lv.OnEvent("DoubleClick", (ctrl, row) => (row ? (this.GoTo(names[row]), c.Destroy()) : 0))
         c.AddButton("w120 Default", Tr("Chiudi")).OnEvent("Click", (*) => c.Destroy())
+        c.OnEvent("Close", (*) => c.Destroy()), c.OnEvent("Escape", (*) => c.Destroy())
         c.Show()
     }
 
@@ -7115,18 +7368,19 @@ class SettingsEditor {
         if ((this.Pending.Count || this.BossDirty)
             && MsgBox(Tr("Ci sono modifiche non salvate. Chiudere senza salvarle?"), "AION 2 Wingman", "YesNo Icon?") != "Yes")
             return true
+        if IsObject(this.CapIH)                           ; ascolto dei tasti in corso: fermato
+            try this.CapIH.Stop()
+        look := this.LookDiffers()
+        if look                                           ; lingua/tema non salvati: tornano quelli del file
+            this.LookSet(), FieldBoss.ResetUi()
         if PreviewMode
-            this.PreviewSet(false)                        ; chiude l'anteprima e rimette i valori del file
+            this.PreviewSet(false)                        ; chiude l'anteprima: HUD ricostruito già col tema del file
+        else if look
+            BuildHud(), UpdateVisibility()                ; l'HUD riprende i colori del tema salvato
         this.ElemHide(), this.ElemWin := ""
         this.Win.Destroy()
         this.Win := ""
         this.Pending := Map(), this.BossDirty := false
-        if this.LookDiffers() {                           ; lingua/tema non salvati: tornano quelli del file
-            this.LookSet()
-            FieldBoss.ResetUi()
-            BuildHud()                                    ; l'HUD riprende i colori del tema salvato
-            UpdateVisibility()
-        }
     }
 
     ; ---------------- Lingua ----------------
@@ -7170,10 +7424,19 @@ class SettingsEditor {
     }
 
     ; applica lingua e tema scelti (anche non salvati) e ridisegna la finestra al prossimo giro
-    static LookApply() {
+    static ApplyPerf() {
+        for v in PerfVars                                 ; ricorda i valori del file prima del profilo
+            if !this.Orig.Has(v)
+                this.Orig[v] := GetGlobalVar(v)
+        ApplyPerfProfile(), RestartPerfTimers()
+    }
+
+    static LookApply(delay := 10) {
         this.LookSet(false)
         FieldBoss.ResetUi()
-        SetTimer(ObjBindMethod(this, "Redraw"), -10)
+        if !this.RedrawFn
+            this.RedrawFn := ObjBindMethod(this, "Redraw")
+        SetTimer(this.RedrawFn, -delay)                   ; un solo timer: più richieste = un solo ridisegno
     }
 
     ; ricrea la finestra nella nuova lingua, nella stessa posizione e sulla stessa voce del menu
@@ -7183,7 +7446,8 @@ class SettingsEditor {
         sel := this.TV.GetSelection(), content := this.Nodes.Has(sel) ? this.Nodes[sel].content : "", cur := this.Cur
         selTitle := this.Nodes.Has(sel) ? this.Nodes[sel].title : ""
         this.Win.GetPos(&wx, &wy)
-        elemOpen := IsObject(this.ElemWin) && WinExist(this.ElemWin.Hwnd) && DllCall("IsWindowVisible", "Ptr", this.ElemWin.Hwnd)
+        edFocus := this.EEdit.Focused
+        elemOpen := IsObject(this.ElemWin) && DllCall("IsWindow", "Ptr", this.ElemWin.Hwnd) && DllCall("IsWindowVisible", "Ptr", this.ElemWin.Hwnd)
         this.ElemHide(), this.ElemWin := ""
         this.Win.Destroy()
         this.Win := ""
@@ -7208,6 +7472,8 @@ class SettingsEditor {
         }
         if (cur != "" && (row := this.FindRow(cur)))
             this.LV.Modify(row, "Select Focus Vis"), this.SelectRow(row)
+        if (edFocus && this.EEdit.Visible)                ; si stava scrivendo: il cursore torna nel campo
+            this.EEdit.Focus(), n := StrLen(this.EEdit.Value), SendMessage(0xB1, n, n, this.EEdit)
         if PreviewMode
             this.Rebuild()
     }
@@ -14367,18 +14633,18 @@ ru=Поиск настройки...
 ko=설정 검색...
 zh=搜索设置...
 ja=設定を検索...
-it=Riesegui l'installazione guidata
-en=Run the guided setup again
-nap=Fa' n'ata vota l'installazione guidata
-bro=Rilancia il setup guidato
-es=Volver a ejecutar la instalación guiada
-fr=Relancer l'installation guidée
-de=Geführte Installation erneut starten
-pt=Executar de novo a instalação guiada
-ru=Снова запустить мастер установки
-ko=설치 마법사 다시 실행
-zh=重新运行安装向导
-ja=セットアップウィザードを再実行
+it=Riesegui il FIRST RUN QUICK-SETUP
+en=Run the FIRST RUN QUICK-SETUP again
+nap=Fa' n'ata vota 'o FIRST RUN QUICK-SETUP
+bro=Rilancia il FIRST RUN QUICK-SETUP
+es=Volver a ejecutar el FIRST RUN QUICK-SETUP
+fr=Relancer le FIRST RUN QUICK-SETUP
+de=FIRST RUN QUICK-SETUP erneut starten
+pt=Executar de novo o FIRST RUN QUICK-SETUP
+ru=Снова запустить FIRST RUN QUICK-SETUP
+ko=FIRST RUN QUICK-SETUP 다시 실행
+zh=重新运行 FIRST RUN QUICK-SETUP
+ja=FIRST RUN QUICK-SETUP を再実行
 it=Controlla aggiornamenti (in arrivo)
 en=Check for updates (coming soon)
 nap=Guarda si ce stanno aggiornamente (a venì)
@@ -14451,18 +14717,18 @@ ru=Личные настройки
 ko=개인 설정
 zh=个人设置
 ja=個人設定
-it=Installazione guidata non trovata: manca "{1}" nella cartella di Wingman.
-en=Guided setup not found: "{1}" is missing from the Wingman folder.
-nap=Installazione guidata nun truvata: manca "{1}" dint''a cartella 'e Wingman.
-bro=Setup guidato non trovato: manca "{1}" nella cartella di Wingman, bro.
-es=No se encontró la instalación guiada: falta "{1}" en la carpeta de Wingman.
-fr=Installation guidée introuvable : "{1}" manque dans le dossier de Wingman.
-de=Geführte Installation nicht gefunden: "{1}" fehlt im Wingman-Ordner.
-pt=Instalação guiada não encontrada: falta "{1}" na pasta do Wingman.
-ru=Мастер установки не найден: в папке Wingman нет "{1}".
-ko=설치 마법사를 찾을 수 없습니다: Wingman 폴더에 "{1}" 파일이 없습니다.
-zh=未找到安装向导：Wingman 文件夹中缺少 "{1}"。
-ja=セットアップが見つかりません：Wingman フォルダーに "{1}" がありません。
+it=FIRST RUN QUICK-SETUP non trovato: manca "{1}" nella cartella di Wingman.
+en=FIRST RUN QUICK-SETUP not found: "{1}" is missing from the Wingman folder.
+nap=FIRST RUN QUICK-SETUP nun truvato: manca "{1}" dint'a cartella 'e Wingman.
+bro=FIRST RUN QUICK-SETUP non trovato: manca "{1}" nella cartella di Wingman, bro.
+es=No se encontró el FIRST RUN QUICK-SETUP: falta "{1}" en la carpeta de Wingman.
+fr=FIRST RUN QUICK-SETUP introuvable : "{1}" manque dans le dossier de Wingman.
+de=FIRST RUN QUICK-SETUP nicht gefunden: "{1}" fehlt im Wingman-Ordner.
+pt=FIRST RUN QUICK-SETUP não encontrado: falta "{1}" na pasta do Wingman.
+ru=FIRST RUN QUICK-SETUP не найден: в папке Wingman нет "{1}".
+ko=FIRST RUN QUICK-SETUP을 찾을 수 없습니다: Wingman 폴더에 "{1}" 파일이 없습니다.
+zh=未找到 FIRST RUN QUICK-SETUP：Wingman 文件夹中缺少 "{1}"。
+ja=FIRST RUN QUICK-SETUP が見つかりません：Wingman フォルダーに "{1}" がありません。
 it=Terminare AION 2 Wingman?
 en=Quit AION 2 Wingman?
 nap=Stutammo AION 2 Wingman?
@@ -16417,17 +16683,20 @@ ko=숫자 위치: 화면 높이의 % (100 = 아래)
 zh=数字位置：屏幕高度的 %（100 = 底部）
 ja=数字の位置：画面の高さの %（100 = 下）
 @=RandomIconEnabled
-en=Random icon: a die with the key combination under it, clickable (it lights up when the\nmouse passes over it). Only visible while the game is in the foreground.\nfalse = no icon
-nap=Icona d'o random: nu dado cu sotto 'a combinazione 'e taste, ca se clicca (s'allumma quanno\nce passa 'o mouse). Se vede sulo cu 'o juoco 'nnanze.\nfalse = nisciuna icona
-bro=Icona del random: dado con sotto la combo di tasti, cliccabile (si illumina quando ci passi\ncol mouse). Si vede solo col gioco in primo piano.\nfalse = niente icona
-es=Icono del aleatorio: un dado con la combinación de teclas debajo, clicable (se ilumina al pasar\nel ratón). Solo visible con el juego en primer plano.\nfalse = sin icono
-fr=Icône du nombre aléatoire : un dé avec la combinaison de touches en dessous, cliquable (elle s'illumine\nau survol de la souris). Visible seulement avec le jeu au premier plan.\nfalse = pas d'icône
-de=Zufalls-Symbol: ein Würfel mit der Tastenkombination darunter, anklickbar (leuchtet auf, wenn die\nMaus darüberfährt). Nur sichtbar, wenn das Spiel im Vordergrund ist.\nfalse = kein Symbol
-pt=Ícone do aleatório: um dado com a combinação de teclas embaixo, clicável (acende quando o\nmouse passa por cima). Só aparece com o jogo em primeiro plano.\nfalse = sem ícone
-ru=Значок случайного числа: кубик с сочетанием клавиш под ним, по нему можно кликнуть (подсвечивается\nпри наведении мыши). Виден только когда игра на переднем плане.\nfalse = без значка
-ko=랜덤 아이콘: 아래에 키 조합이 적힌 주사위로, 클릭할 수 있어요 (마우스를 올리면 밝아짐).\n게임이 앞에 있을 때만 보여요.\nfalse = 아이콘 없음
-zh=随机图标：下方带按键组合的骰子，可点击（鼠标经过时高亮）。\n仅在游戏处于前台时显示。\nfalse = 不显示图标
-ja=ランダムのアイコン：下にキーの組み合わせが書かれたサイコロで、クリックできます（マウスを\n乗せると光ります）。ゲームが前面にあるときだけ表示。\nfalse = アイコンなし
+en=Random icon: a die with the key combination under it, clickable (it lights up when the\nmouse passes over it). By default it only appears while you choose the cards of the Shugo Mysterious Track\n(Monster Cube): see RandomIconMode.\nfalse = no icon
+nap=Icona d'o random: nu dado cu sotto 'a combinazione 'e taste, ca se clicca (s'allumma quanno\nce passa 'o mouse). Comme predefinito compare sulo quanno scigli 'e carte d'o Mysterious Track d'e Shugo\n(Monster Cube): vide RandomIconMode.\nfalse = nisciuna icona
+bro=Icona del random: dado con sotto la combo di tasti, cliccabile (si illumina quando ci passi\ncol mouse). Di default spunta solo quando scegli le carte del Mysterious Track degli Shugo\n(Monster Cube): vedi RandomIconMode.\nfalse = niente icona
+es=Icono del aleatorio: un dado con la combinación de teclas debajo, clicable (se ilumina al pasar\nel ratón). Por defecto solo aparece mientras eliges las cartas del Mysterious Track de los Shugo\n(Monster Cube): ver RandomIconMode.\nfalse = sin icono
+fr=Icône du nombre aléatoire : un dé avec la combinaison de touches en dessous, cliquable (elle s'illumine\nau survol de la souris). Par défaut, n'apparaît que pendant le choix des cartes du Mysterious Track des Shugo\n(Monster Cube) : voir RandomIconMode.\nfalse = pas d'icône
+de=Zufalls-Symbol: ein Würfel mit der Tastenkombination darunter, anklickbar (leuchtet auf, wenn die\nMaus darüberfährt). Standardmäßig erscheint es nur, während du die Karten des Shugo-Mysterious-Track wählst\n(Monster Cube): siehe RandomIconMode.\nfalse = kein Symbol
+pt=Ícone do aleatório: um dado com a combinação de teclas embaixo, clicável (acende quando o\nmouse passa por cima). Por padrão só aparece enquanto você escolhe as cartas do Mysterious Track dos Shugo\n(Monster Cube): veja RandomIconMode.\nfalse = sem ícone
+ru=Значок случайного числа: кубик с сочетанием клавиш под ним, по нему можно кликнуть (подсвечивается\nпри наведении мыши). По умолчанию появляется только во время выбора карт Mysterious Track у Шуго\n(Monster Cube): см. RandomIconMode.\nfalse = без значка
+ko=랜덤 아이콘: 아래에 키 조합이 적힌 주사위로, 클릭할 수 있어요 (마우스를 올리면 밝아짐).\n기본값은 Shugo의 Mysterious Track 카드를 고를 때만 나타나요\n(Monster Cube): RandomIconMode 참고.\nfalse = 아이콘 없음
+zh=随机图标：下方带按键组合的骰子，可点击（鼠标经过时高亮）。\n默认仅在选择 Shugo 的 Mysterious Track 卡牌时出现\n（Monster Cube）：见 RandomIconMode。\nfalse = 不显示图标
+ja=ランダムのアイコン：下にキーの組み合わせが書かれたサイコロで、クリックできます（マウスを\n乗せると光ります）。初期設定では Shugo の Mysterious Track のカードを選ぶときだけ表示\n（Monster Cube）：RandomIconMode を参照。\nfalse = アイコンなし
+)" "`n"
+        s .= "
+(
 @=RandomIconX
 en=position of the icon: % of the screen width
 nap=posizione 'e ll'icona: % d'a larghezza d'o schermo
@@ -16452,9 +16721,6 @@ ru=положение значка: % высоты экрана
 ko=아이콘 위치: 화면 높이의 %
 zh=图标位置：屏幕高度的 %
 ja=アイコンの位置：画面の高さの %
-)" "`n"
-        s .= "
-(
 @=RandomIconScale
 en=size of the icon (1.0 = normal)
 nap=grandezza 'e ll'icona (1.0 = normale)
@@ -16515,6 +16781,129 @@ ru=Ожидание... нажмите клавиши
 ko=입력 대기 중... 키를 누르세요
 zh=正在监听……请按下按键
 ja=入力待ち…キーを押してください
+it={}° boss
+en=Boss {}
+nap={}° boss
+bro={}° boss
+es={}.º jefe
+fr={}ᵉ boss
+de={}. Boss
+pt={}º chefe
+ru={}-й босс
+ko={}번째 보스
+zh=第{}个首领
+ja={}体目のボス
+it=Boss finale
+en=Final boss
+nap=Boss finale
+bro=Boss finale
+es=Jefe final
+fr=Boss final
+de=Endboss
+pt=Chefe final
+ru=Финальный босс
+ko=최종 보스
+zh=最终首领
+ja=最終ボス
+it=Teleport nei preferiti
+en=Teleports in favorites
+nap=Teleport dint'e preferite
+bro=Teleport nei preferiti
+es=Teleport en favoritos
+fr=Teleport dans les favoris
+de=Teleports in Favoriten
+pt=Teleport nos favoritos
+ru=Teleport в избранном
+ko=즐겨찾기 Teleport
+zh=收藏的 Teleport
+ja=お気に入りの Teleport
+@=FieldBossUltraFavorites
+en=ULTRA-FAST: the Teleports of the bosses with the highest priority (max 10, the limit of the game's\nFavorites) go into the favorites at the top of the list: the first time it has you click the star,\nthen no more scrolling
+nap=ULTRA-FAST: 'e Teleport d'e boss cu 'a priorità cchiù àuta (max 10, 'o limite d'e Favorites d'o\njuoco) vanno dint'e preferite 'ncoppa â lista: 'a primma vota te fa cliccà 'a stelletta,\npo' nun se scrolla cchiù
+bro=ULTRA-FAST: i Teleport dei boss con la priorità più alta (max 10, il limite dei Favorites del\ngioco) vanno nei preferiti in cima alla lista: la prima volta ti fa cliccare la stellina,\npoi zero scroll
+es=ULTRA-FAST: los Teleport de los jefes con mayor prioridad (máx. 10, el límite de Favorites del\njuego) van a favoritos arriba de la lista: la primera vez te hace pulsar la estrella,\ny luego ya no hace falta desplazar
+fr=ULTRA-FAST : les Teleport des boss les plus prioritaires (max 10, la limite des Favorites du\njeu) vont dans les favoris en haut de la liste : la première fois il te fait cliquer l'étoile,\npuis plus aucun défilement
+de=ULTRA-FAST: die Teleports der Bosse mit der höchsten Priorität (max. 10, das Limit der\nFavorites im Spiel) kommen in die Favoriten oben in der Liste: beim ersten Mal klickst du den\nStern, danach kein Scrollen mehr
+pt=ULTRA-FAST: os Teleport dos chefes com prioridade mais alta (máx. 10, o limite de Favorites do\njogo) vão para os favoritos no topo da lista: na primeira vez você clica na estrela,\ndepois sem rolagem
+ru=ULTRA-FAST: Teleport боссов с самым высоким приоритетом (макс. 10, лимит Favorites в игре)\nпопадают в избранное вверху списка: в первый раз нужно кликнуть по звёздочке,\nдальше без прокрутки
+ko=ULTRA-FAST: 우선순위가 가장 높은 보스들의 Teleport(최대 10개, 게임 Favorites 한도)를\n목록 맨 위 즐겨찾기에 넣어요. 처음 한 번은 별을 클릭하게 하고,\n그다음부터는 스크롤이 필요 없어요
+zh=ULTRA-FAST：优先级最高的首领的 Teleport（最多 10 个，游戏 Favorites 的上限）\n放入列表顶部的收藏：第一次会让你点击星标，\n之后就不用再滚动
+ja=ULTRA-FAST：優先度の高いボスの Teleport（最大 10 件、ゲームの Favorites の上限）を\nリスト上部のお気に入りに入れます。初回だけ星をクリックしてもらい、\nその後はスクロール不要
+it=Clicca la STELLA
+en=Click the STAR
+nap=Clicca 'a STELLA
+bro=Clicca la STELLA
+es=Haz clic en la ESTRELLA
+fr=Clique sur l'ÉTOILE
+de=Klicke auf den STERN
+pt=Clique na ESTRELA
+ru=Кликните по ЗВЁЗДОЧКЕ
+ko=별을 클릭하세요
+zh=点击星标
+ja=星をクリック
+it={1}: lo aggiungo ai preferiti (solo la prima volta)
+en={1}: adding it to favorites (first time only)
+nap={1}: 'o metto dint'e preferite (sulo 'a primma vota)
+bro={1}: lo metto nei preferiti (solo la prima volta)
+es={1}: lo añado a favoritos (solo la primera vez)
+fr={1} : je l'ajoute aux favoris (seulement la première fois)
+de={1}: wird zu den Favoriten hinzugefügt (nur beim ersten Mal)
+pt={1}: adicionando aos favoritos (só na primeira vez)
+ru={1}: добавляю в избранное (только в первый раз)
+ko={1}: 즐겨찾기에 추가 (처음 한 번만)
+zh={1}：加入收藏（仅第一次）
+ja={1}：お気に入りに追加（初回のみ）
+it=Quando si vede l'icona
+en=When the icon is shown
+nap=Quanno se vede l'icona
+bro=Quando spunta l'icona
+es=Cuándo se ve el icono
+fr=Quand l'icône s'affiche
+de=Wann das Symbol erscheint
+pt=Quando o ícone aparece
+ru=Когда виден значок
+ko=아이콘이 보이는 때
+zh=图标何时显示
+ja=アイコンを表示するタイミング
+)" "`n"
+        s .= "
+(
+@=RandomIconMode
+en=when the icon is shown:\n  "shugo"  = only while you choose the Shugo reward cards\n  "always" = always, while the game is in the foreground
+nap=quanno se vede l'icona:\n  "shugo"  = sulo quanno scigli 'e carte premio d'e Shugo\n  "always" = sempe, cu 'o juoco 'nnanze
+bro=quando spunta l'icona:\n  "shugo"  = solo quando scegli le carte premio degli Shugo\n  "always" = sempre, col gioco in primo piano
+es=cuándo se ve el icono:\n  "shugo"  = solo mientras eliges las cartas de premio de los Shugo\n  "always" = siempre, con el juego en primer plano
+fr=quand l'icône s'affiche :\n  "shugo"  = seulement pendant le choix des cartes récompense des Shugo\n  "always" = toujours, quand le jeu est au premier plan
+de=wann das Symbol erscheint:\n  "shugo"  = nur während du die Shugo-Belohnungskarten wählst\n  "always" = immer, wenn das Spiel im Vordergrund ist
+pt=quando o ícone aparece:\n  "shugo"  = só enquanto você escolhe as cartas de recompensa dos Shugo\n  "always" = sempre, com o jogo em primeiro plano
+ru=когда виден значок:\n  "shugo"  = только во время выбора наградных карт Шуго\n  "always" = всегда, когда игра на переднем плане
+ko=아이콘이 보이는 때:\n  "shugo"  = Shugo 보상 카드를 고를 때만\n  "always" = 항상, 게임이 앞에 있을 때
+zh=图标何时显示：\n  "shugo"  = 仅在选择 Shugo 奖励卡牌时\n  "always" = 始终，游戏处于前台时
+ja=アイコンを表示するタイミング：\n  "shugo"  = Shugo の報酬カードを選ぶときだけ\n  "always" = 常に、ゲームが前面にあるとき
+it=Sempre (gioco in primo piano)
+en=Always (game in the foreground)
+nap=Sempe (juoco 'nnanze)
+bro=Sempre (gioco in primo piano)
+es=Siempre (juego en primer plano)
+fr=Toujours (jeu au premier plan)
+de=Immer (Spiel im Vordergrund)
+pt=Sempre (jogo em primeiro plano)
+ru=Всегда (игра на переднем плане)
+ko=항상 (게임이 앞에 있을 때)
+zh=始终（游戏处于前台）
+ja=常に（ゲームが前面）
+it=Solo sulle carte premio degli Shugo
+en=Only on the Shugo reward cards
+nap=Sulo 'ncopp'e carte premio d'e Shugo
+bro=Solo sulle carte premio degli Shugo
+es=Solo en las cartas de premio de los Shugo
+fr=Seulement sur les cartes récompense des Shugo
+de=Nur bei den Shugo-Belohnungskarten
+pt=Só nas cartas de recompensa dos Shugo
+ru=Только на наградных картах Шуго
+ko=Shugo 보상 카드에서만
+zh=仅在 Shugo 奖励卡牌时
+ja=Shugo の報酬カードのときだけ
 )" "`n"
         return s
     }
@@ -16523,7 +16912,7 @@ ja=入力待ち…キーを押してください
 ; ==============================================================================
 ; === IMPOSTAZIONI PERSONALI PERSISTENTI (sopravvivono agli aggiornamenti) ===
 ; ==============================================================================
-; Ogni impostazione salvata dalla finestra Impostazioni (o dal setup) viene copiata anche in
+; Ogni impostazione salvata dalla finestra Impostazioni (o dal FIRST RUN QUICK-SETUP) viene copiata anche in
 ; %AppData%\AION 2 Wingman\settings.ini, insieme all'elenco boss, ai preset e al "primo avvio fatto".
 ; Quando si sovrascrive lo script con una versione nuova, all'avvio la CONFIG viene riscritta con
 ; i valori personali e lo script si riavvia una volta da solo. Se invece si modifica a mano la
@@ -16612,11 +17001,12 @@ class UserData {
         list := []
         for item in StrSplit(key, "¦") {
             f := StrSplit(item, "|")
-            if (f.Length >= 3 && f[1] != "")          ; prima della 1.05: senza Teleport e direzione
-                list.Push(b := {name: f[1], grade: StrLower(f[2]), tier: Integer(f[3])
-                         , tele: f.Length >= 4 && f[4] != "" ? f[4] : FieldBossTool.DefTele(f[1])
-                         , dir: SettingsEditor.DirCode(f.Length >= 5 ? f[5] : "")})
-            if (f.Length >= 3 && f[1] != "" && f.Length < 5)
+            if (f.Length < 3 || f[1] = "" || !IsInteger(f[3]))   ; riga rovinata: saltata
+                continue
+            list.Push(b := {name: f[1], grade: StrLower(f[2]), tier: Integer(f[3])     ; prima della 1.05: senza Teleport e direzione
+                     , tele: f.Length >= 4 && f[4] != "" ? f[4] : FieldBossTool.DefTele(f[1])
+                     , dir: SettingsEditor.DirCode(f.Length >= 5 ? f[5] : "")})
+            if (f.Length < 5)
                 b.old := true
         }
         return list
@@ -17004,6 +17394,8 @@ class Updater {
     static EveryMs() => Max(1, UpdateCheckHours) * 3600000
 
     static Background() {
+        if WinActive("ahk_exe " GameExe)                 ; mai durante il gioco: la richiesta può bloccare lo script per qualche secondo
+            return SetTimer(ObjBindMethod(this, "Background"), -120000)
         SetTimer(ObjBindMethod(this, "Background"), -this.EveryMs())   ; prossimo controllo
         if (StrLower(Trim(UpdateMode)) = "spento" || IsObject(this.Latest))
             return                                     ; spento, oppure aggiornamento già trovato e in attesa
@@ -17108,7 +17500,7 @@ class ViCountdownBar {
 ; tema, nome e Teleport (o dungeon) sotto. Entra con un piccolo zoom e una dissolvenza.
 ; Le immagini sono in BOSSES\<nome del boss senza spazi e simboli>.png (es. blackwarrioraed.png).
 class BossCard {
-    static Win := "", Fn := "", Img := 0, A := 0, Target := 0, Last := 0, Name := "", Sub := ""
+    static Win := "", Fn := "", Img := 0, A := 0, Target := 0, Last := 0, Name := "", Sub := "", Drawn := ""
 
     static Visible() => IsObject(this.Win) && DllCall("IsWindowVisible", "Ptr", this.Win.Hwnd)
 
@@ -17130,9 +17522,9 @@ class BossCard {
             this.Destroy()
         if !IsObject(this.Win) {
             this.K := k, this.W := W, this.H := H, this.A := 0
-            w := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000 +E0x20 +E0x08000000")
-            w.Show(Format("NA x{} y{} w{} h{}", x, y, W, H))
-            this.Win := w
+            win := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000 +E0x20 +E0x08000000")
+            win.Show(Format("NA x{} y{} w{} h{}", x, y, W, H))    ; "win", non "w": in AHK w e W sono la stessa variabile
+            this.Win := win
             this.hdc := DllCall("CreateCompatibleDC", "Ptr", 0, "Ptr")
             bi := Buffer(40, 0)
             NumPut("UInt", 40, bi, 0), NumPut("Int", W, bi, 4), NumPut("Int", -H, bi, 8)
@@ -17146,6 +17538,12 @@ class BossCard {
             DllCall("gdiplus\GdipSetPixelOffsetMode", "Ptr", gr, "Int", 2)
             this.SizeBuf := Buffer(8), NumPut("Int", W, "Int", H, this.SizeBuf)
             this.PtSrc := Buffer(8, 0)
+            DllCall("gdiplus\GdipCreateFontFamilyFromName", "WStr", "Segoe UI", "Ptr", 0, "Ptr*", &fam := 0)
+            DllCall("gdiplus\GdipCreateStringFormat", "Int", 0, "Int", 0, "Ptr*", &fmt := 0)
+            DllCall("gdiplus\GdipSetStringFormatAlign", "Ptr", fmt, "Int", 1)
+            DllCall("gdiplus\GdipSetStringFormatLineAlign", "Ptr", fmt, "Int", 1)
+            DllCall("gdiplus\GdipSetStringFormatTrimming", "Ptr", fmt, "Int", 3)    ; "..." se non ci sta
+            this.Fam := fam, this.Fmt := fmt
         } else {
             DllCall("SetWindowPos", "Ptr", this.Win.Hwnd, "Ptr", 0, "Int", x, "Int", y, "Int", 0, "Int", 0, "UInt", 0x15)
             if !DllCall("IsWindowVisible", "Ptr", this.Win.Hwnd)
@@ -17168,8 +17566,15 @@ class BossCard {
         if cache.Has(f)
             return cache[f]
         img := 0
-        if FileExist(f)
-            DllCall("gdiplus\GdipCreateBitmapFromFile", "WStr", f, "Ptr*", &img)
+        if (FileExist(f) && !DllCall("gdiplus\GdipCreateBitmapFromFile", "WStr", f, "Ptr*", &src := 0) && src) {
+            DllCall("gdiplus\GdipGetImageWidth", "Ptr", src, "UInt*", &iw := 0)
+            DllCall("gdiplus\GdipGetImageHeight", "Ptr", src, "UInt*", &ih := 0)
+            DllCall("gdiplus\GdipCreateBitmapFromScan0", "Int", iw, "Int", ih, "Int", 0, "Int", 0xE200B, "Ptr", 0, "Ptr*", &img)   ; copia in memoria (PARGB): il file resta libero
+            DllCall("gdiplus\GdipGetImageGraphicsContext", "Ptr", img, "Ptr*", &ig := 0)
+            DllCall("gdiplus\GdipDrawImageRectI", "Ptr", ig, "Ptr", src, "Int", 0, "Int", 0, "Int", iw, "Int", ih)
+            DllCall("gdiplus\GdipDeleteGraphics", "Ptr", ig)
+            DllCall("gdiplus\GdipDisposeImage", "Ptr", src)
+        }
         return cache[f] := img
     }
 
@@ -17217,20 +17622,14 @@ class BossCard {
     }
 
     static Text(g, text, size, style, rgb, y, h) {
-        DllCall("gdiplus\GdipCreateFontFamilyFromName", "WStr", "Segoe UI", "Ptr", 0, "Ptr*", &fam := 0)
-        DllCall("gdiplus\GdipCreateFont", "Ptr", fam, "Float", size, "Int", style, "Int", 2, "Ptr*", &font := 0)
-        DllCall("gdiplus\GdipCreateStringFormat", "Int", 0, "Int", 0, "Ptr*", &fmt := 0)
-        DllCall("gdiplus\GdipSetStringFormatAlign", "Ptr", fmt, "Int", 1)
-        DllCall("gdiplus\GdipSetStringFormatLineAlign", "Ptr", fmt, "Int", 1)
-        DllCall("gdiplus\GdipSetStringFormatTrimming", "Ptr", fmt, "Int", 3)    ; "..." se non ci sta
+        DllCall("gdiplus\GdipCreateFont", "Ptr", this.Fam, "Float", size, "Int", style, "Int", 2, "Ptr*", &font := 0)
         DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0xFF000000 | rgb, "Ptr*", &br := 0)
         rc := Buffer(16), NumPut("Float", 8 * this.K, "Float", y, "Float", this.W - 16 * this.K, "Float", h, rc)
-        DllCall("gdiplus\GdipDrawString", "Ptr", g, "WStr", text, "Int", -1, "Ptr", font, "Ptr", rc, "Ptr", fmt, "Ptr", br)
+        DllCall("gdiplus\GdipDrawString", "Ptr", g, "WStr", text, "Int", -1, "Ptr", font, "Ptr", rc, "Ptr", this.Fmt, "Ptr", br)
         DllCall("gdiplus\GdipDeleteBrush", "Ptr", br)
-        DllCall("gdiplus\GdipDeleteStringFormat", "Ptr", fmt)
         DllCall("gdiplus\GdipDeleteFont", "Ptr", font)
-        DllCall("gdiplus\GdipDeleteFontFamily", "Ptr", fam)
     }
+
 
     static Tick() {
         Critical "On"
@@ -17239,14 +17638,23 @@ class BossCard {
         now := A_TickCount, dt := Min(60, now - this.Last), this.Last := now
         this.A := this.Target ? Min(1, this.A + dt / 160) : Max(0, this.A - dt / 140)   ; fade-in 0,16 s / fade-out 0,14 s
         q := this.A, e := 1 - (1 - q) ** 3
+        key := this.Name "|" this.Sub "|" UiC("Accent") UiC("Deep") UiC("Text")
+        if (this.Drawn != key)                    ; disegnata UNA volta per boss: i fotogrammi cambiano solo l'opacità
+            this.Render(), this.Drawn := key
+        DllCall("UpdateLayeredWindow", "Ptr", this.Win.Hwnd, "Ptr", 0, "Ptr", 0, "Ptr", this.SizeBuf
+            , "Ptr", this.hdc, "Ptr", this.PtSrc, "UInt", 0, "UInt*", (Round(255 * e) << 16) | 0x1000000, "UInt", 2)
+        if (!this.Target && q <= 0) {             ; dissolvenza finita: la finestra resta pronta, nascosta
+            SetTimer(this.Fn, 0)
+            return this.Win.Hide()
+        }
+        if (this.Target && q >= 1)
+            SetTimer(this.Fn, 0)                  ; comparsa finita: resta ferma
+    }
+
+    static Render() {
         g := this.G, k := this.K, W := this.W, H := this.H
         acc := ColorToRGB(UiC("Accent")), deep := ColorToRGB(UiC("Deep"))
         DllCall("gdiplus\GdipGraphicsClear", "Ptr", g, "UInt", 0)
-        DllCall("gdiplus\GdipResetWorldTransform", "Ptr", g)
-        sc := 0.9 + 0.1 * e, cx := W / 2, cy := H / 2           ; piccolo zoom d'entrata
-        DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", cx, "Float", cy, "Int", 0)
-        DllCall("gdiplus\GdipScaleWorldTransform", "Ptr", g, "Float", sc, "Float", sc, "Int", 0)
-        DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", -cx, "Float", -cy, "Int", 0)
         ; fondo della scheda
         bg := this.RoundRect(2 * k, 2 * k, W - 4 * k, H - 4 * k, 16 * k)
         DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0xEE000000 | deep, "Ptr*", &br := 0)
@@ -17281,21 +17689,16 @@ class BossCard {
         if (this.Sub != "")
             this.Text(g, this.Sub, 10.5 * k, 0, ColorToRGB(UiC("Accent")), iy + isz + 34 * k, 22 * k)
         DllCall("gdiplus\GdipFlush", "Ptr", g, "Int", 1)
-        DllCall("UpdateLayeredWindow", "Ptr", this.Win.Hwnd, "Ptr", 0, "Ptr", 0, "Ptr", this.SizeBuf
-            , "Ptr", this.hdc, "Ptr", this.PtSrc, "UInt", 0, "UInt*", (Round(255 * e) << 16) | 0x1000000, "UInt", 2)
-        if (!this.Target && q <= 0)
-            return this.Destroy()                         ; dissolvenza in uscita finita
-        if (this.Target && q >= 1)
-            SetTimer(this.Fn, 0)                          ; comparsa finita: resta ferma
     }
 
     ; Sparisce con dissolvenza (instant = true: subito, senza animazione)
     static Hide(instant := false) {
-        Critical "On"
         if !IsObject(this.Win)
             return
         if instant
             return this.Destroy()
+        if !this.Target                                   ; già in dissolvenza o già nascosta
+            return
         this.Target := 0, this.Last := A_TickCount
         SetTimer(this.Fn, 15)
     }
@@ -17310,9 +17713,11 @@ class BossCard {
         DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.obm)
         DllCall("DeleteObject", "Ptr", this.hbm)
         DllCall("DeleteDC", "Ptr", this.hdc)
+        DllCall("gdiplus\GdipDeleteStringFormat", "Ptr", this.Fmt)
+        DllCall("gdiplus\GdipDeleteFontFamily", "Ptr", this.Fam)
         this.Img := 0                                     ; l'immagine resta nella cache di Bitmap()
         this.Win.Destroy()
-        this.Win := "", this.Name := ""
+        this.Win := "", this.Name := "", this.Drawn := ""
     }
 }
 
@@ -17324,15 +17729,70 @@ class BossCard {
 ; L'icona (dado + combinazione di tasti) si vede solo con il gioco in primo piano: un click = un tiro.
 class RandomRoll {
     static Win := "", Fn := "", Icon := "", IconShown := false, Hot := false, TickFn := ""
+    static CardOn := false, CardMiss := 0, CardFn := ""
 
     static Init() {
         HotIfWinActive("ahk_exe " GameExe)
         if (RandomKey != "")
             try Hotkey(RandomKey, (*) => RandomRoll.Roll())
         HotIfWinActive()
-        this.BuildIcon()
         this.TickFn := ObjBindMethod(this, "IconTick")
-        SetTimer(this.TickFn, 120)
+        this.CardFn := ObjBindMethod(this, "CardCheck")
+        this.BuildIcon()
+    }
+
+    ; ---------------- Schermata delle carte (Mysterious Track degli Shugo) ----------------
+    ; Prima un controllo leggerissimo (fascia sopra le carte quasi nera), poi l'OCR del titolo
+    ; "Mysterious Track" / "Select the reward" in alto al centro. Due letture mancate = icona via.
+    static CardCheck() {
+        if !IsObject(this.Icon)
+            return
+        if !WinActive("ahk_exe " GameExe) {
+            this.CardOn := false, this.CardMiss := 0
+            return
+        }
+        ; (FieldBoss.Running è vero sempre col gioco in primo piano: si salta solo con la mappa aperta)
+        if (FieldBossTool.OcrBusy || (IsObject(FieldBoss) && (FieldBoss.Busy || FieldBoss.Shown)))
+            return
+        g := this.Geo()
+        if (this.DarkBand(g) && this.TitleSeen(g))
+            this.CardOn := true, this.CardMiss := 0
+        else if (this.CardOn && ++this.CardMiss >= 3)
+            this.CardOn := false
+    }
+
+    static DarkBand(g) {
+        x := g.x + Round(g.w * 0.30), y := g.y + Round(g.h * 0.19), w := Round(g.w * 0.40), h := Round(g.h * 0.08)
+        buf := FieldBossTool.Capture(x, y, w, h), sum := 0, n := 0, stp := 4 * Max(1, Round(g.s * 3))
+        loop h // stp {
+            row := (A_Index - 1) * stp * w * 4
+            loop w // stp {
+                c := NumGet(buf, row + (A_Index - 1) * stp * 4, "UInt")
+                sum += ((c >> 16) & 0xFF) + ((c >> 8) & 0xFF) + (c & 0xFF), n += 3
+            }
+        }
+        return n && sum / n < 70                            ; sfondo della schermata delle carte: quasi nero
+    }
+
+    ; titolo in alto ("Mysterious Track / Select the reward...") oppure, se non si legge, i pulsanti
+    ; in basso ("Cancel Selection" / "Complete Select")
+    static TitleSeen(g) {
+        for r in [[0.36, 0.035, 0.28, 0.09], [0.36, 0.91, 0.28, 0.07]] {
+            txt := ""
+            FieldBossTool.OcrBusy := true
+            try {
+                res := OCR.FromRect(g.x + Round(g.w * r[1]), g.y + Round(g.h * r[2]), Round(g.w * r[3]), Round(g.h * r[4])
+                                  , {lang: FieldBoss.OcrLang, scale: Max(1.5, Min(3, PerfOcrQuality / g.s))})
+                for line in res.Lines
+                    txt .= line.Text " "
+            }
+            FieldBossTool.OcrBusy := false
+            n := FieldBossTool.Norm(txt)
+            if (InStr(n, "mysterious") || InStr(n, "track") && InStr(n, "select") || InStr(n, "selectthereward")
+             || InStr(n, "cancelselection") || InStr(n, "completeselect"))
+                return true
+        }
+        return false
     }
 
     static Geo() {
@@ -17376,7 +17836,7 @@ class RandomRoll {
         this.PtSrc := Buffer(8, 0)
         ; etichetta fissa in alto: "RANDOM  1 – 5"
         this.PLabel := this.Path("RANDOM   " lo " – " hi, 1, 26 * k, 0, 0, this.W, 60 * k)
-        this.T0 := A_TickCount
+        this.T0 := A_TickCount, this.PNum := 0, this.NumVal := ""
         this.Fn := ObjBindMethod(this, "Tick")
         this.Tick()
         SetTimer(this.Fn, Max(10, AnimInterval))
@@ -17434,7 +17894,12 @@ class RandomRoll {
         DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", cx, "Float", cy, "Int", 0)
         DllCall("gdiplus\GdipScaleWorldTransform", "Ptr", g, "Float", sc, "Float", sc, "Int", 0)
         DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", -cx, "Float", -cy, "Int", 0)
-        path := this.Path(String(num), 1, 230 * k, 0, cy - 150 * k, this.W, 300 * k)
+        if (num != this.NumVal) {                                  ; contorno rifatto solo quando cambia il numero
+            if this.PNum
+                DllCall("gdiplus\GdipDeletePath", "Ptr", this.PNum)
+            this.PNum := this.Path(String(num), 1, 230 * k, 0, cy - 150 * k, this.W, 300 * k), this.NumVal := num
+        }
+        path := this.PNum
         if final                                                   ; alone del colore d'accento
             for wd in [[46, 0x1C], [30, 0x30], [18, 0x50]] {
                 DllCall("gdiplus\GdipSetPenWidth", "Ptr", this.Pen, "Float", wd[1] * k)
@@ -17446,7 +17911,6 @@ class RandomRoll {
         DllCall("gdiplus\GdipDrawPath", "Ptr", g, "Ptr", this.Pen, "Ptr", path)
         DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", 0xFF000000 | (final ? acc : ColorToRGB(UiC("Text"))))
         DllCall("gdiplus\GdipFillPath", "Ptr", g, "Ptr", this.Brush, "Ptr", path)
-        DllCall("gdiplus\GdipDeletePath", "Ptr", path)
         DllCall("gdiplus\GdipFlush", "Ptr", g, "Int", 1)
         DllCall("UpdateLayeredWindow", "Ptr", this.Win.Hwnd, "Ptr", 0, "Ptr", 0, "Ptr", this.SizeBuf
             , "Ptr", this.hdc, "Ptr", this.PtSrc, "UInt", 0, "UInt*", (Round(255 * Max(0, Min(1, a))) << 16) | 0x1000000, "UInt", 2)
@@ -17459,6 +17923,8 @@ class RandomRoll {
         if !IsObject(this.Win)
             return
         DllCall("gdiplus\GdipDeletePath", "Ptr", this.PLabel)
+        if this.PNum
+            DllCall("gdiplus\GdipDeletePath", "Ptr", this.PNum)
         DllCall("gdiplus\GdipDeletePen", "Ptr", this.Pen)
         DllCall("gdiplus\GdipDeleteBrush", "Ptr", this.Brush)
         DllCall("gdiplus\GdipDeleteStringFormat", "Ptr", this.Fmt)
@@ -17476,6 +17942,8 @@ class RandomRoll {
         if IsObject(this.Icon)
             this.Icon.Destroy()
         this.Icon := "", this.IconShown := false, this.Hot := false
+        if this.TickFn                                      ; timer accesi solo se l'icona esiste
+            SetTimer(this.TickFn, RandomIconEnabled ? 120 : 0), SetTimer(this.CardFn, RandomIconEnabled && RandomIconMode != "always" ? 700 : 0)
         if !RandomIconEnabled
             return
         k := this.Geo().s * RandomIconScale
@@ -17497,11 +17965,12 @@ class RandomRoll {
         this.Icon := g, this.IconW := w, this.IconH := h
     }
 
-    ; visibile solo col gioco in primo piano (o in anteprima); al passaggio del mouse si illumina
+    ; visibile durante la scelta delle carte degli Shugo, o sempre col gioco in primo piano (RandomIconMode);
+    ; in anteprima sempre. Al passaggio del mouse si illumina
     static IconTick() {
         if !IsObject(this.Icon)
             return
-        want := WinActive("ahk_exe " GameExe) || (PreviewMode && PreviewAllows("random"))
+        want := ((RandomIconMode = "always" || this.CardOn) && WinActive("ahk_exe " GameExe) != 0) || (PreviewMode && PreviewAllows("random"))
         if (want != this.IconShown) {
             this.IconShown := want
             if want {

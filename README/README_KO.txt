@@ -23,7 +23,7 @@
   커서만 옮기고 할 일을 보여 줄 뿐, 클릭은 직접 합니다.
 
 패키지 구성
-  Setup AION 2 Wingman.bat   최초 실행 설정 (필수 구성 요소)
+  FIRST RUN QUICK-SETUP.bat  최초 실행 설정 (필수 구성 요소)
   AION 2 Wingman.ahk         프로그램 본체
   OCR.ahk                    OCR 라이브러리 (Field Boss에 사용)
   README\                    여러 언어로 된 이 안내서
@@ -39,7 +39,7 @@
      (Windows 경고를 줄여 줍니다.)
   2. zip을 고정된 폴더에 압축 해제하세요. 예: 문서\AION 2 Wingman.
      zip 안에서 바로 실행하지 마세요.
-  3. "Setup AION 2 Wingman.bat"를 더블클릭하고 관리자 권한 요청을
+  3. "FIRST RUN QUICK-SETUP.bat"를 더블클릭하고 관리자 권한 요청을
      허용합니다. 모든 항목을 확인·설치한 뒤, 바탕 화면 바로 가기를
      만들고 바로 실행할 수 있습니다.
      "Windows의 PC 보호" 창이 뜨면: "추가 정보" > "실행".
