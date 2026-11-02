@@ -59,32 +59,42 @@ jobs:
                   break
               if on:
                   sec.append(line)
-          def short(line, desc_len):
-              # "- 🆕 **Titolo** – spiegazione" -> "- 🆕 **Titolo** – prima frase (accorciata)"
-              if not line.startswith("- "):
-                  return line
+          def split(line):
+              # "- 🆕 **Titolo** – Prima frase. Dettagli..." -> ("- 🆕 **Titolo**", "Prima frase.")
               parts = re.split(r"\s+[–-]\s+", line, maxsplit=1)
-              title = parts[0]
-              if desc_len <= 0 or len(parts) < 2:
-                  return title
-              d = re.split(r"(?<=[.;:!?])\s", parts[1].replace("**", ""), maxsplit=1)[0].rstrip(" .;:")
-              if len(d) > desc_len:
-                  d = d[:desc_len].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
-              return f"{title} – {d}"
+              if len(parts) < 2:
+                  return parts[0], ""
+              d = re.split(r"(?<=[.!?])\s", parts[1].replace("**", ""), maxsplit=1)[0].strip()
+              return parts[0], d
           # note brevi (le versioni fino alla 1.04 vanno in errore con note troppo lunghe):
-          # titolo + piccola descrizione, accorciata finché tutto sta sotto il limite
-          for n in (110, 90, 70, 55, 0):
+          # titolo + prima frase INTERA (mai tagliata a metà). Se non ci sta tutto, si tolgono
+          # le frasi più lunghe una alla volta (resta il titolo), mai pezzi di frase.
+          rows = []
+          for line in sec:
+              if line.startswith("- "):
+                  t, d = split(line)
+                  rows.append([t, d])
+              elif line.strip() or (rows and rows[-1] is not None):
+                  rows.append(line if line.strip() else None)
+          def render():
               out = []
-              for line in sec:
-                  if line.strip() or (out and out[-1].strip()):
-                      out.append(short(line, n))
+              for r in rows:
+                  if r is None:
+                      out.append("")
+                  elif isinstance(r, list):
+                      out.append(r[0] + (" – " + r[1] if r[1] else ""))
+                  else:
+                      out.append(r)
               while out and not out[-1].strip():
                   out.pop()
-              text = "\n".join(out + ["", link]).strip()
-              if len(text) <= 1700:
+              return "\n".join(out + ["", link]).strip()
+          text = render()
+          while len(text) > 1700:
+              items = [r for r in rows if isinstance(r, list) and r[1]]
+              if not items:
                   break
-          if len(text) > 1700:
-              text = text[:1600].rsplit("\n", 1)[0] + "\n…\n\n" + link
+              max(items, key=lambda r: len(r[1]))[1] = ""
+              text = render()
           open("notes.md", "w", encoding="utf-8").write(text + "\n")
           PY
           if [ -s notes.md ]; then gh release edit "$TAG" --notes-file notes.md; fi
