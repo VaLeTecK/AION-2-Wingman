@@ -36,7 +36,7 @@ jobs:
       - name: Crea il pacchetto zip
         run: |
           mkdir -p "dist/AION 2 Wingman"
-          cp "AION 2 Wingman.ahk" "OCR.ahk" "Setup AION 2 Wingman.bat" "dist/AION 2 Wingman/"
+          cp "AION 2 Wingman.ahk" "OCR.ahk" "FIRST RUN QUICK-SETUP.bat" "dist/AION 2 Wingman/"
           cp -r README INFOGRAPHICS BOSSES "dist/AION 2 Wingman/"
           cd dist && zip -qr ../AION-2-Wingman.zip "AION 2 Wingman"
           cd .. && cp "AION 2 Wingman.ahk" AION-2-Wingman.ahk
