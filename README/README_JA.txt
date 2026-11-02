@@ -10,7 +10,7 @@
   - Hidden Cube：Hidden Cube のウィンドウが開くと、マウスを
     「Open with Key」へ移動し、そこに固定します。
   - 高速テレポートアシスタント（Field Boss）：マップを開くと全ボスの
-    パネルを表示（A-Z、グレード、出現中 / 未出現）。
+    パネルを表示（A-Z、グレード、重要度）。
     ULTRA-FAST MODE（デフォルト）：ボスをクリックすると、Wingman が
     Kibelisk リストから Teleport を自動で探します。クリックして F を
     2 回押すだけ。その後、矢印が飛行方向を示します。

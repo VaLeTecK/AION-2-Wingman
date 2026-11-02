@@ -53,7 +53,7 @@ AION 2 Wingman is a plain **AutoHotkey v2** script: you can open it with Notepad
 
 Reaching a Field Boss normally means opening the map, going to Exploration and then Field Boss, finding the boss in a long list, looking for the nearest Teleport and flying in the right direction. **Wingman turns all of this into a few guided clicks:**
 
-1. **Open the map** (`M`): the Field Boss panel lists every boss A–Z, with grade, status (active / inactive) and importance.
+1. **Open the map** (`M`): the Field Boss panel lists every boss A–Z, with grade and importance.
 2. **Click a boss** in the panel.
 3. Wingman **moves the cursor step by step** to *Exploration*, *Field Boss*, *the boss* and then **the nearest Teleport**, which it finds by itself on the map. A big on-screen instruction and a ring on the exact spot tell you what to click, and the cursor can stay locked there so you can't miss.
 4. **Press `F`** (Travel): an arrow shows the **flight direction** to the boss, for example *NORTH-EAST*.
@@ -77,7 +77,7 @@ Reaching a Field Boss normally means opening the map, going to Exploration and t
 <img src="docs/images/hud.png" alt="HUD overlay in game with the Classic, GTA VI and Halloween themes" width="760">
 
 **👑 Field Boss**
-- When you open the map, a panel lists every field boss (A–Z) with grade colors, active / inactive status and filters.
+- When you open the map, a panel lists every field boss (A–Z) with grade colors and grade filters.
 - Click a boss and a **step-by-step guide** moves the cursor to Exploration, Field Boss, the boss and the nearest Teleport. Big on-screen instructions tell you what to click.
 - After Travel, an arrow shows the **flight direction** to the boss.
 - Inside **dungeons** the panel stays hidden: it is detected from the map tabs and from the dungeon name.
@@ -221,7 +221,7 @@ La **NORMAL MODE**, il percorso guidato completo, resta a un click di distanza n
 
 Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Exploration e poi in Field Boss, cercare il boss in una lunga lista, trovare il Teleport più vicino e volare nella direzione giusta. **Wingman trasforma tutto questo in pochi click guidati:**
 
-1. **Apri la mappa** (`M`): il pannello Field Boss elenca tutti i boss dalla A alla Z, con grado, stato (attivo / non attivo) e importanza.
+1. **Apri la mappa** (`M`): il pannello Field Boss elenca tutti i boss dalla A alla Z, con grado e importanza.
 2. **Clicca un boss** nel pannello.
 3. Wingman **porta il cursore passo dopo passo** su *Exploration*, *Field Boss*, *il boss* e poi **il Teleport più vicino**, che trova da solo sulla mappa. Un'istruzione grande a schermo e un anello sul punto esatto ti dicono cosa cliccare, e il cursore può restare bloccato lì così non sbagli.
 4. **Premi `F`** (Travel): una freccia indica la **direzione di volo** verso il boss, per esempio *NORD-EST*.
@@ -245,7 +245,7 @@ Di solito per raggiungere un Field Boss devi aprire la mappa, andare in Explorat
 <img src="docs/images/hud.png" alt="HUD overlay in gioco con i temi Classic, GTA VI e Halloween" width="760">
 
 **👑 Field Boss**
-- Aprendo la mappa compare un pannello con tutti i field boss (A–Z), colori del grado, stato attivo / non attivo e filtri.
+- Aprendo la mappa compare un pannello con tutti i field boss (A–Z), colori del grado e filtri per grado.
 - Clicchi un boss e una **guida a fasi** porta il cursore su Exploration, Field Boss, il boss e il Teleport più vicino. Istruzioni grandi a schermo ti dicono cosa cliccare.
 - Dopo il Travel, una freccia indica la **direzione di volo** verso il boss.
 - Nei **dungeon** il pannello resta nascosto: li riconosce dai tab della mappa e dal nome del dungeon.
@@ -389,7 +389,7 @@ El **NORMAL MODE**, la ruta guiada completa, sigue a un clic en los Ajustes:
 
 Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego a Field Boss, buscar el jefe en una lista larga, encontrar el Teleport más cercano y volar en la dirección correcta. **Wingman lo convierte en unos pocos clics guiados:**
 
-1. **Abre el mapa** (`M`): el panel muestra todos los jefes de la A a la Z con grado, estado e importancia.
+1. **Abre el mapa** (`M`): el panel muestra todos los jefes de la A a la Z con grado e importancia.
 2. **Haz clic en un jefe** del panel.
 3. Wingman **lleva el cursor paso a paso** a *Exploration*, *Field Boss*, *el jefe* y luego **al Teleport más cercano**, que encuentra solo en el mapa. Una instrucción grande en pantalla y un anillo en el punto exacto te dicen dónde hacer clic.
 4. **Pulsa `F`** (Travel): una flecha indica la **dirección de vuelo** hacia el jefe.
@@ -409,7 +409,7 @@ Llegar a un Field Boss suele significar abrir el mapa, ir a Exploration y luego 
   - cada icono tiene su forma, tamaño, posición, textos, emoji y efectos animados, y puede reflejar al otro;
   - textos y emoji se ajustan solos a la forma del icono.
 - **👑 Field Boss:**
-  - panel con todos los jefes en el mapa, con grado, estado y filtros;
+  - panel con todos los jefes en el mapa, con grado y filtros por grado;
   - **guía paso a paso** hasta el Teleport más cercano y **dirección de vuelo** después del Travel;
   - el panel se oculta en las **mazmorras**.
 - **🧊 Hidden Cube:** lleva el ratón a "Open with Key" cuando se abre la ventana.
@@ -491,7 +491,7 @@ Le **NORMAL MODE**, le parcours guidé complet, reste à un clic dans les Param�
 
 Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Exploration puis Field Boss, de chercher le boss dans une longue liste, de trouver le Teleport le plus proche et de voler dans la bonne direction. **Wingman en fait quelques clics guidés :**
 
-1. **Ouvre la carte** (`M`) : le panneau liste tous les boss de A à Z avec grade, état et importance.
+1. **Ouvre la carte** (`M`) : le panneau liste tous les boss de A à Z avec grade et importance.
 2. **Clique sur un boss** dans le panneau.
 3. Wingman **guide le curseur étape par étape** vers *Exploration*, *Field Boss*, *le boss* puis **le Teleport le plus proche**, qu'il trouve seul sur la carte. Une grande consigne à l'écran et un anneau sur le point exact te disent où cliquer.
 4. **Appuie sur `F`** (Travel) : une flèche indique la **direction de vol** vers le boss.
@@ -511,7 +511,7 @@ Rejoindre un Field Boss demande d'habitude d'ouvrir la carte, d'aller dans Explo
   - chaque icône a sa forme, sa taille, sa position, ses textes, son emoji et ses effets animés, et peut se placer en miroir de l'autre ;
   - textes et emoji s'adaptent seuls à la forme.
 - **👑 Field Boss :**
-  - panneau de tous les boss de la carte, avec grade, état et filtres ;
+  - panneau de tous les boss de la carte, avec grade et filtres par grade ;
   - **guide pas à pas** jusqu'au Teleport le plus proche et **direction de vol** après le Travel ;
   - le panneau est masqué dans les **donjons**.
 - **🧊 Hidden Cube :** place la souris sur "Open with Key" quand la fenêtre s'ouvre.
@@ -593,7 +593,7 @@ Der **NORMAL MODE**, die vollständige geführte Route, ist in den Einstellungen
 
 Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration und dann Field Boss gehen, den Boss in einer langen Liste suchen, den nächsten Teleport finden und in die richtige Richtung fliegen. **Wingman macht daraus ein paar geführte Klicks:**
 
-1. **Karte öffnen** (`M`): Das Panel listet alle Bosse von A bis Z mit Grad, Status und Wichtigkeit.
+1. **Karte öffnen** (`M`): Das Panel listet alle Bosse von A bis Z mit Grad und Wichtigkeit.
 2. **Einen Boss anklicken** im Panel.
 3. Wingman **führt den Cursor Schritt für Schritt** zu *Exploration*, *Field Boss*, *dem Boss* und dann **zum nächsten Teleport**, den es selbst auf der Karte findet. Eine große Anweisung und ein Ring auf der genauen Stelle zeigen dir, wo du klicken musst.
 4. **`F` drücken** (Travel): Ein Pfeil zeigt die **Flugrichtung** zum Boss.
@@ -613,7 +613,7 @@ Normalerweise musst du für einen Field Boss die Karte öffnen, zu Exploration u
   - jedes Symbol hat eigene Form, Größe, Position, Texte, Emoji und animierte Effekte und kann das andere spiegeln;
   - Text und Emoji passen sich der Form selbst an.
 - **👑 Field Boss:**
-  - Panel mit allen Bossen auf der Karte, mit Grad, Status und Filtern;
+  - Panel mit allen Bossen auf der Karte, mit Grad und Grad-Filtern;
   - **Schritt-für-Schritt-Führung** zum nächsten Teleport und **Flugrichtung** nach dem Travel;
   - in **Dungeons** bleibt das Panel ausgeblendet.
 - **🧊 Hidden Cube:** bringt die Maus auf "Open with Key", sobald sich das Fenster öffnet.
@@ -695,7 +695,7 @@ O **NORMAL MODE**, a rota guiada completa, continua a um clique nas Configuraç�
 
 Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e depois Field Boss, procurar o chefe numa lista longa, achar o Teleport mais próximo e voar na direção certa. **O Wingman transforma isso em poucos cliques guiados:**
 
-1. **Abra o mapa** (`M`): o painel lista todos os chefes de A a Z com grau, estado e importância.
+1. **Abra o mapa** (`M`): o painel lista todos os chefes de A a Z com grau e importância.
 2. **Clique num chefe** no painel.
 3. O Wingman **leva o cursor passo a passo** até *Exploration*, *Field Boss*, *o chefe* e depois **o Teleport mais próximo**, que ele encontra sozinho no mapa. Uma instrução grande na tela e um anel no ponto exato mostram onde clicar.
 4. **Aperte `F`** (Travel): uma seta mostra a **direção de voo** até o chefe.
@@ -715,7 +715,7 @@ Normalmente, chegar a um Field Boss significa abrir o mapa, ir em Exploration e 
   - cada ícone tem forma, tamanho, posição, textos, emoji e efeitos animados próprios, e pode espelhar o outro;
   - textos e emoji se ajustam sozinhos à forma.
 - **👑 Field Boss:**
-  - painel com todos os chefes do mapa, com grau, estado e filtros;
+  - painel com todos os chefes do mapa, com grau e filtros por grau;
   - **guia passo a passo** até o Teleport mais próximo e **direção de voo** após o Travel;
   - o painel fica oculto nas **masmorras**.
 - **🧊 Hidden Cube:** leva o mouse até "Open with Key" quando a janela abre.
@@ -797,7 +797,7 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
 
 Обычно, чтобы добраться до Field Boss, нужно открыть карту, перейти в Exploration, затем в Field Boss, найти босса в длинном списке, найти ближайший Teleport и лететь в нужную сторону. **Wingman превращает это в несколько кликов с подсказками:**
 
-1. **Откройте карту** (`M`): панель показывает всех боссов от A до Z с грейдом, статусом и важностью.
+1. **Откройте карту** (`M`): панель показывает всех боссов от A до Z с грейдом и важностью.
 2. **Кликните по боссу** на панели.
 3. Wingman **шаг за шагом подводит курсор** к *Exploration*, *Field Boss*, *боссу* и затем **к ближайшему Teleport**, который сам находит на карте. Крупная подсказка на экране и кольцо на нужной точке показывают, куда кликнуть.
 4. **Нажмите `F`** (Travel): стрелка покажет **направление полёта** к боссу.
@@ -817,7 +817,7 @@ AION 2 Wingman — обычный скрипт **AutoHotkey v2**: его мож�
   - у каждого значка своя форма, размер, позиция, текст, эмодзи и анимированные эффекты; значки могут располагаться зеркально друг к другу;
   - текст и эмодзи сами подстраиваются под форму значка.
 - **👑 Field Boss:**
-  - панель со всеми боссами на карте: грейд, статус и фильтры;
+  - панель со всеми боссами на карте: грейд и фильтры по грейду;
   - **пошаговая подсказка** до ближайшего Teleport и **направление полёта** после Travel;
   - в **подземельях** панель скрыта.
 - **🧊 Hidden Cube:** когда открывается окно, переносит мышь на «Open with Key».
@@ -899,7 +899,7 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
 
 보통 Field Boss에 가려면 지도를 열고, Exploration과 Field Boss로 들어가, 긴 목록에서 보스를 찾고, 가장 가까운 Teleport를 찾은 다음, 올바른 방향으로 날아가야 합니다. **Wingman은 이것을 몇 번의 안내된 클릭으로 바꿉니다:**
 
-1. **지도 열기** (`M`): 패널에 모든 보스가 A–Z 순으로 등급, 상태, 중요도와 함께 표시됩니다.
+1. **지도 열기** (`M`): 패널에 모든 보스가 A–Z 순으로 등급, 중요도와 함께 표시됩니다.
 2. 패널에서 **보스를 클릭**합니다.
 3. Wingman이 *Exploration*, *Field Boss*, *보스*, 그리고 지도에서 직접 찾은 **가장 가까운 Teleport**까지 **커서를 단계별로 안내**합니다. 화면의 큰 안내문과 정확한 위치의 링이 클릭할 곳을 알려 줍니다.
 4. **`F`를 누르면** (Travel) 화살표가 보스까지의 **비행 방향**을 보여 줍니다.
@@ -919,7 +919,7 @@ AION 2 Wingman은 평범한 **AutoHotkey v2** 스크립트입니다. 메모장�
   - 아이콘마다 모양, 크기, 위치, 텍스트, 이모지, 애니메이션 효과를 따로 정할 수 있고, 서로 대칭으로 배치할 수도 있습니다;
   - 텍스트와 이모지가 아이콘 모양에 자동으로 맞춰집니다.
 - **👑 Field Boss:**
-  - 지도에 모든 보스를 등급, 상태, 필터와 함께 보여 주는 패널;
+  - 지도에 모든 보스를 등급, 등급 필터와 함께 보여 주는 패널;
   - 가장 가까운 Teleport까지 **단계별 안내**, Travel 후에는 **비행 방향** 표시;
   - **던전**에서는 패널이 나타나지 않습니다.
 - **🧊 Hidden Cube:** 창이 열리면 마우스를 "Open with Key"로 옮깁니다.
@@ -1001,7 +1001,7 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
 
 通常要前往 Field Boss，你需要打开地图、进入 Exploration 再进入 Field Boss、在长长的列表中找首领、找到最近的 Teleport，再朝正确方向飞行。**Wingman 把这些变成几次有引导的点击：**
 
-1. **打开地图**（`M`）：面板按 A–Z 列出所有首领，显示品级、状态和重要度。
+1. **打开地图**（`M`）：面板按 A–Z 列出所有首领，显示品级和重要度。
 2. 在面板中**点击一个首领**。
 3. Wingman **一步步引导光标**到 *Exploration*、*Field Boss*、*首领*，然后是它在地图上自动找到的**最近的 Teleport**。屏幕上的大号提示和目标点上的圆环会告诉你点哪里。
 4. **按 `F`**（Travel）：箭头会显示前往首领的**飞行方向**。
@@ -1021,7 +1021,7 @@ AION 2 Wingman 是一个普通的 **AutoHotkey v2** 脚本：用记事本就能�
   - 每个图标都有独立的形状、大小、位置、文字、表情和动画效果，也可以与另一个图标镜像对称；
   - 文字和表情会自动适配图标形状。
 - **👑 Field Boss：**
-  - 地图上显示所有首领的面板，带品级、状态和筛选；
+  - 地图上显示所有首领的面板，带品级和品级筛选；
   - **分步引导**你到最近的 Teleport，Travel 后显示**飞行方向**；
   - 在**副本**中面板不会出现。
 - **🧊 Hidden Cube：** 窗口打开时把鼠标移到 "Open with Key"。
@@ -1103,7 +1103,7 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
 
 普段は Field Boss に行くために、マップを開き、Exploration から Field Boss へ進み、長いリストからボスを探し、最寄りの Teleport を見つけて正しい方向へ飛ぶ必要があります。**Wingman はこれを数回のガイド付きクリックにします：**
 
-1. **マップを開く**（`M`）：パネルに全ボスが A–Z 順でグレード・状態・重要度とともに表示されます。
+1. **マップを開く**（`M`）：パネルに全ボスが A–Z 順でグレード・重要度とともに表示されます。
 2. パネルで**ボスをクリック**。
 3. Wingman が *Exploration*、*Field Boss*、*ボス*、そしてマップ上で自動で見つけた**最寄りの Teleport** へ、**カーソルを一歩ずつ案内**します。画面の大きな指示と正確な位置のリングがクリックする場所を示します。
 4. **`F` を押す**（Travel）：矢印がボスへの**飛行方向**を示します。
@@ -1123,7 +1123,7 @@ AION 2 Wingman はシンプルな **AutoHotkey v2** スクリプトです。メ�
   - アイコンごとに形・サイズ・位置・テキスト・絵文字・アニメーション効果を個別に設定でき、左右対称にもできます；
   - テキストと絵文字はアイコンの形に自動で収まります。
 - **👑 Field Boss：**
-  - マップ上の全ボスをグレード・状態・フィルター付きで表示するパネル；
+  - マップ上の全ボスをグレード・グレードのフィルター付きで表示するパネル；
   - 最寄りの Teleport までの**手順ガイド**と、Travel 後の**飛行方向**；
   - **ダンジョン**ではパネルを表示しません。
 - **🧊 Hidden Cube：** ウィンドウが開くとマウスを「Open with Key」へ移動します。

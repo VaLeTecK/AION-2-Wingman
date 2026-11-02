@@ -10,7 +10,7 @@
   - Hidden Cube：Hidden Cube 窗口打开时，把鼠标移到 "Open with Key"
     并固定在那里。
   - 快速传送助手（Field Boss）：打开地图时显示包含所有首领的面板
-    （A-Z、等级、已出现 / 未出现）。
+    （A-Z、等级、重要度）。
     ULTRA-FAST MODE（默认）：点击首领，Wingman 自动在 Kibelisk 列表中
     找到它的 Teleport，点击后按两次 F 即可。随后箭头会显示飞行方向。
     NORMAL MODE：完整引导到最近的 Teleport。

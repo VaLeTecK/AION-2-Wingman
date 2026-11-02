@@ -10,7 +10,7 @@
   - Hidden Cube: Hidden Cube 창이 열리면 마우스를 "Open with Key"
     버튼으로 옮기고 그 자리에 고정합니다.
   - 빠른 텔레포트 도우미 (Field Boss): 지도를 열면 모든 보스가 있는
-    패널을 표시합니다 (A-Z, 등급, 출현 / 미출현).
+    패널을 표시합니다 (A-Z, 등급, 중요도).
     ULTRA-FAST MODE (기본값): 보스를 클릭하면 Wingman이 Kibelisk 목록에서
     Teleport를 스스로 찾아 줍니다. 클릭하고 F를 두 번 누르면 끝.
     이후 화살표가 비행 방향을 알려 줍니다.

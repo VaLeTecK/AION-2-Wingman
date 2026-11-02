@@ -10,7 +10,7 @@ DE QUOI S'AGIT-IL
   - Hidden Cube : quand la fenêtre des Hidden Cube s'ouvre, il place la
     souris sur « Open with Key » et l'y maintient.
   - Assistant Teleport rapide (Field Boss) : carte ouverte, un panneau
-    affiche tous les boss (A-Z, rangs, actifs / inactifs).
+    affiche tous les boss (A-Z, rangs, importance).
     ULTRA-FAST MODE (par défaut) : tu cliques le boss, Wingman trouve
     tout seul son Teleport dans la liste Kibelisk, tu le cliques et tu
     appuies deux fois sur F. Une flèche indique ensuite la direction.

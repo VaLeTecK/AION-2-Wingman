@@ -439,7 +439,8 @@ if ($ready) {
             $sc.TargetPath       = $ahk.Path
             $sc.Arguments        = '"' + $MainScript + '"'
             $sc.WorkingDirectory = $Dir
-            $sc.IconLocation     = $ahk.Path + ',0'
+            $ico = Join-Path $Dir 'ICONS\ali_rombo_mirino.ico'
+            if (Test-Path $ico) { $sc.IconLocation = $ico + ',0' } else { $sc.IconLocation = $ahk.Path + ',0' }
             $sc.Description      = 'AION 2 Wingman - by VaLeTecK'
             $sc.Save()
             Say ((L "   Collegamento creato: " "   Shortcut created: ") + $lnk) Green
