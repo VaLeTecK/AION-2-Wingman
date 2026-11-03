@@ -4,6 +4,26 @@ Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descriz
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
 A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal del pacchetto.
 
+## v1.09
+
+### 🇬🇧 English
+- ↶ **EDIT OVERLAY: undo, redo and layouts** – Every move in the editor can now be undone and redone. "↶ Undo" / "↷ Redo" (or Ctrl+Z / Ctrl+Y) walk through the history of the editing session; the "📐 Layout" menu lists your saved layouts, saves the current one under the name you choose as an "A2W_name.ini" file in the HUD LAYOUTS folder, and opens that folder so you can share layouts or drop in someone else's.
+- ✥ **Movable toolbar** – The EDIT OVERLAY toolbar can be dragged anywhere on the screen. It remembers where you left it, so it never covers the part of the HUD you are working on.
+- 🎲 **Multiple random numbers** – A single roll can now draw from 1 to 4 numbers at once. The new "Numbers per roll" setting (RandomCount) picks how many, always all different from each other, shown side by side in the order they came out.
+- 🧲 **Gentler snap** – Elements follow the mouse freely and snap only near the grid lines. The snap now works like a magnet that grabs only when you pass close to a line, instead of locking the element to the grid at every step.
+ – The bars now have animated effects in ON state too. They are mirrored, both halves pointing toward the center: light trails with a spark at the head ("comet", on by default), a halo breathing around the bars ("pulse") or the bar lighting up intermittently ("glow"); they can be combined, and speed and color are adjustable in Settings > HUD overlay > Bars.
+- 🧭 **Direction of the new boss** – Picking another boss replaces the old flight direction right away. If you teleport to a boss and quickly move on to another one, the arrow of the previous boss disappears as soon as you choose the new one and only the new direction is shown.
+- 🎲 **More reliable die icon** – The die now shows up every time on the Shugo reward cards. Wingman recognizes the card screen from two lines of pixels (the black background above the cards and the cards themselves), without waiting for text to be read; the text reading stays only as a backup, and the check remains very light.
+
+### 🇮🇹 Italiano
+- ↶ **EDIT OVERLAY: annulla, ripeti e layout** – Ogni spostamento nell'editor ora si può annullare e ripetere. "↶ Indietro" / "↷ Avanti" (o Ctrl+Z / Ctrl+Y) percorrono lo storico della sessione di modifica; il menu "📐 Layout" elenca i layout salvati, salva quello attuale col nome che scegli come file "A2W_nome.ini" nella cartella HUD LAYOUTS, e apre quella cartella per condividere i layout o aggiungerne di altri.
+- ✥ **Barra spostabile** – La barra degli strumenti di EDIT OVERLAY si può trascinare in qualsiasi punto dello schermo. Ricorda dove l'hai lasciata, così non copre mai la parte dell'HUD su cui stai lavorando.
+- 🎲 **Più numeri random** – Un solo tiro ora può estrarre da 1 a 4 numeri insieme. La nuova impostazione "Numeri per tiro" (RandomCount) sceglie quanti, sempre diversi tra loro, mostrati affiancati nell'ordine in cui sono usciti.
+- 🧲 **Snap più morbido** – Gli elementi seguono liberamente il mouse e si agganciano solo vicino alle linee della griglia. Lo snap ora funziona come una calamita che afferra solo quando passi vicino a una linea, invece di bloccare l'elemento sulla griglia a ogni passo.
+ – Ora anche le barre hanno effetti animati nello stato ON. Sono speculari, con le due metà che puntano verso il centro: scie luminose con una scintilla in testa ("comet", acceso di default), alone che respira attorno alle barre ("pulse") oppure la barra che si illumina a intermittenza ("glow"); si possono combinare, e velocità e colore si regolano in Impostazioni > HUD overlay > Barre.
+- 🧭 **Direzione del nuovo boss** – Scegliendo un altro boss la vecchia direzione di volo viene sostituita subito. Se ti teletrasporti da un boss e poco dopo passi a un altro, la freccia del boss precedente sparisce appena scegli il nuovo e compare solo la nuova direzione.
+- 🎲 **Icona del dado più affidabile** – Il dado ora compare ogni volta sulle carte premio degli Shugo. Wingman riconosce la schermata delle carte da due righe di pixel (lo sfondo nero sopra le carte e le carte stesse), senza aspettare la lettura del testo; la lettura del testo resta solo come riserva, e il controllo rimane leggerissimo.
+
 ## v1.08
 
 ### 🇬🇧 English
@@ -13,7 +33,7 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 - ✨ **Logo in the splash screen** – The startup splash now shows the Wingman logo. It's recolored with your theme's accent color and floats gently inside a glowing halo, above the name.
 - 🎛️ **Wingman button in the game menu** – Open Settings straight from the game menu. When you open the game menu (Esc) the Wingman icon fades in at the top right, under the X, and fades out as soon as you close it; it grows and glows under the mouse, and one click opens Settings; it can be turned off in Settings > General.
 - 🔄 **Restart button** – Wingman can be restarted with one click. A small ⟳ button next to "Quit Wingman" in Settings restarts it (it asks first if there are unsaved changes).
-- 🐞 **Bug report** – Reporting a bug takes one click. A small "🐞 Bug?" button at the bottom of Settings and a new entry in Maintenance open the GitHub issue form.
+- 🐞 **Bugs & suggestions** – Reporting a bug or sending an idea takes one click. A small "🐞 Bugs & Suggestions" button at the bottom of Settings (with a green glow on hover) and a new entry in Maintenance open the GitHub issue form.
 - ⚡ **Smoother animations** – Wingman reads the screen much less often. The die icon check uses a single thin line of pixels, the text is read only on dark card-like screens and ever less often if it's not them, and the game-menu button only looks after you press Esc.
 - 🧹 **Boss status removed** – The active / inactive check and its filters are gone. They were rarely useful; the map panel is simpler and Wingman no longer reads the boss list every couple of seconds while the map is open.
 
@@ -24,7 +44,7 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 - ✨ **Logo nello splash** – Lo splash all'avvio ora mostra il logo di Wingman. È ricolorato con il colore d'accento del tema e fluttua piano dentro un alone luminoso, sopra il nome.
 - 🎛️ **Pulsante di Wingman nel menu del gioco** – Apri le Impostazioni direttamente dal menu del gioco. Quando apri il menu del gioco (Esc) l'icona di Wingman compare in dissolvenza in alto a destra, sotto la X, e sparisce appena lo chiudi; sotto il mouse si ingrandisce e si illumina, e un click apre le Impostazioni; si può spegnere in Impostazioni > Generale.
 - 🔄 **Pulsante per riavviare** – Wingman si riavvia con un click. Un pulsantino ⟳ accanto a "Termina Wingman" nelle Impostazioni lo riavvia (chiede prima se ci sono modifiche non salvate).
-- 🐞 **Segnalazione bug** – Segnalare un bug ora richiede un click. Un pulsantino "🐞 Bug?" in fondo alle Impostazioni e una nuova voce in Manutenzione aprono il modulo delle issue su GitHub.
+- 🐞 **Bug & Consigli** – Segnalare un bug o proporre un'idea ora richiede un click. Un pulsantino "🐞 Bug & Consigli" in fondo alle Impostazioni (con alone verde al passaggio del mouse) e una nuova voce in Manutenzione aprono il modulo delle issue su GitHub.
 - ⚡ **Animazioni più fluide** – Wingman legge lo schermo molto meno spesso. Il controllo per l'icona del dado usa una sola riga sottile di pixel, il testo si legge solo su schermate scure come quella delle carte e sempre più di rado se non lo sono, e il pulsante del menu del gioco guarda solo dopo Esc.
 - 🧹 **Stato dei boss rimosso** – Il controllo attivo / non attivo e i suoi filtri non ci sono più. Erano poco utili; il pannello della mappa è più semplice e Wingman non rilegge più la lista dei boss ogni paio di secondi a mappa aperta.
 

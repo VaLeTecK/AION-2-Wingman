@@ -23,7 +23,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.08"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.09"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -352,6 +352,14 @@ global Bar1OffsetY    := 216,           Bar2OffsetY    := 259     ; posizione ve
 global Bar1OffsetX    := 2,             Bar2OffsetX    := 2       ; posizione orizzontale (+ = destra)
 global Bar1CenterGap  := 82,            Bar2CenterGap  := 170     ; spazio vuoto tra le due metà
 global Bar1Skew       := 12,            Bar2Skew       := 5       ; inclinazione dei lati (0 = rettangolo)
+; Effetti delle barre nello stato ON (Combat attivo), speculari: le due metà puntano verso il centro.
+; Si possono combinare: metti uno o più nomi tra [ ].
+;   "comet" = scie luminose con una scintilla in testa che corrono verso il centro
+;   "pulse" = alone che respira attorno alle barre      "glow" = la barra si illumina a intermittenza
+;   Nessuno = nessun effetto
+global BarAnim        := ["comet"]
+global BarAnimCycle   := 900      ; ms per un giro dell'effetto (più basso = più veloce)
+global BarFxColor     := "FFF4D6" ; colore di scie e bagliori (chiaro: si vede su ogni colore delle barre)
 
 ; ------------------------------------------------------------------------------
 ; [HUD] Icone di stato
@@ -736,6 +744,7 @@ global FieldBossList := [
 global RandomKey         := "^+-"       ; Ctrl+Shift+- (il tasto - accanto al punto)
 global RandomMin         := 1           ; numero più piccolo
 global RandomMax         := 5           ; numero più grande
+global RandomCount       := 1           ; quanti numeri esce un tiro (1-4), tutti diversi tra loro
 global RandomHold        := 3           ; secondi in cui il risultato resta a schermo
 global RandomScale       := 1.0         ; dimensione del numero (1.0 = normale, già molto grande)
 global RandomX           := 62          ; posizione del numero: % della larghezza dello schermo (50 = centro)
@@ -1149,10 +1158,16 @@ DestroyHud() {
     for name in ["LootFx", "CombatFx"]
         if IsObject(%name%)
             %name%.Free()
+    for bar in [Bar1, Bar2]
+        if (IsObject(bar) && bar.HasOwnProp("Fx"))
+            bar.Fx.Free()
 }
 
 OnCombatChange(on) {
     ChevronAnim.SetActive(on)
+    for bar in [Bar1, Bar2]
+        if (IsObject(bar) && bar.HasOwnProp("Fx"))
+            bar.Fx.SetActive(on)
     if CombatIconEnabled
         CombatFx.SetActive(on)
 }
@@ -1875,6 +1890,171 @@ ChevronOnState(k, n, p, mode := "") {
     }
 }
 
+; Effetti animati delle barre nello stato ON (Combat attivo). Speculari: nella metà di sinistra
+; corrono da sinistra verso il centro, in quella di destra da destra verso il centro.
+;   "comet" = scie luminose con una scintilla in testa   "pulse" = alone che respira attorno alle barre
+;   "glow"  = la barra si illumina a intermittenza
+; Una finestra trasparente sopra la barra (nel gruppo della barra: segue dissolvenze e visibilità).
+class BarEffects {
+    __New(grp, x, y, w, h, m, half, maxH, border, gap, skew) {
+        this.Grp := grp, this.W := w, this.H := h, this.M := m
+        this.Half := half, this.BH := maxH, this.Border := border, this.Skew := skew
+        this.LX := border, this.RX := border + half + border * 2 + gap   ; inizio dei due riempimenti nella finestra
+        this.Y0 := m + border
+        used := Map()
+        for name in GetGlobalVar("BarAnim")
+            used[StrLower(name)] := true
+        this.DoComet := used.Has("comet"), this.DoPulse := used.Has("pulse"), this.DoGlow := used.Has("glow")
+        this.Animated := used.Count > 0
+        this.Cycle := Max(200, BarAnimCycle)
+        this.RGB := ColorToRGB(BarFxColor)
+        this.Active := false, this.K := 0, this.KFrom := 0, this.KTo := 0, this.KStart := 0, this.KDur := 0, this.T0 := NowMs()
+        win := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000" (ClickThrough ? " +E0x20" : ""), "Bar Fx")
+        this.Win := win
+        this.hdc := DllCall("CreateCompatibleDC", "Ptr", 0, "Ptr")
+        bi := Buffer(40, 0)
+        NumPut("UInt", 40, bi, 0), NumPut("Int", w, bi, 4), NumPut("Int", -h, bi, 8)
+        NumPut("UShort", 1, bi, 12), NumPut("UShort", 32, bi, 14)
+        this.hbm := DllCall("CreateDIBSection", "Ptr", this.hdc, "Ptr", bi, "UInt", 0, "Ptr*", &bits := 0, "Ptr", 0, "UInt", 0, "Ptr")
+        DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.hbm)
+        DllCall("gdiplus\GdipCreateFromHDC", "Ptr", this.hdc, "Ptr*", &gr := 0)
+        this.G := gr
+        DllCall("gdiplus\GdipSetSmoothingMode", "Ptr", gr, "Int", 4)
+        DllCall("gdiplus\GdipCreateSolidFill", "UInt", 0, "Ptr*", &br := 0)
+        this.Brush := br
+        ; forme dei due riempimenti (trapezi), per tenere scie e lampi dentro la barra
+        this.PathL := this.Trap(this.LX, this.Y0, half, maxH, skew, true)
+        this.PathR := this.Trap(this.RX, this.Y0, half, maxH, skew, false)
+        this.SizeBuf := Buffer(8), NumPut("Int", w, "Int", h, this.SizeBuf), this.PtSrc := Buffer(8, 0)
+        grp.Add(win, x, y, w, h, false, true)
+        grp.OnAlpha := ObjBindMethod(this, "Present")
+        this.Draw(NowMs())
+    }
+
+    Trap(x, y, w, h, skew, left) {
+        pts := left ? [x + skew, y, x + w, y, x + w - skew, y + h, x, y + h]
+                    : [x, y, x + w - skew, y, x + w, y + h, x + skew, y + h]
+        b := Buffer(32)
+        for i, v in pts
+            NumPut("Float", v, b, (i - 1) * 4)
+        DllCall("gdiplus\GdipCreatePath", "Int", 0, "Ptr*", &p := 0)
+        DllCall("gdiplus\GdipAddPathPolygon", "Ptr", p, "Ptr", b, "Int", 4)
+        return p
+    }
+
+    Free() {
+        Critical "On"
+        if !this.G
+            return
+        DllCall("gdiplus\GdipDeletePath", "Ptr", this.PathL), DllCall("gdiplus\GdipDeletePath", "Ptr", this.PathR)
+        DllCall("gdiplus\GdipDeleteBrush", "Ptr", this.Brush)
+        DllCall("gdiplus\GdipDeleteGraphics", "Ptr", this.G)
+        DllCall("DeleteDC", "Ptr", this.hdc), DllCall("DeleteObject", "Ptr", this.hbm)
+        this.G := 0, this.Grp.OnAlpha := ""
+    }
+
+    SetActive(on) {
+        if !this.Animated
+            return
+        now := NowMs()
+        if (on && this.K <= 0)
+            this.T0 := now                                   ; le scie ripartono dal bordo esterno
+        this.Active := on, this.KFrom := this.K, this.KTo := on ? 1 : 0, this.KStart := now
+        this.KDur := (on ? 250 : 600) * Abs(this.KTo - this.KFrom)
+        Ticker.Add(this)
+    }
+
+    Tick(now) {
+        if (this.K != this.KTo) {
+            t := this.KDur > 0 ? Min(1, (now - this.KStart) / this.KDur) : 1
+            this.K := t >= 1 ? this.KTo : Lerp(this.KFrom, this.KTo, t)
+        }
+        if HudShown
+            this.Draw(now)
+        return (this.K = this.KTo && !this.Active)            ; spento e fermo: fuori dal Ticker
+    }
+
+    Present() {
+        if !this.G
+            return
+        DllCall(Api.UpdateLayeredWindow, "Ptr", this.Win.Hwnd, "Ptr", 0, "Ptr", 0, "Ptr", this.SizeBuf, "Ptr", this.hdc
+            , "Ptr", this.PtSrc, "UInt", 0, "UInt*", (Round(this.Grp.Alpha) << 16) | 0x1000000, "UInt", 2)
+    }
+
+    Draw(now) {
+        Critical "On"
+        if !this.G
+            return
+        g := this.G, k := Smoothstep(this.K)
+        DllCall(Api.GdipGraphicsClear, "Ptr", g, "UInt", 0)
+        if (k > 0.001) {
+            p := Mod((now - this.T0) / this.Cycle, 1)
+            if this.DoPulse
+                this.Pulse(g, k, p)
+            if this.DoGlow
+                this.Glow(g, k, p)
+            if this.DoComet
+                for off in [0, 0.5]                          ; due scie per metà, sfasate
+                    this.Comet(g, k, Mod(p + off, 1))
+        }
+        DllCall(Api.GdipFlush, "Ptr", g, "Int", 1)
+        this.Present()
+    }
+
+    ; scia: dal bordo esterno verso il centro, con una scintilla in testa (fuori dalla barra)
+    Comet(g, k, p) {
+        a := k * Sin(ChevPi * p)                              ; nasce e si spegne senza scatti
+        if (a <= 0.01)
+            return
+        len := this.Half * 0.38, y := this.Y0, h := this.BH, c := this.RGB
+        for side in [1, -1] {                                 ; 1 = metà sinistra (verso destra), -1 = destra (verso sinistra)
+            path := side = 1 ? this.PathL : this.PathR
+            head := side = 1 ? this.LX + this.Half * p : this.RX + this.Half * (1 - p)
+            tail := head - side * len
+            x1 := Min(head, tail), x2 := Max(head, tail)
+            p1 := Buffer(8), p2 := Buffer(8)
+            NumPut("Float", tail, "Float", 0, p1), NumPut("Float", head, "Float", 0, p2)
+            DllCall("gdiplus\GdipCreateLineBrush", "Ptr", p1, "Ptr", p2, "UInt", c & 0xFFFFFF
+                  , "UInt", (Round(235 * a) << 24) | c, "Int", 0, "Ptr*", &lb := 0)
+            DllCall("gdiplus\GdipSetClipPath", "Ptr", g, "Ptr", path, "Int", 0)
+            DllCall("gdiplus\GdipFillRectangle", "Ptr", g, "Ptr", lb, "Float", x1, "Float", y - 1, "Float", x2 - x1, "Float", h + 2)
+            DllCall("gdiplus\GdipResetClip", "Ptr", g)
+            DllCall("gdiplus\GdipDeleteBrush", "Ptr", lb)
+            ; scintilla: alone morbido attorno alla testa
+            r := Max(h * 1.6, this.M * 0.9), cy := y + h / 2
+            DllCall("gdiplus\GdipCreatePath", "Int", 0, "Ptr*", &ep := 0)
+            DllCall("gdiplus\GdipAddPathEllipse", "Ptr", ep, "Float", head - r * 1.6, "Float", cy - r, "Float", r * 3.2, "Float", r * 2)
+            DllCall("gdiplus\GdipCreatePathGradientFromPath", "Ptr", ep, "Ptr*", &pg := 0)
+            DllCall("gdiplus\GdipSetPathGradientCenterColor", "Ptr", pg, "UInt", (Round(200 * a) << 24) | c)
+            cnt := 1, sur := Buffer(4), NumPut("UInt", c & 0xFFFFFF, sur)
+            DllCall("gdiplus\GdipSetPathGradientSurroundColorsWithCount", "Ptr", pg, "Ptr", sur, "Int*", &cnt)
+            DllCall("gdiplus\GdipFillPath", "Ptr", g, "Ptr", pg, "Ptr", ep)
+            DllCall("gdiplus\GdipDeleteBrush", "Ptr", pg)
+            DllCall("gdiplus\GdipDeletePath", "Ptr", ep)
+        }
+    }
+
+    ; alone attorno alle due metà che si allarga e si ritira (strati sempre più tenui)
+    Pulse(g, k, p) {
+        w := 0.5 - 0.5 * Cos(2 * ChevPi * p), c := this.RGB, ext := this.M * (0.45 + 0.55 * w), n := 6
+        for x0 in [this.LX, this.RX]
+            loop n {
+                e := ext * A_Index / n, al := 90 * k * (0.4 + 0.6 * w) * (1 - A_Index / (n + 1)) / n
+                DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", (Round(al) << 24) | c)
+                DllCall("gdiplus\GdipFillRectangle", "Ptr", g, "Ptr", this.Brush, "Float", x0 - e, "Float", this.Y0 - e
+                      , "Float", this.Half + e * 2, "Float", this.BH + e * 2)
+            }
+    }
+
+    ; la barra si illumina a intermittenza (dentro la forma)
+    Glow(g, k, p) {
+        w := 0.5 - 0.5 * Cos(2 * ChevPi * p)
+        DllCall("gdiplus\GdipSetSolidFillColor", "Ptr", this.Brush, "UInt", (Round(150 * k * w) << 24) | this.RGB)
+        for path in [this.PathL, this.PathR]
+            DllCall("gdiplus\GdipFillPath", "Ptr", g, "Ptr", this.Brush, "Ptr", path)
+    }
+}
+
 ; Insieme di finestre che condividono trasparenza e dissolvenze
 ; (es. una barra = 2 cornici + 2 riempimenti). Solo i "riempimenti" cambiano colore.
 class FadeGroup {
@@ -2004,9 +2184,10 @@ class FadeGroup {
         if (rounded = this.Applied)
             return
         this.Applied := rounded
+        ; difensivo: una voce incompleta o una finestra appena distrutta non deve mai fermare l'HUD
         for item in this.Windows
-            if !item.OwnAlpha
-                SetLayerAlpha(item.Win.Hwnd, rounded, item.Key)
+            if (IsObject(item) && !(item.HasProp("OwnAlpha") && item.OwnAlpha) && item.HasProp("Win"))
+                try SetLayerAlpha(item.Win.Hwnd, rounded, item.HasProp("Key") ? item.Key : "")
         if this.OnAlpha
             this.OnAlpha.Call()
     }
@@ -2235,6 +2416,7 @@ BuildSplitBar(maxW, maxH, border, offX, offY, gap, skew, fadeIn, fadeOut) {
     rightX := baseX + gap // 2
 
     grp := FadeGroup(fadeIn, fadeOut)
+    fxM := Max(8, maxH * 2)                      ; margine sopra/sotto per le scintille degli effetti
     for side in [[leftX, TrapezoidLeftRgn], [rightX, TrapezoidRightRgn]] {
         x := side[1], shape := side[2]
 
@@ -2246,6 +2428,8 @@ BuildSplitBar(maxW, maxH, border, offX, offY, gap, skew, fadeIn, fadeOut) {
         SetWindowRegion(fill, shape(half, maxH, skew))
         grp.Add(fill, x + border, posY + border, half, maxH, true)
     }
+    if (IsObject(GetGlobalVar("BarAnim")) && GetGlobalVar("BarAnim").Length)   ; effetti nello stato ON (sopra la barra)
+        grp.Fx := BarEffects(grp, leftX, posY - fxM, rightX + totW - leftX, totH + fxM * 2, fxM, half, maxH, border, gap, skew)
     return grp
 }
 
@@ -4381,6 +4565,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
 
     PickDungeonRow(b, *) {
         BossCard.Hide(), this.CurBoss := b.boss
+        this.DirHide()                                        ; via la direzione del boss di prima
         switch FieldBossPickAction {
             case "collapse": this.SetCollapsed(true, true)
             case "fade":     this.SetFaded(true)
@@ -4659,6 +4844,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
 
     PickRow(name, *) {
         BossCard.Hide(), this.CurBoss := name                 ; il ritratto passa nelle istruzioni
+        this.DirHide()                                        ; via la direzione del boss di prima (anche se in attesa)
         switch FieldBossPickAction {
             case "collapse": this.SetCollapsed(true, true)
             case "fade":     this.SetFaded(true)
@@ -4805,7 +4991,7 @@ class SettingsEditor {
             ["Barre", "Due barre a trapezio sotto il centro dello schermo, ognuna divisa in due metà.",
                 ["Bar1Enabled", "Bar2Enabled", "Bar1MaxWidth", "Bar2MaxWidth", "Bar1MaxHeight", "Bar2MaxHeight",
                  "Bar1BorderSize", "Bar2BorderSize", "Bar1OffsetX", "Bar2OffsetX", "Bar1OffsetY", "Bar2OffsetY",
-                 "Bar1CenterGap", "Bar2CenterGap", "Bar1Skew", "Bar2Skew"]],
+                 "Bar1CenterGap", "Bar2CenterGap", "Bar1Skew", "Bar2Skew", "BarAnim", "BarAnimCycle", "BarFxColor"]],
             ["Icone - generale", "Opzioni comuni alle due icone. Con le icone speculari sposti il Loot e il Combat lo segue dall'altro lato.",
                 ["IconAutoFit", "IconMirror"]],
             ["Icona Loot", "Icona LOOT (F10), a sinistra.",
@@ -4839,7 +5025,7 @@ class SettingsEditor {
                  "EnableBar2FadeIn", "EnableBar2FadeOut", "EnableLootFadeIn", "EnableLootFadeOut",
                  "EnableCombatFadeIn", "EnableCombatFadeOut"]]]],
         ["Numero random", "Numero casuale grande a schermo con animazione di roll, dal tasto o dall'icona cliccabile.",
-            ["RandomKey", "RandomMin", "RandomMax", "RandomHold", "RandomScale", "RandomX", "RandomY",
+            ["RandomKey", "RandomMin", "RandomMax", "RandomCount", "RandomHold", "RandomScale", "RandomX", "RandomY",
              "RandomIconEnabled", "RandomIconMode", "RandomIconX", "RandomIconY", "RandomIconScale"]],
         ["Hidden Cube", "Quando compare la finestra degli Hidden Cube porta il mouse su `"Open with Key`" e ce lo tiene bloccato.",
             ["HiddenCubeEnabled", "HiddenCubeInterval", "HiddenCubeCheckSlot", "HiddenCubeOffsetX", "HiddenCubeOffsetY",
@@ -4876,7 +5062,7 @@ class SettingsEditor {
         "CombatSize", "Grandezza icona (altezza)", "CombatBorderSize", "Bordino nero",
         "FieldBossHideInDungeon", "Nascondi il pannello nei dungeon", "FieldBossDungeons", "Nomi dei dungeon",
         "FieldBossDungeonPanel", "Menu Teleport nei dungeon", "FieldBossBossImage", "Immagine del boss", "FieldBossBossImageStyle", "Stile dell'anteprima del boss",
-        "RandomKey", "Tasto del numero random", "RandomMin", "Numero minimo", "RandomMax", "Numero massimo",
+        "RandomKey", "Tasto del numero random", "RandomMin", "Numero minimo", "RandomMax", "Numero massimo", "RandomCount", "Numeri per tiro",
         "RandomHold", "Durata del risultato (s)", "RandomScale", "Dimensione del numero", "RandomX", "Posizione orizzontale (%)",
         "RandomY", "Posizione verticale (%)", "RandomIconEnabled", "Icona del random", "RandomIconMode", "Quando si vede l'icona", "RandomIconX", "Icona: posizione orizzontale (%)",
         "RandomIconY", "Icona: posizione verticale (%)", "RandomIconScale", "Icona: dimensione",
@@ -4931,6 +5117,7 @@ class SettingsEditor {
         "Bar1OffsetY", "Barra 1: posizione verticale", "Bar2OffsetY", "Barra 2: posizione verticale",
         "Bar1CenterGap", "Barra 1: spazio centrale", "Bar2CenterGap", "Barra 2: spazio centrale",
         "Bar1Skew", "Barra 1: inclinazione", "Bar2Skew", "Barra 2: inclinazione",
+        "BarAnim", "Barre: effetti nello stato ON", "BarAnimCycle", "Barre: durata di un giro (ms)", "BarFxColor", "Barre: colore degli effetti",
         "LootSize", "Grandezza icona (altezza)", "LootBorderSize", "Bordino nero", "LootBaseFontSize", "Dimensione testo",
         "LootEmojiSize", "Dimensione emoji", "LootEmojiOffsetY", "Emoji: spostamento verticale",
         "LootEmojiOffsetX", "Emoji: spostamento orizzontale",
@@ -5014,7 +5201,8 @@ class SettingsEditor {
         "RandomIconMode", ["shugo", "always"],
         "WingmanIcon", ["ali_rombo_mirino", "ali_mirino", "rombo_mirino", "rombo_alato", "ali_v_mirino"],
         "FieldBossBossImageStyle", ["card", "bottom", "info"])
-    static Multi := Map("LootAnim", ["ring", "pulse", "spin", "glow"], "CombatAnim", ["ring", "pulse", "spin", "glow"])
+    static Multi := Map("LootAnim", ["ring", "pulse", "spin", "glow"], "CombatAnim", ["ring", "pulse", "spin", "glow"]
+                      , "BarAnim", ["comet", "pulse", "glow"])
 
     ; Nomi mostrati nei menu a tendina (stesso ordine di Enums): emoji + valore
     static ThemeIcons := Map("principale", "⚜️", "dark", "🌑", "bright", "☀️", "cuddle", "🧸", "pinkhaze", "🌸", "egirl", "🎀", "vi", "🌴"
@@ -5032,6 +5220,7 @@ class SettingsEditor {
         "FieldBossCloseLoot",  Map("zoom", "🔍", "always", "✅", "never", "🚫"),
         "FieldBossZoomOutWheel", Map("WheelDown", "🔽", "WheelUp", "🔼"),
         "LootAnim",    Map("ring", "💫", "pulse", "💓", "spin", "🌀", "glow", "✨"),
+        "BarAnim",     Map("comet", "☄️", "pulse", "💓", "glow", "✨"),
         "Grade",           Map("verde", "🟢", "blu", "🔵", "oro", "🟡"))
 
     static IconOf(name, value) {
@@ -5107,7 +5296,7 @@ class SettingsEditor {
         "FieldBossCheckEvery", [100, 5000, 1], "FieldBossHintScale", [0.3, 4, 0], "FieldBossHintBottom", [0, 2000, 1],
         "FieldBossPanelScale", [0.5, 4, 0], "FieldBossPanelMarginR", [0, 3000, 1], "FieldBossPanelOffsetY", [-1500, 1500, 1],
         "FieldBossFadeAlpha", [0, 255, 1], "FieldBossLegendScale", [0.3, 4, 0], "FieldBossLegendY", [0, 100, 1], "FieldBossLegendAlpha", [0, 255, 1],
-        "FieldBossListScroll", [1, 200, 1], "RandomMin", [0, 999, 1], "RandomMax", [1, 999, 1],
+        "FieldBossListScroll", [1, 200, 1], "RandomMin", [0, 999, 1], "RandomMax", [1, 999, 1], "RandomCount", [1, 4, 1],
         "RandomHold", [0, 30, 0], "RandomScale", [0.3, 4, 0], "RandomX", [0, 100, 0], "RandomY", [0, 100, 0],
         "RandomIconX", [0, 100, 0], "RandomIconY", [0, 100, 0], "RandomIconScale", [0.3, 4, 0], "FieldBossUltraScrollStep", [1, 200, 1], "FieldBossZoomOut", [0, 50, 1], "FieldBossZoomBack", [0, 50, 1], "FieldBossLootClickDist", [20, 500, 1],
         "FieldBossTravelPresses", [1, 5, 1], "FieldBossTravelWait", [1, 600, 1], "FieldBossDirSeconds", [1, 300, 1],
@@ -5661,7 +5850,7 @@ class SettingsEditor {
         for it in [["🧙  " Tr("Riesegui il FIRST RUN QUICK-SETUP"), (*) => this.RunSetup()]
                  , ["🔄  " Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow()]
                  , ["🌐  " Tr("Pagina del progetto su GitHub"), (*) => Updater.OpenPage()]
-                 , ["🐞  " Tr("Segnala un bug su GitHub"), ReportBug]
+                 , ["🐞  " Tr("Bug e consigli su GitHub"), ReportBug]
                  , ["🅿️  " Tr("Dona con PayPal"), DonatePayPal]
                  , ["☕  " Tr("Dona con Ko-fi"), DonateKofi]
                  , ["📂  " Tr("Apri la cartella delle impostazioni personali"), (*) => Run('explorer.exe "' UserData.Dir '"')]
@@ -5683,10 +5872,10 @@ class SettingsEditor {
         g.AddText("x0 y" (H - 56) " w" W " h1 Background" UiC("Line"))
         this.ChgBtn := g.AddButton("x12 y" (H - 46) " w150 h34", Tr("Vedi modifiche"))
         this.ChgBtn.OnEvent("Click", (*) => this.ShowChanges())
-        this.Status := g.AddText("x172 y" (H - 42) " w190 h26 0x200", "")
-        ; segnalazione bug: pulsantino discreto, apre il modulo delle issue su GitHub
+        this.Status := g.AddText("x172 y" (H - 42) " w160 h26 0x200", "")
+        ; bug e consigli: pulsantino discreto, apre il modulo delle issue su GitHub (alone verde al passaggio)
         g.SetFont("s9 bold c" UiOn("Text", "Row"), "Segoe UI")
-        this.BugBtn := g.AddText("x" (W - 806) " y" (H - 42) " w100 h26 Center 0x200 Background" UiC("Row"), "🐞  " Tr("Bug?"))
+        this.BugBtn := g.AddText("x" (W - 840) " y" (H - 42) " w134 h26 Center 0x200 Background" UiC("Row"), "🐞  " Tr("Bug {1} Consigli", "&&"))   ; "&&" = una & visibile
         this.BugBtn.OnEvent("Click", ReportBug)
         RoundCtl(this.BugBtn, 10)
         ; donazioni: due pulsantini discreti accanto ai pulsanti principali
@@ -5718,7 +5907,7 @@ class SettingsEditor {
         this.TV.Modify(this.TV.GetChild(0), "Select")
         this.SelectNode(this.TV.GetChild(0), true)
         this.UpdateStatus()
-        extra := [this.QuitBtn, this.RestartBtn, this.EditBtn, this.PrevElemBtn, this.PrevOn, this.PrevOff, this.PayPalBtn, this.KofiBtn, this.ModeB, this.ModeA]
+        extra := [this.QuitBtn, this.RestartBtn, this.EditBtn, this.BugBtn, this.PrevElemBtn, this.PrevOn, this.PrevOff, this.PayPalBtn, this.KofiBtn, this.ModeB, this.ModeA]
         for c in this.HomeCards
             extra.Push(c.ctrl)
         this.HoverInit(extra)
@@ -5727,11 +5916,12 @@ class SettingsEditor {
     ; ---------------- Pulsanti animati ----------------
     ; Mouse sopra un pulsante: si ingrandisce un poco e si accende un alone del colore del tema
     ; (due anelli sovrapposti, il più esterno più tenue). Un timer leggero guarda cosa c'è sotto il mouse.
-    static HovMap := Map(), HovCur := 0, HovFn := "", HovAnimFn := "", HovK := 0, HovOrig := "", Glow := [], HovRound := Map()
+    static HovColor := Map(), HovMap := Map(), HovCur := 0, HovFn := "", HovAnimFn := "", HovK := 0, HovOrig := "", Glow := [], HovRound := Map()
 
     static HoverInit(extra) {
         this.HovMap := Map(), this.HovCur := 0, this.HovK := 0, this.Glow := []
-        this.HovRound := Map(this.QuitBtn.Hwnd, 10, this.RestartBtn.Hwnd, 10, this.PayPalBtn.Hwnd, 10, this.KofiBtn.Hwnd, 10)
+        this.HovRound := Map(this.QuitBtn.Hwnd, 10, this.RestartBtn.Hwnd, 10, this.PayPalBtn.Hwnd, 10, this.KofiBtn.Hwnd, 10, this.BugBtn.Hwnd, 10)
+        this.HovColor := Map(this.BugBtn.Hwnd, "35D49A")       ; colori d'alone speciali (gli altri: colore del tema)
         for hwnd, c in this.Win
             if (c.Type = "Button")
                 this.HovMap[c.Hwnd] := c
@@ -5776,10 +5966,11 @@ class SettingsEditor {
             this.Glow := []
             loop 2 {
                 gw := Gui("-Caption +ToolWindow -DPIScale +E0x20 +Owner" this.Win.Hwnd)
-                gw.BackColor := UiC("Accent")
                 this.Glow.Push(gw)
             }
         }
+        for gw in this.Glow                                ; alone del colore del tema (o speciale, es. Bug & Consigli)
+            gw.BackColor := this.HovColor.Has(hwnd) ? this.HovColor[hwnd] : UiC("Accent")
         SetTimer(this.HovAnimFn, 15)
         this.HoverAnim()
     }
@@ -5952,7 +6143,7 @@ class SettingsEditor {
         "LootShape", 1, "CombatShape", 1, "LootEmoji", 1, "CombatEmoji", 1,
         "HiddenCubeEnabled", 1, "HiddenCubeLockMouse", 1, "HiddenCubeAutoClick", 1,
         "FieldBossEnabled", 1, "FieldBossTeleportMode", 1, "FieldBossHideInDungeon", 1, "FieldBossDungeonPanel", 1, "FieldBossBossImage", 1, "FieldBossBossImageStyle", 1,
-        "RandomKey", 1, "RandomIconEnabled", 1, "RandomIconMode", 1, "RandomX", 1, "RandomY", 1, "RandomIconX", 1, "RandomIconY", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
+        "RandomKey", 1, "RandomCount", 1, "RandomIconEnabled", 1, "RandomIconMode", 1, "RandomX", 1, "RandomY", 1, "RandomIconX", 1, "RandomIconY", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
         "FieldBossPanelScale", 1, "FieldBossShowLegend", 1, "FieldBossTravelPresses", 1, "FieldBossTeleportLock", 1, "FieldBossDirHint", 1,
         "UpdateMode", 1, "UpdateCheckOnStart", 1)
     static BasicPanels := Map("HOME", 1, "PRESET", 1, "BOSS", 1, "MAINT", 1)
@@ -17107,6 +17298,444 @@ ru=Сетка
 ko=격자
 zh=网格
 ja=グリッド
+it=Bug {1} Consigli
+en=Bugs {1} Suggestions
+nap=Bug {1} Cunziglie
+bro=Bug {1} Consigli
+es=Errores {1} sugerencias
+fr=Bugs {1} suggestions
+de=Fehler {1} Vorschläge
+pt=Bugs {1} sugestões
+ru=Ошибки {1} идеи
+ko=버그 {1} 제안
+zh=错误 {1} 建议
+ja=バグ {1} 提案
+it=Bug e consigli su GitHub
+en=Bugs and suggestions on GitHub
+nap=Bug e cunziglie ncopp'a GitHub
+bro=Bug e consigli su GitHub
+es=Errores y sugerencias en GitHub
+fr=Bugs et suggestions sur GitHub
+de=Fehler und Vorschläge auf GitHub
+pt=Bugs e sugestões no GitHub
+ru=Ошибки и идеи на GitHub
+ko=GitHub에 버그 및 제안
+zh=在 GitHub 上反馈错误与建议
+ja=GitHub でバグ・提案を送る
+it=Barre: effetti nello stato ON
+en=Bars: effects in ON state
+nap=Barre: effette quanno è ON
+bro=Barre: effetti in ON
+es=Barras: efectos en estado ON
+fr=Barres : effets en état ON
+de=Balken: Effekte im ON-Zustand
+pt=Barras: efeitos no estado ON
+ru=Полосы: эффекты в режиме ON
+ko=바: ON 상태 효과
+zh=条：ON 状态效果
+ja=バー：ON 状態のエフェクト
+it=Barre: durata di un giro (ms)
+en=Bars: cycle length (ms)
+nap=Barre: quanto dura nu giro (ms)
+bro=Barre: durata di un giro (ms)
+es=Barras: duración de un ciclo (ms)
+fr=Barres : durée d'un cycle (ms)
+de=Balken: Dauer eines Durchlaufs (ms)
+pt=Barras: duração de um ciclo (ms)
+ru=Полосы: длительность цикла (мс)
+ko=바: 한 바퀴 시간 (ms)
+zh=条：一个循环的时长（毫秒）
+ja=バー：1 周の時間（ms）
+it=Barre: colore degli effetti
+en=Bars: effect color
+nap=Barre: culore d'e effette
+bro=Barre: colore degli effetti
+es=Barras: color de los efectos
+fr=Barres : couleur des effets
+de=Balken: Farbe der Effekte
+pt=Barras: cor dos efeitos
+ru=Полосы: цвет эффектов
+ko=바: 효과 색
+zh=条：效果颜色
+ja=バー：エフェクトの色
+@=BarAnim
+en=Bar effects in ON state (Combat active), mirrored: the two halves point toward the center.\nThey can be combined: tick one or more.\n"comet" = light trails with a spark at the head running toward the center\n"pulse" = halo breathing around the bars      "glow" = the bar lights up intermittently\nNone = no effect
+nap=Effette d'e barre quanno è ON (Combat appicciato), a specchio: 'e doje metà guardano ô centro.\nSe ponno mettere 'nzieme: spunta uno o cchiù.\n"comet" = scie 'e luce cu na scintilla 'nnanze ca correno vierso 'o centro\n"pulse" = alone ca respira attuorno ê barre      "glow" = 'a barra s'allumma a tratti\nNisciuno = nisciunu effetto
+bro=Effetti delle barre in ON (Combat attivo), a specchio: le due metà puntano al centro.\nSi possono combinare: spunta uno o più.\n"comet" = scie di luce con scintilla in testa che corrono verso il centro\n"pulse" = alone che respira attorno alle barre      "glow" = la barra si accende a tratti\nNessuno = zero effetti
+es=Efectos de las barras en estado ON (Combat activo), en espejo: las dos mitades apuntan al centro.\nSe pueden combinar: marca uno o más.\n"comet" = estelas de luz con una chispa en la punta que corren hacia el centro\n"pulse" = halo que respira alrededor de las barras      "glow" = la barra se ilumina a intervalos\nNinguno = sin efecto
+fr=Effets des barres en état ON (Combat actif), en miroir : les deux moitiés pointent vers le centre.\nIls se combinent : coche un ou plusieurs.\n"comet" = traînées lumineuses avec une étincelle en tête qui filent vers le centre\n"pulse" = halo qui respire autour des barres      "glow" = la barre s'illumine par intermittence\nAucun = pas d'effet
+de=Balkeneffekte im ON-Zustand (Combat aktiv), gespiegelt: beide Hälften zeigen zur Mitte.\nKombinierbar: einen oder mehrere ankreuzen.\n"comet" = Lichtspuren mit einem Funken an der Spitze, die zur Mitte laufen\n"pulse" = Schein, der um die Balken atmet      "glow" = der Balken leuchtet zeitweise auf\nKeiner = kein Effekt
+pt=Efeitos das barras no estado ON (Combat ativo), espelhados: as duas metades apontam para o centro.\nPodem ser combinados: marque um ou mais.\n"comet" = rastros de luz com uma faísca na ponta correndo para o centro\n"pulse" = halo que respira em volta das barras      "glow" = a barra acende de tempos em tempos\nNenhum = sem efeito
+ru=Эффекты полос в режиме ON (Combat активен), зеркальные: обе половины смотрят к центру.\nМожно сочетать: отметьте один или несколько.\n"comet" = световые следы с искрой впереди, бегущие к центру\n"pulse" = ореол, «дышащий» вокруг полос      "glow" = полоса периодически вспыхивает\nНичего = без эффекта
+ko=ON 상태(Combat 활성)의 바 효과, 좌우 대칭: 두 절반이 가운데를 향해요.\n함께 쓸 수 있어요: 하나 이상 선택.\n"comet" = 끝에 불꽃이 달린 빛줄기가 가운데로 달려요\n"pulse" = 바 주위에서 숨 쉬듯 퍼지는 광채      "glow" = 바가 간헐적으로 밝아져요\n없음 = 효과 없음
+zh=ON 状态（Combat 激活）的条效果，左右对称：两半都朝向中心。\n可组合：勾选一个或多个。\n"comet" = 头部带火花的光迹奔向中心\n"pulse" = 条周围呼吸般的光晕      "glow" = 条间歇性发亮\n不选 = 无效果
+ja=ON 状態（Combat 有効）のバーのエフェクト、左右対称：両側が中央を向きます。\n組み合わせ可：1 つ以上チェック。\n"comet" = 先端に火花のある光の筋が中央へ走る\n"pulse" = バーのまわりで呼吸する光      "glow" = バーがときどき光る\nなし = エフェクトなし
+)" "`n"
+        s .= "
+(
+@=BarAnimCycle
+en=ms for one cycle of the effect (lower = faster)
+nap=ms pe' nu giro d'o effetto (cchiù vascio = cchiù veloce)
+bro=ms per un giro dell'effetto (più basso = più veloce)
+es=ms para un ciclo del efecto (más bajo = más rápido)
+fr=ms pour un cycle de l'effet (plus bas = plus rapide)
+de=ms für einen Durchlauf des Effekts (niedriger = schneller)
+pt=ms para um ciclo do efeito (mais baixo = mais rápido)
+ru=мс на один цикл эффекта (меньше = быстрее)
+ko=효과 한 바퀴의 ms (낮을수록 빨라요)
+zh=效果一个循环的毫秒数（越低越快）
+ja=エフェクト 1 周の ms（低いほど速い）
+@=BarFxColor
+en=color of trails and glows (light: visible on every bar color)
+nap=culore d'e scie e d'e luce (chiaro: se vede ncopp'a ogne culore d'e barre)
+bro=colore di scie e bagliori (chiaro: si vede su ogni colore delle barre)
+es=color de estelas y brillos (claro: se ve sobre cualquier color de las barras)
+fr=couleur des traînées et lueurs (clair : visible sur toutes les couleurs des barres)
+de=Farbe von Spuren und Schein (hell: auf jeder Balkenfarbe sichtbar)
+pt=cor dos rastros e brilhos (clara: aparece sobre qualquer cor das barras)
+ru=цвет следов и свечения (светлый: виден на любом цвете полос)
+ko=빛줄기와 광채의 색 (밝은 색: 어떤 바 색에서도 보여요)
+zh=光迹和光晕的颜色（浅色：在任何条颜色上都可见）
+ja=光の筋と輝きの色（明るい色：どのバーの色でも見えます）
+it=Indietro
+en=Undo
+nap=Arreto
+bro=Indietro
+es=Deshacer
+fr=Annuler
+de=Rückgängig
+pt=Desfazer
+ru=Отменить
+ko=실행 취소
+zh=撤销
+ja=元に戻す
+it=Avanti
+en=Redo
+nap=Annanze
+bro=Avanti
+es=Rehacer
+fr=Rétablir
+de=Wiederholen
+pt=Refazer
+ru=Повторить
+ko=다시 실행
+zh=重做
+ja=やり直し
+it=Layout
+en=Layout
+nap=Layout
+bro=Layout
+es=Diseño
+fr=Disposition
+de=Layout
+pt=Layout
+ru=Раскладка
+ko=레이아웃
+zh=布局
+ja=レイアウト
+it=Salva il layout come preset...
+en=Save the layout as a preset...
+nap=Sarva 'o layout comme preset...
+bro=Salva il layout come preset...
+es=Guardar el diseño como preset...
+fr=Enregistrer la disposition comme préréglage...
+de=Layout als Preset speichern...
+pt=Salvar o layout como preset...
+ru=Сохранить раскладку как пресет...
+ko=레이아웃을 프리셋으로 저장...
+zh=将布局保存为预设...
+ja=レイアウトをプリセットとして保存...
+it=Elimina un preset
+en=Delete a preset
+nap=Scancella nu preset
+bro=Elimina un preset
+es=Eliminar un preset
+fr=Supprimer un préréglage
+de=Preset löschen
+pt=Excluir um preset
+ru=Удалить пресет
+ko=프리셋 삭제
+zh=删除预设
+ja=プリセットを削除
+it=Esporta il layout in un file...
+en=Export the layout to a file...
+nap=Esporta 'o layout dint'a nu file...
+bro=Esporta il layout in un file...
+es=Exportar el diseño a un archivo...
+fr=Exporter la disposition dans un fichier...
+de=Layout in eine Datei exportieren...
+pt=Exportar o layout para um arquivo...
+ru=Экспортировать раскладку в файл...
+ko=레이아웃을 파일로 내보내기...
+zh=将布局导出到文件...
+ja=レイアウトをファイルに書き出す...
+it=Importa un layout da file...
+en=Import a layout from a file...
+nap=Importa nu layout 'a nu file...
+bro=Importa un layout da file...
+es=Importar un diseño desde un archivo...
+fr=Importer une disposition depuis un fichier...
+de=Layout aus einer Datei importieren...
+pt=Importar um layout de um arquivo...
+ru=Импортировать раскладку из файла...
+ko=파일에서 레이아웃 가져오기...
+zh=从文件导入布局...
+ja=ファイルからレイアウトを読み込む...
+it=Nome del layout (es. "4K centrato"):
+en=Layout name (e.g. "4K centered"):
+nap=Nomme d'o layout (es. "4K centrato"):
+bro=Nome del layout (tipo "4K centrato"):
+es=Nombre del diseño (p. ej. "4K centrado"):
+fr=Nom de la disposition (ex. "4K centré") :
+de=Name des Layouts (z. B. "4K zentriert"):
+pt=Nome do layout (ex. "4K centralizado"):
+ru=Название раскладки (напр. "4K по центру"):
+ko=레이아웃 이름 (예: "4K 가운데"):
+zh=布局名称（例如 "4K 居中"）：
+ja=レイアウト名（例："4K 中央"）：
+it=Layout salvato: {1}
+en=Layout saved: {1}
+nap=Layout sarvato: {1}
+bro=Layout salvato: {1}
+es=Diseño guardado: {1}
+fr=Disposition enregistrée : {1}
+de=Layout gespeichert: {1}
+pt=Layout salvo: {1}
+ru=Раскладка сохранена: {1}
+ko=레이아웃 저장됨: {1}
+zh=布局已保存：{1}
+ja=レイアウトを保存しました：{1}
+it=Eliminare il layout "{1}"?
+en=Delete the layout "{1}"?
+nap=Scancellà 'o layout "{1}"?
+bro=Elimino il layout "{1}"?
+es=¿Eliminar el diseño "{1}"?
+fr=Supprimer la disposition "{1}" ?
+de=Layout "{1}" löschen?
+pt=Excluir o layout "{1}"?
+ru=Удалить раскладку "{1}"?
+ko="{1}" 레이아웃을 삭제할까요?
+zh=删除布局 "{1}"？
+ja=レイアウト "{1}" を削除しますか？
+it=Esporta il layout dell'HUD
+en=Export the HUD layout
+nap=Esporta 'o layout d'o HUD
+bro=Esporta il layout dell'HUD
+es=Exportar el diseño del HUD
+fr=Exporter la disposition du HUD
+de=HUD-Layout exportieren
+pt=Exportar o layout do HUD
+ru=Экспорт раскладки HUD
+ko=HUD 레이아웃 내보내기
+zh=导出 HUD 布局
+ja=HUD レイアウトを書き出す
+it=Importa un layout dell'HUD
+en=Import a HUD layout
+nap=Importa nu layout d'o HUD
+bro=Importa un layout dell'HUD
+es=Importar un diseño del HUD
+fr=Importer une disposition du HUD
+de=HUD-Layout importieren
+pt=Importar um layout do HUD
+ru=Импорт раскладки HUD
+ko=HUD 레이아웃 가져오기
+zh=导入 HUD 布局
+ja=HUD レイアウトを読み込む
+it=Il file non contiene un layout dell'HUD.
+en=The file doesn't contain a HUD layout.
+nap='O file nun tene nu layout d'o HUD.
+bro=Il file non ha un layout dell'HUD.
+es=El archivo no contiene un diseño del HUD.
+fr=Le fichier ne contient pas de disposition du HUD.
+de=Die Datei enthält kein HUD-Layout.
+pt=O arquivo não contém um layout do HUD.
+ru=Файл не содержит раскладку HUD.
+ko=파일에 HUD 레이아웃이 없어요.
+zh=该文件不包含 HUD 布局。
+ja=このファイルには HUD レイアウトがありません。
+it=Layout esportato
+en=Layout exported
+nap=Layout esportato
+bro=Layout esportato
+es=Diseño exportado
+fr=Disposition exportée
+de=Layout exportiert
+pt=Layout exportado
+ru=Раскладка экспортирована
+ko=레이아웃 내보냄
+zh=布局已导出
+ja=レイアウトを書き出しました
+it=Layout caricato
+en=Layout loaded
+nap=Layout caricato
+bro=Layout caricato
+es=Diseño cargado
+fr=Disposition chargée
+de=Layout geladen
+pt=Layout carregado
+ru=Раскладка загружена
+ko=레이아웃 불러옴
+zh=布局已加载
+ja=レイアウトを読み込みました
+it=Il layout è uguale a quello attuale
+en=The layout is the same as the current one
+nap='O layout è pariglio a chillo 'e mo
+bro=Il layout è identico a quello attuale
+es=El diseño es igual al actual
+fr=La disposition est identique à l'actuelle
+de=Das Layout entspricht dem aktuellen
+pt=O layout é igual ao atual
+ru=Раскладка совпадает с текущей
+ko=현재와 같은 레이아웃이에요
+zh=布局与当前相同
+ja=今のレイアウトと同じです
+it=Numeri per tiro
+en=Numbers per roll
+nap=Nummere pe' tiro
+bro=Numeri per tiro
+es=Números por tirada
+fr=Nombres par tirage
+de=Zahlen pro Wurf
+pt=Números por rolagem
+ru=Чисел за бросок
+ko=굴림당 숫자 수
+zh=每次掷出的数字数
+ja=1 回のロールの数字の数
+@=RandomCount
+en=how many numbers one roll gives (1-4), all different from each other
+nap=quanti nummere esceno a ogne tiro (1-4), tutte diverse tra 'e lloro
+bro=quanti numeri esce un tiro (1-4), tutti diversi tra loro
+es=cuántos números da una tirada (1-4), todos distintos entre sí
+fr=combien de nombres donne un tirage (1-4), tous différents
+de=wie viele Zahlen ein Wurf ergibt (1-4), alle verschieden
+pt=quantos números uma rolagem dá (1-4), todos diferentes entre si
+ru=сколько чисел даёт один бросок (1-4), все разные
+ko=한 번 굴릴 때 나오는 숫자 개수 (1-4), 모두 서로 달라요
+zh=一次掷出几个数字（1-4），互不相同
+ja=1 回のロールで出る数字の数（1〜4）、すべて異なる数字
+it=Ctrl+Z = indietro  ·  Ctrl+Y = avanti
+en=Ctrl+Z = undo  ·  Ctrl+Y = redo
+nap=Ctrl+Z = arreto  ·  Ctrl+Y = annanze
+bro=Ctrl+Z = torna indietro  ·  Ctrl+Y = vai avanti
+es=Ctrl+Z = deshacer  ·  Ctrl+Y = rehacer
+fr=Ctrl+Z = annuler  ·  Ctrl+Y = rétablir
+de=Strg+Z = rückgängig  ·  Strg+Y = wiederholen
+pt=Ctrl+Z = desfazer  ·  Ctrl+Y = refazer
+ru=Ctrl+Z = отменить  ·  Ctrl+Y = вернуть
+ko=Ctrl+Z = 되돌리기  ·  Ctrl+Y = 다시 실행
+zh=Ctrl+Z = 撤销  ·  Ctrl+Y = 重做
+ja=Ctrl+Z = 元に戻す  ·  Ctrl+Y = やり直す
+it=✥ trascina questa barra per spostarla
+en=✥ drag this bar to move it
+nap=✥ trascina sta barra pe' 'a spustà
+bro=✥ trascina 'sta barra per spostarla
+es=✥ arrastra esta barra para moverla
+fr=✥ fais glisser cette barre pour la déplacer
+de=✥ diese Leiste ziehen, um sie zu verschieben
+pt=✥ arraste esta barra para movê-la
+ru=✥ перетащите эту панель, чтобы переместить её
+ko=✥ 이 바를 끌어서 옮기세요
+zh=✥ 拖动此栏可移动它
+ja=✥ このバーをドラッグして移動
+it=Nessun layout salvato
+en=No saved layouts
+nap=Nisciun layout salvato
+bro=Zero layout salvati
+es=No hay diseños guardados
+fr=Aucune disposition enregistrée
+de=Keine gespeicherten Layouts
+pt=Nenhum layout salvo
+ru=Нет сохранённых раскладок
+ko=저장된 레이아웃 없음
+zh=没有已保存的布局
+ja=保存されたレイアウトはありません
+it=Salva il layout attuale...
+en=Save the current layout...
+nap=Sarva 'o layout 'e mo...
+bro=Salva il layout attuale...
+es=Guardar el diseño actual...
+fr=Enregistrer la disposition actuelle...
+de=Aktuelles Layout speichern...
+pt=Salvar o layout atual...
+ru=Сохранить текущую раскладку...
+ko=현재 레이아웃 저장...
+zh=保存当前布局...
+ja=現在のレイアウトを保存...
+it=Elimina un layout
+en=Delete a layout
+nap=Scancella nu layout
+bro=Elimina un layout
+es=Eliminar un diseño
+fr=Supprimer une disposition
+de=Ein Layout löschen
+pt=Excluir um layout
+ru=Удалить раскладку
+ko=레이아웃 삭제
+zh=删除布局
+ja=レイアウトを削除
+it=Apri la cartella dei layout
+en=Open the layouts folder
+nap=Arape 'a cartella d'e layout
+bro=Apri la cartella dei layout
+es=Abrir la carpeta de diseños
+fr=Ouvrir le dossier des dispositions
+de=Layout-Ordner öffnen
+pt=Abrir a pasta de layouts
+ru=Открыть папку раскладок
+ko=레이아웃 폴더 열기
+zh=打开布局文件夹
+ja=レイアウトのフォルダーを開く
+)" "`n"
+        s .= "
+(
+it=Esiste già un layout chiamato "{1}". Sostituirlo?
+en=A layout named "{1}" already exists. Replace it?
+nap=Ce sta già nu layout chiammato "{1}". 'O cagnammo?
+bro=C'è già un layout chiamato "{1}". Lo sostituisco?
+es=Ya existe un diseño llamado "{1}". ¿Reemplazarlo?
+fr=Une disposition nommée "{1}" existe déjà. La remplacer ?
+de=Ein Layout namens "{1}" existiert bereits. Ersetzen?
+pt=Já existe um layout chamado "{1}". Substituí-lo?
+ru=Раскладка "{1}" уже существует. Заменить?
+ko="{1}" 레이아웃이 이미 있어요. 바꿀까요?
+zh=已存在名为 "{1}" 的布局。要替换吗？
+ja=レイアウト "{1}" は既にあります。置き換えますか？
+it=Nome del layout:
+en=Layout name:
+nap=Nomme d'o layout:
+bro=Nome del layout:
+es=Nombre del diseño:
+fr=Nom de la disposition :
+de=Name des Layouts:
+pt=Nome do layout:
+ru=Название раскладки:
+ko=레이아웃 이름:
+zh=布局名称：
+ja=レイアウト名：
+it=Verrà salvato come A2W_nome.ini nella cartella HUD LAYOUTS
+en=It will be saved as A2W_name.ini in the HUD LAYOUTS folder
+nap=Se sarva comme A2W_nomme.ini dint'a cartella HUD LAYOUTS
+bro=Finisce salvato come A2W_nome.ini nella cartella HUD LAYOUTS
+es=Se guardará como A2W_nombre.ini en la carpeta HUD LAYOUTS
+fr=Il sera enregistré sous A2W_nom.ini dans le dossier HUD LAYOUTS
+de=Wird als A2W_Name.ini im Ordner HUD LAYOUTS gespeichert
+pt=Será salvo como A2W_nome.ini na pasta HUD LAYOUTS
+ru=Будет сохранено как A2W_имя.ini в папке HUD LAYOUTS
+ko=HUD LAYOUTS 폴더에 A2W_이름.ini 로 저장돼요
+zh=将以 A2W_名称.ini 保存在 HUD LAYOUTS 文件夹中
+ja=HUD LAYOUTS フォルダーに A2W_名前.ini として保存されます
+it=Salva
+en=Save
+nap=Sarva
+bro=Salva
+es=Guardar
+fr=Enregistrer
+de=Speichern
+pt=Salvar
+ru=Сохранить
+ko=저장
+zh=保存
+ja=保存
 )" "`n"
         return s
     }
@@ -18290,6 +18919,7 @@ class GameMenuButton {
 ; modifiche da salvare; "Annulla" rimette i valori di prima.
 class OverlayEditor {
     static On := false, Handles := Map(), Bar := "", Orig := Map(), WasPreview := false, Drag := ""
+    static Hist := [], HistPos := 0, UndoBtn := "", RedoBtn := "", Prompt := "", PromptVal := "", LMenu := ""
     static RefreshFn := "", MsgOn := false, MsgOn2 := false, Grid := "", GridOn := true, GridSize := 40, Snap := true, GridLbl := "", SnapBtn := "", GridBtn := ""
 
     ; elementi spostabili: chiave, nome, variabili toccate
@@ -18335,8 +18965,12 @@ class OverlayEditor {
         }
         this.BuildGrid()
         this.BuildBar()
+        this.Hist := [], this.HistPos := 0, this.PaintHist()
         HotIfWinActive()
-        Hotkey("Esc", (*) => OverlayEditor.Stop(true), "On")
+        Hotkey("Esc", (*) => OverlayEditor.EscKey(), "On")
+        Hotkey("^z", (*) => OverlayEditor.Undo(), "On")
+        Hotkey("^y", (*) => OverlayEditor.Redo(), "On")
+        Hotkey("^+z", (*) => OverlayEditor.Redo(), "On")
         this.RefreshFn := ObjBindMethod(this, "Refresh")
         SetTimer(this.RefreshFn, -600)                          ; dopo la ricostruzione dell'anteprima
     }
@@ -18347,11 +18981,14 @@ class OverlayEditor {
             return
         this.On := false
         HotIfWinActive()
-        try Hotkey("Esc", "Off")
+        for hk in ["Esc", "^z", "^y", "^+z"]
+            try Hotkey(hk, "Off")
         SetTimer(this.RefreshFn, 0)
         for key, h in this.Handles
             try h.gui.Destroy()
         this.Handles := Map()
+        if IsObject(this.Prompt)
+            this.Prompt.Destroy(), this.Prompt := ""
         if IsObject(this.Bar)
             this.Bar.Destroy(), this.Bar := ""
         this.FreeGrid()
@@ -18367,6 +19004,7 @@ class OverlayEditor {
             S.Win.Show(), S.UpdateStatus()
     }
 
+    ; Barra in alto, su due righe: titolo e aiuto; griglia, snap, annulla/ripeti, layout, fine/annulla
     static BuildBar() {
         g := RandomRoll.Geo(), k := g.s
         b := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +Border")
@@ -18374,32 +19012,42 @@ class OverlayEditor {
         b.SetFont("s" Round(12 * k) " bold c" UiC("Accent"), "Segoe UI")
         b.AddText("xm ym", "✥  EDIT OVERLAY")
         b.SetFont("s" Round(9 * k) " norm c" UiC("SubText"), "Segoe UI")
-        b.AddText("x+" Round(16 * k) " yp+" Round(4 * k), Tr("Trascina gli elementi dove vuoi.  Esc = fine"))
-        ; griglia: accesa/spenta, misura dei riquadri (px), aggancio (snap)
-        bh := Round(28 * k)
-        b.SetFont("s" Round(9 * k) " bold c" UiOn("Text", "Row"), "Segoe UI")
-        this.GridBtn := b.AddText("x+" Round(18 * k) " ym w" Round(110 * k) " h" bh " Center 0x200 Background" UiC("Row"), "")
-        this.GridBtn.OnEvent("Click", (*) => OverlayEditor.ToggleGrid())
-        mi := b.AddText("x+" Round(4 * k) " ym w" bh " h" bh " Center 0x200 Background" UiC("Row"), "−")
-        mi.OnEvent("Click", (*) => OverlayEditor.GridStep(-1))
-        this.GridLbl := b.AddText("x+" Round(2 * k) " ym w" Round(64 * k) " h" bh " Center 0x200 Background" UiC("Deep"), "")
-        pl := b.AddText("x+" Round(2 * k) " ym w" bh " h" bh " Center 0x200 Background" UiC("Row"), "+")
-        pl.OnEvent("Click", (*) => OverlayEditor.GridStep(1))
-        this.SnapBtn := b.AddText("x+" Round(4 * k) " ym w" Round(100 * k) " h" bh " Center 0x200 Background" UiC("Row"), "")
-        this.SnapBtn.OnEvent("Click", (*) => OverlayEditor.ToggleSnap())
-        for c in [this.GridBtn, mi, pl, this.SnapBtn]
+        b.AddText("x+" Round(16 * k) " yp+" Round(4 * k), Tr("Trascina gli elementi dove vuoi.  Esc = fine") "   ·   "
+                . Tr("Ctrl+Z = indietro  ·  Ctrl+Y = avanti") "   ·   " Tr("✥ trascina questa barra per spostarla"))
+        bh := Round(28 * k), y2 := "y+" Round(10 * k)
+        btn(opt, txt, fn, bg := "Row") {
+            c := b.AddText(opt " h" bh " Center 0x200 Background" UiC(bg), txt)
+            c.OnEvent("Click", fn)
             RoundCtl(c, 8)
-        this.PaintBar()
+            return c
+        }
+        ; griglia: accesa/spenta, misura dei riquadri (px), aggancio (snap)
+        b.SetFont("s" Round(9 * k) " bold c" UiOn("Text", "Row"), "Segoe UI")
+        this.GridBtn := btn("xm " y2 " w" Round(110 * k), "", (*) => OverlayEditor.ToggleGrid())
+        btn("x+" Round(4 * k) " yp w" bh, "−", (*) => OverlayEditor.GridStep(-1))
+        this.GridLbl := b.AddText("x+" Round(2 * k) " yp w" Round(64 * k) " h" bh " Center 0x200 Background" UiC("Deep"), "")
+        btn("x+" Round(2 * k) " yp w" bh, "+", (*) => OverlayEditor.GridStep(1))
+        this.SnapBtn := btn("x+" Round(4 * k) " yp w" Round(100 * k), "", (*) => OverlayEditor.ToggleSnap())
+        ; storico
+        this.UndoBtn := btn("x+" Round(18 * k) " yp w" Round(96 * k), "↶  " Tr("Indietro"), (*) => OverlayEditor.Undo())
+        this.RedoBtn := btn("x+" Round(4 * k) " yp w" Round(96 * k), "↷  " Tr("Avanti"), (*) => OverlayEditor.Redo())
+        ; layout: preset e file
+        this.LayBtn := btn("x+" Round(18 * k) " yp w" Round(120 * k), "📐  " Tr("Layout") " ▾", ObjBindMethod(this, "LayoutMenu"))
+        this.PaintBar(), this.PaintHist()
+        ; fine / annulla tutto
         b.SetFont("s" Round(10 * k) " bold c" UiOn("Deep", "Accent"), "Segoe UI")
-        ok := b.AddText("x+" Round(18 * k) " ym w" Round(96 * k) " h" Round(28 * k) " Center 0x200 Background" UiC("Accent"), "✔  " Tr("Fine"))
-        ok.OnEvent("Click", (*) => OverlayEditor.Stop(true))
+        btn("x+" Round(18 * k) " yp w" Round(96 * k), "✔  " Tr("Fine"), (*) => OverlayEditor.Stop(true), "Accent")
         b.SetFont("s" Round(10 * k) " bold c" UiOn("Text", "Row"), "Segoe UI")
-        no := b.AddText("x+" Round(8 * k) " ym w" Round(110 * k) " h" Round(28 * k) " Center 0x200 Background" UiC("Row"), "↺  " Tr("Annulla"))
-        no.OnEvent("Click", (*) => OverlayEditor.Stop(false))
-        RoundCtl(ok, 10), RoundCtl(no, 10)
+        btn("x+" Round(8 * k) " yp w" Round(110 * k), "↺  " Tr("Annulla"), (*) => OverlayEditor.Stop(false))
         b.Show("NA AutoSize Hide")
-        b.GetPos(,, &bw)
-        b.Show(Format("NA x{} y{}", g.x + (g.w - bw) // 2, g.y + Round(14 * k)))
+        b.GetPos(,, &bw, &bh2)
+        x := g.x + (g.w - bw) // 2, y := g.y + Round(14 * k)
+        try {                                                   ; ultima posizione in cui l'hai lasciata
+            bx := IniRead(UserData.File, "Edit", "BarX", ""), by := IniRead(UserData.File, "Edit", "BarY", "")
+            if (IsInteger(bx) && IsInteger(by))
+                x := Min(g.x + g.w - bw, Max(g.x, Integer(bx))), y := Min(g.y + g.h - bh2, Max(g.y, Integer(by)))
+        }
+        b.Show(Format("NA x{} y{}", x, y))
         this.Bar := b
     }
 
@@ -18496,15 +19144,26 @@ class OverlayEditor {
         }
     }
 
-    ; mentre trascini: l'angolo in alto a sinistra si aggancia alla griglia (che passa per il centro)
+    ; Mentre trascini: la posizione segue sempre il mouse (calcolata dal punto in cui hai preso la
+    ; maniglia, non dalla posizione già agganciata) e si aggancia a una linea della griglia solo
+    ; quando ci passi vicino (calamita), così gli elementi si muovono liberi tra una linea e l'altra.
     static OnMoving(wp, lp, msg, hwnd) {
-        if (!this.On || !this.Snap || !IsObject(this.Drag) || hwnd != this.Drag.gui.Hwnd)
+        if (!this.On || !IsObject(this.Drag) || hwnd != this.Drag.gui.Hwnd)
             return
-        g := RandomRoll.Geo(), gs := this.GridSize
-        l := NumGet(lp, 0, "Int"), t := NumGet(lp, 4, "Int"), w := NumGet(lp, 8, "Int") - l, h := NumGet(lp, 12, "Int") - t
-        ox := g.x + Mod(g.w // 2, gs), oy := g.y + Mod(g.h // 2, gs)
-        nl := ox + Round((l - ox) / gs) * gs, nt := oy + Round((t - oy) / gs) * gs
-        NumPut("Int", nl, lp, 0), NumPut("Int", nt, lp, 4), NumPut("Int", nl + w, lp, 8), NumPut("Int", nt + h, lp, 12)
+        d := this.Drag, pt := Buffer(8)
+        DllCall("GetCursorPos", "Ptr", pt)
+        l := NumGet(pt, 0, "Int") - d.gx, t := NumGet(pt, 4, "Int") - d.gy
+        w := NumGet(lp, 8, "Int") - NumGet(lp, 0, "Int"), h := NumGet(lp, 12, "Int") - NumGet(lp, 4, "Int")
+        if this.Snap {
+            g := RandomRoll.Geo(), gs := this.GridSize, thr := Max(4, Min(gs * 0.22, 12 * g.s))
+            ox := g.x + Mod(g.w // 2, gs), oy := g.y + Mod(g.h // 2, gs)   ; la griglia passa per il centro
+            sl := ox + Round((l - ox) / gs) * gs, st := oy + Round((t - oy) / gs) * gs
+            if (Abs(sl - l) <= thr)
+                l := sl
+            if (Abs(st - t) <= thr)
+                t := st
+        }
+        NumPut("Int", l, lp, 0), NumPut("Int", t, lp, 4), NumPut("Int", l + w, lp, 8), NumPut("Int", t + h, lp, 12)
         return true
     }
 
@@ -18526,7 +19185,7 @@ class OverlayEditor {
             case "random":                                       ; il numero non è sempre a schermo: area calcolata
                 if !PreviewAllows("random")
                     return ""
-                g := RandomRoll.Geo(), k := g.s * RandomScale, w := Round(460 * k), h := Round(400 * k)
+                g := RandomRoll.Geo(), k := g.s * RandomScale, w := RandomRoll.BoxW(k), h := Round(400 * k)
                 return [g.x + Round(g.w * RandomX / 100) - w // 2, g.y + Round(g.h * RandomY / 100) - h // 2, w, h]
         }
         x1 := 1e9, y1 := 1e9, x2 := -1e9, y2 := -1e9
@@ -18596,17 +19255,28 @@ class OverlayEditor {
     static OnDown(wp, lp, msg, hwnd) {
         if !this.On
             return
+        if (IsObject(this.Bar) && hwnd = this.Bar.Hwnd) {       ; barra degli strumenti: si trascina dallo sfondo/testi
+            PostMessage(0xA1, 2, 0, this.Bar.Hwnd)
+            return 0
+        }
         h := this.HandleOf(hwnd)
         if !IsObject(h)
             return
         h.gui.GetPos(&x, &y)
-        h.x := x, h.y := y, this.Drag := h
+        pt := Buffer(8)
+        DllCall("GetCursorPos", "Ptr", pt)
+        h.x := x, h.y := y, h.gx := NumGet(pt, 0, "Int") - x, h.gy := NumGet(pt, 4, "Int") - y, this.Drag := h
         WinSetTransparent(170, h.gui.Hwnd)
         PostMessage(0xA1, 2, 0, h.gui.Hwnd)                     ; WM_NCLBUTTONDOWN + HTCAPTION: lo trascina Windows
         return 0
     }
 
     static OnDrop(wp, lp, msg, hwnd) {
+        if (this.On && IsObject(this.Bar) && hwnd = this.Bar.Hwnd) {     ; barra spostata: ricorda dove
+            this.Bar.GetPos(&bx, &by)
+            try IniWrite(bx, UserData.File, "Edit", "BarX"), IniWrite(by, UserData.File, "Edit", "BarY")
+            return
+        }
         if (!this.On || !IsObject(this.Drag) || hwnd != this.Drag.gui.Hwnd)
             return
         h := this.Drag, this.Drag := ""
@@ -18648,9 +19318,201 @@ class OverlayEditor {
                 vals.Delete(v)
         if !vals.Count
             return
-        S.SetValues(vals), this.ShowRows(vals)
-        if (key = "randomicon" || key = "random")
-            RandomRoll.BuildIcon()
+        this.Commit(vals)
+    }
+
+    ; ---------------- Storico (Annulla / Ripeti) della sessione di modifica ----------------
+    ; Ogni modifica salva i valori di prima e quelli nuovi; una modifica nuova cancella i "Ripeti".
+    static Commit(vals) {
+        S := SettingsEditor, before := Map()
+        for v in vals
+            before[v] := S.Val(v)
+        while (this.Hist.Length > this.HistPos)
+            this.Hist.Pop()
+        this.Hist.Push({before: before, after: vals.Clone()}), this.HistPos := this.Hist.Length
+        this.Set(vals)
+    }
+
+    static Undo() {
+        if (!this.On || this.HistPos < 1)
+            return
+        this.Set(this.Hist[this.HistPos].before), this.HistPos -= 1
+    }
+
+    static Redo() {
+        if (!this.On || this.HistPos >= this.Hist.Length)
+            return
+        this.HistPos += 1, this.Set(this.Hist[this.HistPos].after)
+    }
+
+    ; applica i valori (anteprima ricostruita), aggiorna l'elenco e riallinea le maniglie
+    static Set(vals) {
+        SettingsEditor.SetValues(vals), this.ShowRows(vals)
+        for v in vals
+            if (SubStr(v, 1, 6) = "Random") {
+                RandomRoll.BuildIcon()
+                break
+            }
+        this.PaintHist()
+        SetTimer(this.RefreshFn, -600)
+    }
+
+    static PaintHist() {
+        for pair in [[this.UndoBtn, this.HistPos > 0], [this.RedoBtn, this.HistPos < this.Hist.Length]] {
+            c := pair[1]
+            if !IsObject(c)
+                continue
+            c.SetFont("c" (pair[2] ? UiOn("Text", "Row") : UiC("Muted"))), c.Redraw()
+        }
+    }
+
+    ; ---------------- Layout dell'HUD: salva / carica ----------------
+    ; Un layout = le posizioni di tutti gli elementi spostabili (le variabili di Items). Ogni layout
+    ; salvato è un file "A2W_<nome>.ini" nella cartella HUD LAYOUTS accanto allo script: si può
+    ; copiare, condividere o mettere lì un layout ricevuto da altri, e compare subito nel menu.
+    static LayoutDir => A_ScriptDir "\HUD LAYOUTS"
+
+    static LayoutVars() {
+        out := []
+        for it in this.Items
+            for v in it[3]
+                if SettingsEditor.Cfg.Has(v)
+                    out.Push(v)
+        return out
+    }
+
+    static LayoutText() {
+        txt := ""
+        for v in this.LayoutVars()
+            txt .= v "=v:" SettingsEditor.Val(v) "`n"
+        return txt "_Salvato=" FormatTime(, "dd/MM/yyyy HH:mm")
+    }
+
+    static LayoutMenu(*) {
+        m := Menu()
+        names := this.LayoutNames()
+        for n in names
+            m.Add("📐  " n, ObjBindMethod(this, "LoadPreset", n))
+        if !names.Length {
+            m.Add(Tr("Nessun layout salvato"), (*) => 0)
+            m.Disable(Tr("Nessun layout salvato"))
+        }
+        m.Add()
+        m.Add("💾  " Tr("Salva il layout attuale..."), (*) => OverlayEditor.SavePreset())
+        if names.Length {
+            del := Menu()
+            for n in names
+                del.Add(n, ObjBindMethod(this, "DeletePreset", n))
+            m.Add("🗑️  " Tr("Elimina un layout"), del)
+        }
+        m.Add("📂  " Tr("Apri la cartella dei layout"), (*) => OverlayEditor.OpenLayoutDir())
+        ; il menu va tenuto vivo: se viene liberato quando la funzione finisce, il click sulla voce
+        ; arriva dopo e non trova più niente da eseguire (era il motivo per cui "non succedeva niente")
+        this.LMenu := m
+        m.Show()
+    }
+
+    static LayoutPath(name) => this.LayoutDir "\A2W_" name ".ini"
+
+    static LayoutNames() {
+        out := []
+        loop files this.LayoutDir "\A2W_*.ini"
+            out.Push(RegExReplace(A_LoopFileName, "i)^A2W_(.*)\.ini$", "$1"))
+        return out
+    }
+
+    static SavePreset() {
+        try name := this.AskName()
+        catch as e
+            return ShowTip("⚠ " e.Message, 5000)
+        name := Trim(RegExReplace(name, '[\\/:*?"<>|]', ""))      ; caratteri non validi nei nomi dei file
+        if (name = "")
+            return
+        f := this.LayoutPath(name)
+        if (FileExist(f) && MsgBox(Tr("Esiste già un layout chiamato `"{1}`". Sostituirlo?", name), "AION 2 Wingman", 0x40124) != "Yes")
+            return
+        try {
+            DirCreate(this.LayoutDir)
+            try FileDelete(f)
+            IniWrite(this.LayoutText(), f, "AION 2 Wingman HUD")
+            ShowTip(Tr("Layout salvato: {1}", "A2W_" name ".ini"))
+        } catch as e
+            MsgBox(e.Message, "AION 2 Wingman", 0x40030)
+    }
+
+    static DeletePreset(name, *) {
+        if (MsgBox(Tr("Eliminare il layout `"{1}`"?", name), "AION 2 Wingman", 0x40124) = "Yes")
+            try FileDelete(this.LayoutPath(name))
+    }
+
+    static LoadPreset(name, *) {
+        txt := ""
+        try txt := IniRead(this.LayoutPath(name), "AION 2 Wingman HUD")
+        if (txt = "")
+            return MsgBox(Tr("Il file non contiene un layout dell'HUD."), "AION 2 Wingman", 0x40030)
+        this.LoadText(txt)
+    }
+
+    static OpenLayoutDir() {
+        try DirCreate(this.LayoutDir)
+        try Run('explorer.exe "' this.LayoutDir '"')
+    }
+
+    ; finestrella per il nome, sopra la griglia e la barra (le finestre di Windows finirebbero sotto)
+    static AskName() {
+        k := RandomRoll.Geo().s, this.PromptVal := ""
+        p := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +Border +Owner" this.Bar.Hwnd)
+        p.BackColor := UiC("Deep"), p.MarginX := Round(16 * k), p.MarginY := Round(14 * k)
+        p.SetFont("s" Round(11 * k) " bold c" UiC("Accent"), "Segoe UI")
+        p.AddText("xm ym", "💾  " Tr("Nome del layout:"))
+        p.SetFont("s" Round(10 * k) " norm c" UiC("SubText"), "Segoe UI")
+        p.AddText("xm y+" Round(4 * k), Tr("Verrà salvato come A2W_nome.ini nella cartella HUD LAYOUTS"))
+        p.SetFont("s" Round(11 * k) " norm c000000", "Segoe UI")
+        ed := p.AddEdit("xm y+" Round(10 * k) " w" Round(360 * k) " r1 Limit60")
+        ok(*) {
+            OverlayEditor.PromptVal := ed.Value
+            p.Destroy(), OverlayEditor.Prompt := ""
+        }
+        no(*) {
+            p.Destroy(), OverlayEditor.Prompt := ""
+        }
+        p.AddButton("x0 y0 w1 h1 Hidden Default", "OK").OnEvent("Click", ok)    ; Invio = salva
+        bh := Round(28 * k)
+        p.SetFont("s" Round(10 * k) " bold c" UiOn("Deep", "Accent"), "Segoe UI")
+        c := p.AddText("xm y+" Round(12 * k) " w" Round(120 * k) " h" bh " Center 0x200 Background" UiC("Accent"), "✔  " Tr("Salva"))
+        c.OnEvent("Click", ok), RoundCtl(c, 8)
+        p.SetFont("s" Round(10 * k) " bold c" UiOn("Text", "Row"), "Segoe UI")
+        c := p.AddText("x+" Round(8 * k) " yp w" Round(120 * k) " h" bh " Center 0x200 Background" UiC("Row"), "✖  " Tr("Annulla"))
+        c.OnEvent("Click", no), RoundCtl(c, 8)
+        p.OnEvent("Close", no)
+        this.Prompt := p
+        this.Bar.GetPos(&bx, &by, &bw, &bhh)
+        p.Show("Hide AutoSize")
+        p.GetPos(,, &pw)
+        p.Show(Format("x{} y{}", bx + (bw - pw) // 2, by + bhh + Round(8 * k)))
+        ed.Focus()
+        WinWaitClose(p.Hwnd)
+        return this.PromptVal
+    }
+
+    ; Esc: chiude la finestrella del nome se è aperta, altrimenti esce dall'editor
+    static EscKey() {
+        if IsObject(this.Prompt)
+            return (this.Prompt.Destroy(), this.Prompt := "")
+        this.Stop(true)
+    }
+
+    ; righe "Var=v:valore" -> valori validi; il caricamento finisce nello storico (si può annullare)
+    static LoadText(txt) {
+        S := SettingsEditor, vals := Map(), ok := Map()
+        for v in this.LayoutVars()
+            ok[v] := true
+        for ln in StrSplit(txt, "`n", "`r")
+            if (RegExMatch(ln, "^(\w+)=v:(.*)$", &m) && ok.Has(m[1]) && S.Invalid(m[1], m[2]) = "" && m[2] != S.Val(m[1]))
+                vals[m[1]] := m[2]
+        if vals.Count
+            this.Commit(vals)
+        ShowTip(vals.Count ? Tr("Layout caricato") : Tr("Il layout è uguale a quello attuale"))
     }
 
     ; aggiorna le righe dell'elenco delle Impostazioni con i nuovi valori
@@ -18685,6 +19547,9 @@ class RandomRoll {
     ; ---------------- Schermata delle carte (Mysterious Track degli Shugo) ----------------
     ; Prima un controllo leggerissimo (fascia sopra le carte quasi nera), poi l'OCR del titolo
     ; "Mysterious Track" / "Select the reward" in alto al centro. Due letture mancate = icona via.
+    ; Schermata delle carte: sopra le carte lo sfondo è nero uniforme (luminosità ~12, mai oltre ~15),
+    ; a metà altezza si alternano le carte (chiare) e gli spazi tra loro (neri). Due righe di pixel
+    ; bastano a riconoscerla senza OCR; l'OCR del titolo resta solo come riserva, al massimo ogni 2,5 s.
     static CardCheck() {
         if !IsObject(this.Icon)
             return
@@ -18693,34 +19558,58 @@ class RandomRoll {
             return
         }
         ; (FieldBoss.Running è vero sempre col gioco in primo piano: si salta solo con la mappa aperta)
-        if (FieldBossTool.OcrBusy || (IsObject(FieldBoss) && (FieldBoss.Busy || FieldBoss.Shown)))
+        if (IsObject(FieldBoss) && (FieldBoss.Busy || FieldBoss.Shown))
             return
         g := this.Geo()
-        if !this.DarkBand(g) {                             ; niente sfondo scuro: niente carte (e niente OCR)
-            this.CardFail := 0, this.CardNext := 0
+        if !this.DarkBand(g) {                             ; niente fondo nero: niente carte
             if (this.CardOn && ++this.CardMiss >= 2)
                 this.CardOn := false
             return
         }
         this.CardMiss := 0
-        if (this.CardOn || A_TickCount < this.CardNext)    ; già riconosciute, o OCR fallito da poco
+        if this.CardOn
             return
-        if this.TitleSeen(g)
-            this.CardOn := true, this.CardFail := 0
-        else                                               ; scena scura ma non sono le carte: OCR sempre più di rado
-            this.CardNext := A_TickCount + Min(15000, 1500 * 2 ** this.CardFail), this.CardFail += 1
+        if (this.CardRuns(g) >= 3)                         ; carte riconosciute dai pixel: subito
+            return (this.CardOn := true)
+        if (!FieldBossTool.OcrBusy && A_TickCount >= this.CardNext) {   ; riserva: titolo con l'OCR
+            this.CardNext := A_TickCount + 2500
+            if this.TitleSeen(g)
+                this.CardOn := true
+        }
     }
 
+    ; fondo nero e uniforme sopra le carte (riga a 23,5% dell'altezza)
     static DarkBand(g) {
-        x := g.x + Round(g.w * 0.30), w := Round(g.w * 0.40), sum := 0, n := 0, stp := Max(8, Round(g.s * 12))
-        for fy in [0.235] {                                ; una riga sottile: leggerissimo
-            buf := FieldBossTool.Capture(x, g.y + Round(g.h * fy), w, 1)
-            loop w // stp {
-                c := NumGet(buf, (A_Index - 1) * stp * 4, "UInt")
-                sum += ((c >> 16) & 0xFF) + ((c >> 8) & 0xFF) + (c & 0xFF), n += 3
+        x := g.x + Round(g.w * 0.30), w := Round(g.w * 0.40), sum := 0, n := 0, mx := 0, stp := Max(6, Round(g.s * 8))
+        buf := FieldBossTool.Capture(x, g.y + Round(g.h * 0.235), w, 1)
+        loop w // stp {
+            c := NumGet(buf, (A_Index - 1) * stp * 4, "UInt")
+            v := (((c >> 16) & 0xFF) + ((c >> 8) & 0xFF) + (c & 0xFF)) / 3
+            sum += v, n += 1, mx := Max(mx, v)
+        }
+        return n && sum / n < 32 && mx < 55
+    }
+
+    ; quante "carte" (tratti chiari larghi, separati da spazi neri) ci sono a metà altezza
+    static CardRuns(g) {
+        x := g.x + Round(g.w * 0.15), w := Round(g.w * 0.70), stp := Max(3, Round(g.s * 4))
+        buf := FieldBossTool.Capture(x, g.y + Round(g.h * 0.51), w, 1)
+        runs := 0, len := 0, gap := 0, minLen := g.w * 0.07, minGap := g.w * 0.006
+        loop w // stp {
+            c := NumGet(buf, (A_Index - 1) * stp * 4, "UInt")
+            v := (((c >> 16) & 0xFF) + ((c >> 8) & 0xFF) + (c & 0xFF)) / 3
+            if (v > 35) {
+                len += stp, gap := 0
+            } else {
+                gap += stp
+                if (gap >= minGap) {                        ; spazio tra due carte: chiude il tratto
+                    if (len >= minLen)
+                        runs += 1
+                    len := 0
+                }
             }
         }
-        return n && sum / n < 70                            ; sfondo della schermata delle carte: quasi nero
+        return runs + (len >= minLen ? 1 : 0)
     }
 
     ; titolo in alto ("Mysterious Track / Select the reward...") oppure, se non si legge, i pulsanti
@@ -18755,9 +19644,13 @@ class RandomRoll {
     static Roll(*) {
         lo := Round(Min(RandomMin, RandomMax)), hi := Round(Max(RandomMin, RandomMax))
         this.Close()
-        this.Lo := lo, this.Hi := hi, this.Result := Random(lo, hi), this.Shown := Random(lo, hi), this.Step := -1
+        this.N := Max(1, Min(4, Round(RandomCount), hi - lo + 1))       ; più numeri: tutti diversi tra loro
+        this.Lo := lo, this.Hi := hi, this.Result := this.Pick(), this.Shown := this.Pick(), this.Step := -1
         g := this.Geo(), k := g.s * RandomScale
-        this.K := k, this.W := Round(460 * k), this.H := Round(400 * k)
+        this.K := k, this.W := this.BoxW(k), this.H := Round(400 * k)
+        ; dimensione del numero: si rimpicciolisce con più numeri o numeri lunghi, così stanno nella finestra
+        em := this.N * StrLen(String(hi)) * 0.58 + (this.N - 1) * 0.75
+        this.FS := Min([230, 200, 172, 150][this.N] * k, 0.9 * this.W / Max(1, em))
         x := g.x + Round(g.w * RandomX / 100) - this.W // 2, y := g.y + Round(g.h * RandomY / 100) - this.H // 2
         w := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000 +E0x20 +E0x08000000")
         w.Show(Format("NA x{} y{} w{} h{}", x, y, this.W, this.H))
@@ -18773,7 +19666,7 @@ class RandomRoll {
         DllCall("gdiplus\GdipSetSmoothingMode", "Ptr", gr, "Int", 4)
         DllCall("gdiplus\GdipSetPixelOffsetMode", "Ptr", gr, "Int", 2)
         DllCall("gdiplus\GdipCreateFontFamilyFromName", "WStr", "Segoe UI", "Ptr", 0, "Ptr*", &fam := 0)
-        DllCall("gdiplus\GdipCreateStringFormat", "Int", 0, "Int", 0, "Ptr*", &fmt := 0)
+        DllCall("gdiplus\GdipCreateStringFormat", "Int", 0x1000, "Int", 0, "Ptr*", &fmt := 0)   ; senza a capo
         DllCall("gdiplus\GdipSetStringFormatAlign", "Ptr", fmt, "Int", 1)
         DllCall("gdiplus\GdipSetStringFormatLineAlign", "Ptr", fmt, "Int", 1)
         this.Fam := fam, this.Fmt := fmt
@@ -18784,11 +19677,32 @@ class RandomRoll {
         this.SizeBuf := Buffer(8), NumPut("Int", this.W, "Int", this.H, this.SizeBuf)
         this.PtSrc := Buffer(8, 0)
         ; etichetta fissa in alto: "RANDOM  1 – 5"
-        this.PLabel := this.Path("RANDOM   " lo " – " hi, 1, 26 * k, 0, 0, this.W, 60 * k)
+        this.PLabel := this.Path("RANDOM   " lo " – " hi (this.N > 1 ? "   ×" this.N : ""), 1, 26 * k, 0, 0, this.W, 60 * k)
         this.T0 := A_TickCount, this.PNum := 0, this.NumVal := ""
         this.Fn := ObjBindMethod(this, "Tick")
         this.Tick()
         SetTimer(this.Fn, Max(10, AnimInterval))
+    }
+
+    ; larghezza della finestra del numero: più larga con più numeri
+    static BoxW(k) => Round(460 * k * [1, 1.45, 1.9, 2.35][Max(1, Min(4, Round(RandomCount)))])
+
+    ; N numeri diversi tra Lo e Hi, nell'ordine in cui escono
+    static Pick() {
+        out := [], used := Map()
+        while (out.Length < this.N) {
+            n := Random(this.Lo, this.Hi)
+            if !used.Has(n)
+                used[n] := 1, out.Push(n)
+        }
+        return out
+    }
+
+    static Join(arr) {
+        txt := ""
+        for n in arr
+            txt .= (A_Index > 1 ? "   " : "") n
+        return txt
     }
 
     static Path(text, style, size, x, y, w, h) {
@@ -18814,8 +19728,9 @@ class RandomRoll {
             if (step != this.Step) {
                 this.Step := step
                 if (this.Hi > this.Lo) {
-                    loop 6                                    ; un numero diverso da quello a schermo
-                        if ((n := Random(this.Lo, this.Hi)) != this.Shown)
+                    old := this.Join(this.Shown)
+                    loop 6                                    ; numeri diversi da quelli a schermo
+                        if (this.Join(n := this.Pick()) != old)
                             break
                     this.Shown := n
                 }
@@ -18843,10 +19758,11 @@ class RandomRoll {
         DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", cx, "Float", cy, "Int", 0)
         DllCall("gdiplus\GdipScaleWorldTransform", "Ptr", g, "Float", sc, "Float", sc, "Int", 0)
         DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", g, "Float", -cx, "Float", -cy, "Int", 0)
+        num := this.Join(num)
         if (num != this.NumVal) {                                  ; contorno rifatto solo quando cambia il numero
             if this.PNum
                 DllCall("gdiplus\GdipDeletePath", "Ptr", this.PNum)
-            this.PNum := this.Path(String(num), 1, 230 * k, 0, cy - 150 * k, this.W, 300 * k), this.NumVal := num
+            this.PNum := this.Path(num, 1, this.FS, 0, cy - 150 * k, this.W, 300 * k), this.NumVal := num
         }
         path := this.PNum
         if final                                                   ; alone del colore d'accento
@@ -18892,7 +19808,7 @@ class RandomRoll {
             this.Icon.Destroy()
         this.Icon := "", this.IconShown := false, this.Hot := false
         if this.TickFn                                      ; timer accesi solo se l'icona esiste
-            SetTimer(this.TickFn, RandomIconEnabled ? 120 : 0), SetTimer(this.CardFn, RandomIconEnabled && RandomIconMode != "always" ? 1200 : 0)
+            SetTimer(this.TickFn, RandomIconEnabled ? 120 : 0), SetTimer(this.CardFn, RandomIconEnabled && RandomIconMode != "always" ? 800 : 0)
         if !RandomIconEnabled
             return
         k := this.Geo().s * RandomIconScale
