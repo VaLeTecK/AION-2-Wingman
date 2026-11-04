@@ -2997,6 +2997,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.FavCount := -1                     ; preferiti usati nella lista Kibelisk (-1 = non ancora letti)
         this.Hint := "", this.HintFor := 0, this.HintTimed := false, this.Ring := "", this.RingT0 := 0, this.Step := 0
         this.HintHideFn := ObjBindMethod(this, "HintHide")
+        this.ForceLock := false
         this.Dir := "", this.DirFor := 0, this.DirLeft := 0, this.CurBoss := "", this.HoverFn := ObjBindMethod(this, "HoverCheck")
         this.BlockClicks := false
         this.LockPt := "", this.LockFn := ObjBindMethod(this, "LockTick")
@@ -3057,7 +3058,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
 
     ; ---------------- Blocco del mouse (dalla scelta del boss al Travel) ----------------
     StartLock() {
-        if !FieldBossLockMouse
+        if !(FieldBossLockMouse || this.ForceLock)
             return
         MouseGetPos(&mx, &my)
         this.LockPt := {x: mx, y: my}
@@ -3560,21 +3561,151 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
     ; Teleport da tenere nei preferiti: quelli dei boss con la priorità più alta (👑 > 💎 > 🔥 > ⭐ > nessuna),
     ; al massimo 10 (limite dei Favorites del gioco)
     FavWanted(tele) {
+        this.FavList()
+        return this.FavSet.Has(tele)
+    }
+
+    ; gli stessi Teleport in ordine di priorità (per la preparazione accelerata)
+    FavList() {
         if (!this.HasOwnProp("FavSet") || this.FavFor != this.Bosses) {
             list := []
             for name, b in this.Bosses
                 if (b.tele != "")
                     list.Push({t: b.tele, p: b.tier ? b.tier : 9})
-            set := Map(), set.CaseSense := false
+            set := Map(), set.CaseSense := false, order := []
             loop 10 {                                      ; per priorità, senza doppioni
                 p := A_Index
                 for it in list
                     if (it.p = p && !set.Has(it.t) && set.Count < 10)
-                        set[it.t] := true
+                        set[it.t] := true, order.Push(it.t)
             }
-            this.FavSet := set, this.FavFor := this.Bosses
+            this.FavSet := set, this.FavOrder := order, this.FavFor := this.Bosses
         }
-        return this.FavSet.Has(tele)
+        return this.FavOrder
+    }
+
+    ; Preparazione accelerata della ULTRA-FAST MODE (dal tour della mappa), tutta automatica tranne il
+    ; click sulla stellina (il gioco non accetta click simulati):
+    ;  1. torna in cima alla lista e legge i Teleport che sono GIÀ nei preferiti (sezione Favorites o
+    ;     stellina dorata): quelli dei boss principali sono segnati come fatti, senza cercarli;
+    ;  2. per ogni altro Teleport dei boss con la priorità più alta (max 10) scorre la lista da solo,
+    ;     lo trova e guarda la sua stellina: dorata = già nei preferiti, grigia = ti fa cliccarla;
+    ;  3. dopo il tuo click ricontrolla che la stellina sia diventata dorata (se no, te la richiede).
+    ; Salta i Teleport non sbloccati e quelli che non trova. Esc interrompe.
+    ; Durante la preparazione mouse e click sono SEMPRE bloccati (anche se nelle impostazioni sono
+    ; spenti): passano solo il click sulla stellina richiesta e quelli sul pannello Field Boss.
+    FavPrep() {
+        this.ForceLock := true
+        try {
+            this.FavPrepRun()
+        } finally {
+            this.ForceLock := false
+        }
+    }
+
+    FavPrepRun() {
+        this.Step := 0, this.CurBoss := ""
+        if (this.MapVisible() && this.InDungeon())
+            return this.HintShow(Tr("Preparazione non disponibile"), Tr("Apri la mappa di Altgard, non quella di un dungeon"), "err", 4000)
+        this.BlockClicks := true
+        this.StartLock()
+        if !this.TeleListVisible() && !this.GuideToKibelisk()
+            return
+        list := this.FavList(), added := 0, have := 0, locked := 0, miss := 0, full := false
+        key(tele) => [RegExMatch(tele, "^\s*(\d{1,3})", &m) ? Integer(m[1]) : 0, FieldBossTool.Norm(RegExReplace(tele, "^\s*\d{1,3}\s*[.,:]?\s*"))]
+        isFav(it, items) => it.fav || this.StarAt(it, items.right).state = "gold"
+        ; 1. preferiti già presenti, letti in cima alla lista
+        this.HintShow(Tr("Controllo i preferiti..."), Tr("Leggo i Teleport già nei preferiti in cima alla lista"), "wait")
+        this.ListTop()
+        top := this.ReadTele(), done := Map(), done.CaseSense := false
+        for tele in list {
+            k := key(tele)
+            if ((it := FieldBossTool.TeleFind(top, k[1], k[2])) && isFav(it, top))
+                done[tele] := true
+        }
+        ; 2-3. gli altri, uno per uno
+        for i, tele in list {
+            if this.Cancel
+                return
+            head := Tr("Preparazione ULTRA-FAST  {1}/{2}", i, list.Length)
+            if done.Has(tele) {
+                have += 1
+                this.HintShow(head, "✔  " tele "   ·   " Tr("già nei preferiti"), "ok")
+                Sleep(300)
+                continue
+            }
+            if (this.FavCount >= 10) {                     ; preferiti del gioco pieni
+                full := true
+                break
+            }
+            this.HintShow(head, Tr("Cerco {1}...", tele), "wait")
+            it := this.SearchTele(tele, false)
+            if !it {
+                miss += 1
+                continue
+            }
+            if (it.bound = false) {
+                locked += 1
+                continue
+            }
+            items := this.ReadTele()
+            st := it.fav ? {state: "gold"} : this.StarAt(it, items.right)
+            if (st.state = "") {                           ; stellina non letta: seconda lettura
+                Sleep(200)
+                k := key(tele), items := this.ReadTele()
+                if (it2 := FieldBossTool.TeleFind(items, k[1], k[2]))
+                    it := it2, st := it.fav ? {state: "gold"} : this.StarAt(it, items.right)
+            }
+            if (st.state = "gold") {
+                have += 1
+                this.HintShow(head, "✔  " tele "   ·   " Tr("già nei preferiti"), "ok")
+                Sleep(300)
+                continue
+            }
+            if (st.state = "") {
+                miss += 1
+                continue
+            }
+            ok := false
+            loop 2 {                                       ; click sulla stellina, poi verifica
+                r := this.AddFavorite(it, tele)
+                if !r                                      ; Esc o mappa chiusa
+                    return
+                Sleep(200)
+                k := key(tele), items := this.ReadTele()
+                chk := FieldBossTool.TeleFind(items, k[1], k[2]) || r
+                if isFav(chk, items) {
+                    ok := true
+                    break
+                }
+                it := chk
+            }
+            if ok
+                added += 1
+            else
+                miss += 1
+        }
+        sub := Tr("{1} aggiunti ai preferiti  ·  {2} già presenti  ·  {3} non sbloccati  ·  {4} non trovati", added, have, locked, miss)
+        if full
+            sub := Tr("Preferiti del gioco pieni: 10/10") "   ·   " sub
+        this.HintShow(Tr("Preparazione completata"), sub, "ok", 8000, true)
+    }
+
+    ; lista dei Teleport riportata in cima (dove ci sono i preferiti)
+    ListTop() {
+        prev := ""
+        loop 8 {
+            if this.Cancel
+                return
+            sig := ""
+            for i in this.ReadTele()
+                sig .= i.num ":" i.n "|"
+            if (sig = prev)
+                return
+            prev := sig
+            this.Wheel("Up", Max(1, FieldBossUltraScrollStep) * 3)
+            Sleep(120)
+        }
     }
 
     ; Stellina dei preferiti a destra della riga: {state: "gold" | "grey" | "", x, y}
@@ -4003,7 +4134,7 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
             ToolTip(title (sub != "" ? "`n" sub : ""), pt.x + 25, pt.y + 20)
         wasBlocked := this.BlockClicks
         this.BlockClicks := false                 ; in questa fase il click deve arrivare al gioco
-        ok := this.WaitClick(sec, accept, FieldBossLockMouse ? pt : "")
+        ok := this.WaitClick(sec, accept, (FieldBossLockMouse || this.ForceLock) ? pt : "")
         Sleep(60)                                 ; lascia arrivare al gioco anche il rilascio del tasto
         this.BlockClicks := wasBlocked && ok      ; di nuovo bloccati fino alla fase successiva
         this.RingHide()
@@ -4759,6 +4890,8 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         this.Shown := true
         if this.Faded
             WinSetTransparent(FieldBossFadeAlpha, this.Panel.Hwnd)
+        if (kind = "field")
+            MapTour.Maybe()                             ; prima volta: tour della mappa
     }
 
     ; Mappa chiusa (o gioco non in primo piano): nasconde tutto e rimette il pannello com'era
@@ -5859,6 +5992,7 @@ class SettingsEditor {
         this.MaintCtrls := []
         for it in [["🧙  " Tr("Riesegui il FIRST RUN QUICK-SETUP"), (*) => this.RunSetup()]
                  , ["🎓  " Tr("Rifai il tour delle Impostazioni"), (*) => Tutorial.Start()]
+                 , ["🗺️  " Tr("Rifai il tour della mappa"), (*) => MapTour.Reset()]
                  , ["📖  " Tr("Apri la guida rapida"), (*) => Tutorial.OpenGuide()]
                  , ["🔄  " Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow()]
                  , ["🌐  " Tr("Pagina del progetto su GitHub"), (*) => Updater.OpenPage()]
@@ -5868,7 +6002,7 @@ class SettingsEditor {
                  , ["📂  " Tr("Apri la cartella delle impostazioni personali"), (*) => Run('explorer.exe "' UserData.Dir '"')]
                  , ["🗂️  " Tr("Apri la cartella di Wingman"), (*) => Run('explorer.exe "' A_ScriptDir '"')]
                  , ["📝  " Tr("Apri il file"), (*) => Run('notepad.exe "' A_ScriptFullPath '"')]] {
-            bt := g.AddButton("x" X " y" (160 + (A_Index - 1) * 46) " w420 h36 Left", "   " it[1])
+            bt := g.AddButton("x" X " y" (160 + (A_Index - 1) * 42) " w420 h36 Left", "   " it[1])
             if IsObject(it[2])
                 bt.OnEvent("Click", it[2])
             else
@@ -18324,6 +18458,438 @@ ru=Настройки открываются по Ctrl+Shift+F12, двойным
 ko=설정은 Ctrl+Shift+F12, 시계 옆 "H" 아이콘 더블 클릭, 또는 게임 메뉴(Esc)의 오른쪽 위 Wingman 아이콘으로 열 수 있어요. 빠른 가이드에 HUD 키와 첫 단계가 있어요. 즐거운 게임 되세요!
 zh=按 Ctrl+Shift+F12、双击时钟旁的“H”图标，或在游戏菜单（Esc）中点击右上角的 Wingman 图标即可打开设置。快速指南中有 HUD 按键和入门步骤。祝游戏愉快！
 ja=設定は Ctrl+Shift+F12、時計の近くの「H」アイコンのダブルクリック、またはゲームメニュー（Esc）の右上にある Wingman アイコンから開けます。クイックガイドに HUD のキーと最初の手順があります。楽しんでください！
+it=TOUR DELLA MAPPA
+en=MAP TOUR
+nap=GIRO D'A MAPPA
+bro=TOUR DELLA MAPPA
+es=TOUR DEL MAPA
+fr=VISITE DE LA CARTE
+de=KARTEN-TOUR
+pt=TOUR DO MAPA
+ru=ОБЗОР КАРТЫ
+ko=지도 둘러보기
+zh=地图导览
+ja=マップツアー
+it=attiva
+en=active
+nap=attiva
+bro=attiva
+es=activo
+fr=actif
+de=aktiv
+pt=ativo
+ru=активен
+ko=사용 중
+zh=已启用
+ja=有効
+it=Ora è attiva:
+en=Active now:
+nap=Mo è attiva:
+bro=Ora è on:
+es=Activo ahora:
+fr=Actif maintenant :
+de=Jetzt aktiv:
+pt=Ativo agora:
+ru=Сейчас активен:
+ko=현재 사용 중:
+zh=当前启用：
+ja=現在有効：
+it=Rifai il tour della mappa
+en=Take the map tour again
+nap=Rifà 'o giro d'a mappa
+bro=Rifai il tour della mappa
+es=Repetir el tour del mapa
+fr=Refaire la visite de la carte
+de=Karten-Tour wiederholen
+pt=Refazer o tour do mapa
+ru=Пройти обзор карты ещё раз
+ko=지도 둘러보기 다시 하기
+zh=重新进行地图导览
+ja=マップツアーをもう一度
+it=Il tour della mappa partirà alla prossima apertura della mappa nel gioco.
+en=The map tour will start the next time you open the map in the game.
+nap='O giro d'a mappa parte 'a prossima vota ca arape 'a mappa dint'o juoco.
+bro=Il tour della mappa parte la prossima volta che apri la mappa in game.
+es=El tour del mapa empezará la próxima vez que abras el mapa en el juego.
+fr=La visite de la carte démarrera à la prochaine ouverture de la carte dans le jeu.
+de=Die Karten-Tour startet, wenn du das nächste Mal die Karte im Spiel öffnest.
+pt=O tour do mapa começará na próxima vez que você abrir o mapa no jogo.
+ru=Обзор карты начнётся при следующем открытии карты в игре.
+ko=다음에 게임에서 지도를 열면 지도 둘러보기가 시작돼요.
+zh=下次在游戏中打开地图时将开始地图导览。
+ja=次にゲームでマップを開いたときにマップツアーが始まります。
+it=Alla prima apertura della mappa nel gioco parte anche un breve tour del pannello Field Boss e delle modalità di Teleport.
+en=The first time you open the map in the game, a short tour of the Field Boss panel and the Teleport modes starts too.
+nap='A primma vota ca arape 'a mappa dint'o juoco parte pure nu giro curto d'o panniello Field Boss e d'e modalità 'e Teleport.
+bro=La prima volta che apri la mappa in game parte anche un tour veloce del pannello Field Boss e delle modalità Teleport.
+es=La primera vez que abras el mapa en el juego empezará también un breve tour del panel Field Boss y de los modos de Teleport.
+fr=À la première ouverture de la carte dans le jeu, une courte visite du panneau Field Boss et des modes de Teleport démarre aussi.
+de=Beim ersten Öffnen der Karte im Spiel startet auch eine kurze Tour durch das Field-Boss-Panel und die Teleport-Modi.
+pt=Na primeira vez que você abrir o mapa no jogo, começa também um breve tour do painel Field Boss e dos modos de Teleport.
+ru=При первом открытии карты в игре начнётся и короткий обзор панели Field Boss и режимов Teleport.
+ko=게임에서 처음 지도를 열면 Field Boss 패널과 Teleport 모드에 대한 짧은 둘러보기도 시작돼요.
+zh=首次在游戏中打开地图时，还会开始一段关于 Field Boss 面板和 Teleport 模式的简短导览。
+ja=ゲームで初めてマップを開くと、Field Boss パネルと Teleport モードの短いツアーも始まります。
+it=Il pannello Field Boss
+en=The Field Boss panel
+nap='O panniello Field Boss
+bro=Il pannello Field Boss
+es=El panel Field Boss
+fr=Le panneau Field Boss
+de=Das Field-Boss-Panel
+pt=O painel Field Boss
+ru=Панель Field Boss
+ko=Field Boss 패널
+zh=Field Boss 面板
+ja=Field Boss パネル
+)" "`n"
+        s .= "
+(
+it=Ogni volta che apri la mappa, qui a destra trovi tutti i Field Boss dalla A alla Z. Il colore indica il grado dei drop, il simbolo a destra l'importanza. Passando col mouse su un boss vedi la sua anteprima.
+en=Every time you open the map, here on the right you find all the Field Bosses from A to Z. The color shows the grade of the drops, the symbol on the right the importance. Hover a boss with the mouse to see its preview.
+nap=Ogne vota ca arape 'a mappa, ccà a destra truove tutte 'e Field Boss d'a A a 'a Z. 'O culore dice 'o grado d'e drop, 'o simbolo a destra l'importanza. Passanno cu 'o mouse 'ncopp'a nu boss vide l'anteprima soja.
+bro=Ogni volta che apri la mappa, qui a destra trovi tutti i Field Boss dalla A alla Z. Il colore è il grado dei drop, il simbolo a destra l'importanza. Passa col mouse su un boss per vederne l'anteprima.
+es=Cada vez que abres el mapa, aquí a la derecha encuentras todos los Field Boss de la A a la Z. El color indica el grado del botín, el símbolo de la derecha la importancia. Pasa el ratón sobre un jefe para ver su vista previa.
+fr=Chaque fois que tu ouvres la carte, tu trouves ici à droite tous les Field Boss de A à Z. La couleur indique le grade des butins, le symbole à droite l'importance. Survole un boss avec la souris pour voir son aperçu.
+de=Jedes Mal, wenn du die Karte öffnest, findest du hier rechts alle Field Bosse von A bis Z. Die Farbe zeigt die Stufe der Beute, das Symbol rechts die Wichtigkeit. Fahre mit der Maus über einen Boss, um seine Vorschau zu sehen.
+pt=Sempre que você abre o mapa, aqui à direita estão todos os Field Boss de A a Z. A cor indica o grau dos drops, o símbolo à direita a importância. Passe o mouse sobre um chefe para ver a prévia.
+ru=Каждый раз при открытии карты здесь справа — все Field Boss от A до Z. Цвет показывает уровень добычи, символ справа — важность. Наведите мышь на босса, чтобы увидеть превью.
+ko=지도를 열 때마다 오른쪽에 모든 Field Boss가 A부터 Z까지 표시돼요. 색은 드롭 등급을, 오른쪽 기호는 중요도를 나타내요. 보스에 마우스를 올리면 미리 보기가 보여요.
+zh=每次打开地图，右侧都会按 A 到 Z 列出所有 Field Boss。颜色表示掉落等级，右侧符号表示重要程度。将鼠标移到首领上可查看预览。
+ja=マップを開くたびに、右側に Field Boss が A から Z の順ですべて表示されます。色はドロップのグレード、右の記号は重要度を示します。ボスにマウスを乗せるとプレビューが見られます。
+it=Filtri e riduci
+en=Filters and collapse
+nap=Filtre e arreduce
+bro=Filtri e riduci
+es=Filtros y contraer
+fr=Filtres et réduire
+de=Filter und Einklappen
+pt=Filtros e recolher
+ru=Фильтры и свёртывание
+ko=필터와 접기
+zh=筛选与折叠
+ja=フィルターと折りたたみ
+it=I filtri in alto mostrano o nascondono i boss di ogni grado; ▲ riduce il pannello quando ti copre la mappa.
+en=The filters at the top show or hide the bosses of each grade; ▲ collapses the panel when it covers the map.
+nap='E filtre ncoppa fanno vedé o annascondeno 'e boss 'e ogne grado; ▲ arreduce 'o panniello quanno te copre 'a mappa.
+bro=I filtri in alto mostrano o nascondono i boss di ogni grado; ▲ riduce il pannello quando ti copre la mappa.
+es=Los filtros de arriba muestran u ocultan los jefes de cada grado; ▲ contrae el panel cuando te tapa el mapa.
+fr=Les filtres en haut affichent ou masquent les boss de chaque grade ; ▲ réduit le panneau quand il couvre la carte.
+de=Die Filter oben blenden die Bosse jeder Stufe ein oder aus; ▲ klappt das Panel ein, wenn es die Karte verdeckt.
+pt=Os filtros no topo mostram ou escondem os chefes de cada grau; ▲ recolhe o painel quando ele cobre o mapa.
+ru=Фильтры сверху показывают или скрывают боссов каждого уровня; ▲ сворачивает панель, когда она закрывает карту.
+ko=위쪽 필터로 등급별 보스를 보이거나 숨겨요. 패널이 지도를 가리면 ▲로 접어요.
+zh=顶部的筛选可显示或隐藏各等级的首领；面板挡住地图时用 ▲ 折叠。
+ja=上のフィルターで各グレードのボスを表示／非表示にできます。パネルがマップを隠すときは ▲ で折りたためます。
+it=In alto vedi i tasti di Wingman e lo stato delle funzioni, ON o OFF. Esc annulla sempre la guida in corso.
+en=At the top you see Wingman's keys and the state of the features, ON or OFF. Esc always cancels the current guide.
+nap=Ncoppa vide 'e taste 'e Wingman e 'o stato d'e funziune, ON o OFF. Esc annulla sempe 'a guida ca sta jenno.
+bro=In alto vedi i tasti di Wingman e lo stato delle feature, ON o OFF. Esc annulla sempre la guida in corso.
+es=Arriba ves las teclas de Wingman y el estado de las funciones, ON u OFF. Esc siempre cancela la guía en curso.
+fr=En haut tu vois les touches de Wingman et l'état des fonctions, ON ou OFF. Échap annule toujours le guidage en cours.
+de=Oben siehst du die Tasten von Wingman und den Zustand der Funktionen, ON oder OFF. Esc bricht die laufende Führung immer ab.
+pt=No topo você vê as teclas do Wingman e o estado das funções, ON ou OFF. Esc sempre cancela o guia em andamento.
+ru=Сверху видны клавиши Wingman и состояние функций, ON или OFF. Esc всегда отменяет текущую подсказку.
+ko=위쪽에 Wingman의 키와 기능 상태(ON 또는 OFF)가 보여요. Esc는 언제나 진행 중인 안내를 취소해요.
+zh=顶部显示 Wingman 的按键和各功能的状态（ON 或 OFF）。Esc 随时取消当前的引导。
+ja=上部に Wingman のキーと機能の状態（ON／OFF）が表示されます。Esc でいつでも進行中のガイドを取り消せます。
+it=Due modalità di Teleport
+en=Two Teleport modes
+nap=Doje modalità 'e Teleport
+bro=Due modalità Teleport
+es=Dos modos de Teleport
+fr=Deux modes de Teleport
+de=Zwei Teleport-Modi
+pt=Dois modos de Teleport
+ru=Два режима Teleport
+ko=두 가지 Teleport 모드
+zh=两种 Teleport 模式
+ja=2 つの Teleport モード
+it=Wingman ha due modi per portarti al boss: NORMAL MODE e ULTRA-FAST MODE. Si sceglie in Impostazioni > Field Boss > Modalità Teleport.
+en=Wingman has two ways to take you to the boss: NORMAL MODE and ULTRA-FAST MODE. You choose it in Settings > Field Boss > Teleport mode.
+nap=Wingman tene doje manere pe' te purtà addò 'o boss: NORMAL MODE e ULTRA-FAST MODE. Se sceglie 'int'e Mpustaziune > Field Boss > Modalità Teleport.
+bro=Wingman ha due modi per portarti al boss: NORMAL MODE e ULTRA-FAST MODE. Lo scegli in Impostazioni > Field Boss > Modalità Teleport.
+es=Wingman tiene dos formas de llevarte al jefe: NORMAL MODE y ULTRA-FAST MODE. Se elige en Ajustes > Field Boss > Modo Teleport.
+fr=Wingman a deux façons de t'emmener au boss : NORMAL MODE et ULTRA-FAST MODE. Le choix se fait dans Paramètres > Field Boss > Mode Teleport.
+de=Wingman bringt dich auf zwei Arten zum Boss: NORMAL MODE und ULTRA-FAST MODE. Die Wahl triffst du unter Einstellungen > Field Boss > Teleport-Modus.
+pt=O Wingman tem dois jeitos de levar você ao chefe: NORMAL MODE e ULTRA-FAST MODE. A escolha fica em Configurações > Field Boss > Modo Teleport.
+ru=У Wingman два способа доставить вас к боссу: NORMAL MODE и ULTRA-FAST MODE. Выбор — в Настройки > Field Boss > Режим Teleport.
+ko=Wingman은 보스에게 가는 두 가지 방법이 있어요: NORMAL MODE와 ULTRA-FAST MODE. 설정 > Field Boss > Teleport 모드에서 골라요.
+zh=Wingman 有两种带你前往首领的方式：NORMAL MODE 和 ULTRA-FAST MODE。在“设置 > Field Boss > Teleport 模式”中选择。
+ja=Wingman にはボスへ向かう方法が 2 つあります：NORMAL MODE と ULTRA-FAST MODE。設定 > Field Boss > Teleport モードで選べます。
+it=NORMAL MODE
+en=NORMAL MODE
+nap=NORMAL MODE
+bro=NORMAL MODE
+es=NORMAL MODE
+fr=NORMAL MODE
+de=NORMAL MODE
+pt=NORMAL MODE
+ru=NORMAL MODE
+ko=NORMAL MODE
+zh=NORMAL MODE
+ja=NORMAL MODE
+it=ULTRA-FAST MODE
+en=ULTRA-FAST MODE
+nap=ULTRA-FAST MODE
+bro=ULTRA-FAST MODE
+es=ULTRA-FAST MODE
+fr=ULTRA-FAST MODE
+de=ULTRA-FAST MODE
+pt=ULTRA-FAST MODE
+ru=ULTRA-FAST MODE
+ko=ULTRA-FAST MODE
+zh=ULTRA-FAST MODE
+ja=ULTRA-FAST MODE
+)" "`n"
+        s .= "
+(
+it=Apre la lista Field Boss del gioco, trova il boss, cerca sulla mappa il Teleport più vicino e ti guida click dopo click fino al Travel. Più passi, ma sceglie sempre il Teleport più vicino a dove si trova il boss.
+en=It opens the game's Field Boss list, finds the boss, looks on the map for the nearest Teleport and guides you click by click up to the Travel. More steps, but it always picks the Teleport closest to where the boss is.
+nap=Arape 'a lista Field Boss d'o juoco, trova 'o boss, cerca 'ncopp'a mappa 'o Teleport cchiù vicino e te guida click doppo click fino a 'o Travel. Cchiù passe, ma sceglie sempe 'o Teleport cchiù vicino a addò sta 'o boss.
+bro=Apre la lista Field Boss del gioco, trova il boss, cerca sulla mappa il Teleport più vicino e ti guida click dopo click fino al Travel. Più step, ma becca sempre il Teleport più vicino al boss.
+es=Abre la lista Field Boss del juego, encuentra al jefe, busca en el mapa el Teleport más cercano y te guía clic a clic hasta el Travel. Más pasos, pero siempre elige el Teleport más cercano a donde está el jefe.
+fr=Il ouvre la liste Field Boss du jeu, trouve le boss, cherche sur la carte le Teleport le plus proche et te guide clic après clic jusqu'au Travel. Plus d'étapes, mais il choisit toujours le Teleport le plus proche du boss.
+de=Öffnet die Field-Boss-Liste des Spiels, findet den Boss, sucht auf der Karte den nächsten Teleport und führt dich Klick für Klick bis zum Travel. Mehr Schritte, aber es wählt immer den Teleport, der dem Boss am nächsten ist.
+pt=Abre a lista Field Boss do jogo, encontra o chefe, procura no mapa o Teleport mais próximo e guia você clique a clique até o Travel. Mais passos, mas sempre escolhe o Teleport mais perto do chefe.
+ru=Открывает список Field Boss в игре, находит босса, ищет на карте ближайший Teleport и ведёт вас клик за кликом до Travel. Больше шагов, но всегда выбирается Teleport, ближайший к боссу.
+ko=게임의 Field Boss 목록을 열어 보스를 찾고, 지도에서 가장 가까운 Teleport를 찾아 Travel까지 클릭 하나하나 안내해요. 단계는 많지만 항상 보스에 가장 가까운 Teleport를 골라요.
+zh=打开游戏的 Field Boss 列表，找到首领，在地图上寻找最近的 Teleport，并一步步引导你点击直到 Travel。步骤较多，但总能选到离首领最近的 Teleport。
+ja=ゲームの Field Boss リストを開いてボスを見つけ、マップ上で一番近い Teleport を探し、Travel までクリックごとに案内します。手順は多めですが、常にボスに一番近い Teleport を選びます。
+it=Cerca subito nella lista Kibelisk a sinistra il Teleport del boss: lo clicchi e premi F due volte. I Teleport dei boss più importanti finiscono nei preferiti in cima alla lista, così non serve nemmeno scorrere. È la modalità consigliata.
+en=It goes straight to the boss's Teleport in the Kibelisk list on the left: you click it and press F twice. The Teleports of the most important bosses go into the favorites at the top of the list, so you don't even need to scroll. This is the recommended mode.
+nap=Va dritto a 'o Teleport d'o boss dint'a lista Kibelisk a sinistra: 'o clicche e prieme F doje vote. 'E Teleport d'e boss cchiù importante vanno dint'e preferite ncoppa a 'a lista, accussì nun serve manco scorrere. È 'a modalità cunsigliata.
+bro=Va dritto al Teleport del boss nella lista Kibelisk a sinistra: lo clicchi e premi F due volte. I Teleport dei boss top finiscono nei preferiti in cima, quindi zero scroll. È la modalità consigliata.
+es=Busca enseguida el Teleport del jefe en la lista Kibelisk de la izquierda: haces clic y pulsas F dos veces. Los Teleport de los jefes más importantes van a favoritos, arriba de la lista, así que ni siquiera hace falta desplazarse. Es el modo recomendado.
+fr=Il va directement au Teleport du boss dans la liste Kibelisk à gauche : tu cliques dessus et appuies deux fois sur F. Les Teleport des boss les plus importants vont dans les favoris en haut de la liste, donc plus besoin de défiler. C'est le mode conseillé.
+de=Sucht sofort den Teleport des Bosses in der Kibelisk-Liste links: du klickst ihn an und drückst zweimal F. Die Teleports der wichtigsten Bosse landen in den Favoriten oben in der Liste, so musst du nicht einmal scrollen. Das ist der empfohlene Modus.
+pt=Vai direto ao Teleport do chefe na lista Kibelisk à esquerda: você clica e aperta F duas vezes. Os Teleport dos chefes mais importantes vão para os favoritos no topo da lista, então nem é preciso rolar. É o modo recomendado.
+ru=Сразу ищет Teleport босса в списке Kibelisk слева: вы кликаете по нему и дважды нажимаете F. Teleport самых важных боссов попадают в избранное вверху списка, так что прокручивать не нужно. Это рекомендуемый режим.
+ko=왼쪽 Kibelisk 목록에서 보스의 Teleport를 바로 찾아요: 클릭하고 F를 두 번 누르면 돼요. 중요한 보스의 Teleport는 목록 맨 위 즐겨찾기에 들어가서 스크롤할 필요도 없어요. 추천 모드예요.
+zh=直接在左侧 Kibelisk 列表中找到首领的 Teleport：点击它并按两次 F。最重要首领的 Teleport 会加入列表顶部的收藏，连滚动都不需要。这是推荐的模式。
+ja=左の Kibelisk リストでボスの Teleport をすぐに探します。クリックして F を 2 回押すだけです。重要なボスの Teleport はリスト上部のお気に入りに入るので、スクロールも不要です。おすすめのモードです。
+it=Proviamo!
+en=Let's try!
+nap=Pruvammo!
+bro=Proviamo, let's go!
+es=¡Probemos!
+fr=Essayons !
+de=Probieren wir's!
+pt=Vamos tentar!
+ru=Попробуем!
+ko=해 봐요!
+zh=来试试吧！
+ja=試してみよう！
+it=Quando clicchi un boss il tour finisce e Wingman ti guida: porta il cursore sul punto giusto e clicchi tu (il gioco non accetta click simulati), poi premi F due volte per il Travel e segui la freccia di volo. Esc annulla.
+en=When you click a boss the tour ends and Wingman guides you: it moves the cursor to the right spot and you click (the game does not accept simulated clicks), then press F twice for the Travel and follow the flight arrow. Esc cancels.
+nap=Quanno clicche nu boss 'o giro fernisce e Wingman te guida: porta 'o cursore 'ncopp'o punto justo e clicche tu ('o juoco nun accetta click finte), po' prieme F doje vote pe' 'o Travel e siegue 'a freccia 'e volo. Esc annulla.
+bro=Quando clicchi un boss il tour finisce e Wingman ti guida: porta il cursore sul punto giusto e clicchi tu (il gioco non accetta click simulati), poi premi F due volte per il Travel e segui la freccia di volo. Esc annulla.
+es=Cuando hagas clic en un jefe el tour termina y Wingman te guía: lleva el cursor al punto correcto y haces clic tú (el juego no acepta clics simulados), luego pulsa F dos veces para el Travel y sigue la flecha de vuelo. Esc cancela.
+fr=Quand tu cliques sur un boss, la visite se termine et Wingman te guide : il place le curseur au bon endroit et c'est toi qui cliques (le jeu n'accepte pas les clics simulés), puis appuie deux fois sur F pour le Travel et suis la flèche de vol. Échap annule.
+de=Wenn du einen Boss anklickst, endet die Tour und Wingman führt dich: Es setzt den Cursor an die richtige Stelle und du klickst (das Spiel nimmt keine simulierten Klicks an), dann drückst du zweimal F für den Travel und folgst dem Flugpfeil. Esc bricht ab.
+pt=Quando você clica em um chefe o tour termina e o Wingman guia você: leva o cursor ao ponto certo e você clica (o jogo não aceita cliques simulados), depois aperte F duas vezes para o Travel e siga a seta de voo. Esc cancela.
+ru=Когда вы кликнете по боссу, обзор закончится и Wingman поведёт вас: он ставит курсор в нужную точку, а кликаете вы (игра не принимает имитированные клики), затем дважды нажмите F для Travel и следуйте стрелке полёта. Esc отменяет.
+ko=보스를 클릭하면 둘러보기가 끝나고 Wingman이 안내해요: 커서를 알맞은 곳으로 옮기면 직접 클릭하세요(게임이 가상 클릭을 받지 않아요). 그다음 F를 두 번 눌러 Travel하고 비행 화살표를 따라가세요. Esc는 취소예요.
+zh=点击首领后导览结束，Wingman 开始引导：它把光标移到正确位置，由你来点击（游戏不接受模拟点击），然后按两次 F 进行 Travel，并跟随飞行箭头。按 Esc 取消。
+ja=ボスをクリックするとツアーが終わり、Wingman が案内を始めます。カーソルを正しい場所に移すので、クリックはあなたが行います（ゲームは疑似クリックを受け付けません）。その後 F を 2 回押して Travel し、飛行矢印に従ってください。Esc で取り消し。
+it=Prova: clicca un boss nel pannello.
+en=Try it: click a boss in the panel.
+nap=Pruova: clicca nu boss dint'o panniello.
+bro=Prova: clicca un boss nel pannello.
+es=Pruébalo: haz clic en un jefe del panel.
+fr=Essaie : clique sur un boss dans le panneau.
+de=Probier's: klick auf einen Boss im Panel.
+pt=Experimente: clique em um chefe no painel.
+ru=Попробуйте: нажмите на босса в панели.
+ko=해 보세요: 패널에서 보스를 클릭하세요.
+zh=试一试：点击面板中的一个首领。
+ja=試してみよう：パネルのボスをクリック。
+it=Preparazione non disponibile
+en=Preparation not available
+nap=Preparazione nun disponibile
+bro=Preparazione non disponibile
+es=Preparación no disponible
+fr=Préparation indisponible
+de=Vorbereitung nicht verfügbar
+pt=Preparação indisponível
+ru=Подготовка недоступна
+ko=준비를 할 수 없어요
+zh=无法进行准备
+ja=準備できません
+it=Apri la mappa di Altgard, non quella di un dungeon
+en=Open the Altgard map, not a dungeon map
+nap=Arape 'a mappa 'e Altgard, no chella 'e nu dungeon
+bro=Apri la mappa di Altgard, non quella di un dungeon
+es=Abre el mapa de Altgard, no el de una mazmorra
+fr=Ouvre la carte d'Altgard, pas celle d'un donjon
+de=Öffne die Karte von Altgard, nicht die eines Dungeons
+pt=Abra o mapa de Altgard, não o de uma masmorra
+ru=Откройте карту Altgard, а не подземелья
+ko=던전 지도가 아니라 Altgard 지도를 여세요
+zh=请打开 Altgard 地图，而不是副本地图
+ja=ダンジョンではなく Altgard のマップを開いてください
+)" "`n"
+        s .= "
+(
+it=Preparazione ULTRA-FAST  {1}/{2}
+en=ULTRA-FAST preparation  {1}/{2}
+nap=Preparazione ULTRA-FAST  {1}/{2}
+bro=Preparazione ULTRA-FAST  {1}/{2}
+es=Preparación ULTRA-FAST  {1}/{2}
+fr=Préparation ULTRA-FAST  {1}/{2}
+de=ULTRA-FAST-Vorbereitung  {1}/{2}
+pt=Preparação ULTRA-FAST  {1}/{2}
+ru=Подготовка ULTRA-FAST  {1}/{2}
+ko=ULTRA-FAST 준비  {1}/{2}
+zh=ULTRA-FAST 准备  {1}/{2}
+ja=ULTRA-FAST の準備  {1}/{2}
+it=Preparazione completata
+en=Preparation complete
+nap=Preparazione fernuta
+bro=Preparazione fatta, ez
+es=Preparación completada
+fr=Préparation terminée
+de=Vorbereitung abgeschlossen
+pt=Preparação concluída
+ru=Подготовка завершена
+ko=준비 완료
+zh=准备完成
+ja=準備完了
+it={1} aggiunti ai preferiti  ·  {2} già presenti  ·  {3} non sbloccati  ·  {4} non trovati
+en={1} added to favorites  ·  {2} already there  ·  {3} not unlocked  ·  {4} not found
+nap={1} miso dint'e preferite  ·  {2} già ce stevano  ·  {3} nun sbloccate  ·  {4} nun truvate
+bro={1} messi nei preferiti  ·  {2} già lì  ·  {3} non sbloccati  ·  {4} non trovati
+es={1} añadidos a favoritos  ·  {2} ya estaban  ·  {3} sin desbloquear  ·  {4} no encontrados
+fr={1} ajoutés aux favoris  ·  {2} déjà présents  ·  {3} non débloqués  ·  {4} introuvables
+de={1} zu Favoriten hinzugefügt  ·  {2} schon vorhanden  ·  {3} nicht freigeschaltet  ·  {4} nicht gefunden
+pt={1} adicionados aos favoritos  ·  {2} já estavam  ·  {3} não desbloqueados  ·  {4} não encontrados
+ru={1} добавлено в избранное  ·  {2} уже были  ·  {3} не открыто  ·  {4} не найдено
+ko=즐겨찾기 추가 {1}  ·  이미 있음 {2}  ·  미해금 {3}  ·  못 찾음 {4}
+zh=已加入收藏 {1}  ·  已存在 {2}  ·  未解锁 {3}  ·  未找到 {4}
+ja=お気に入りに追加 {1}  ·  登録済み {2}  ·  未解放 {3}  ·  見つからず {4}
+it=Preparazione accelerata
+en=Quick preparation
+nap=Preparazione veloce
+bro=Preparazione speedrun
+es=Preparación acelerada
+fr=Préparation express
+de=Schnellvorbereitung
+pt=Preparação acelerada
+ru=Быстрая подготовка
+ko=빠른 준비
+zh=快速准备
+ja=クイック準備
+it=Vuoi preparare subito la ULTRA-FAST MODE? Wingman cerca nella lista Kibelisk i Teleport dei boss principali (fino a 10, il limite dei preferiti del gioco) e per ognuno ti fa cliccare la stellina: da lì in poi quei Teleport sono sempre in cima alla lista. Ci vuole circa un minuto; Esc interrompe.
+en=Do you want to set up ULTRA-FAST MODE right now? Wingman looks up the Teleports of the main bosses in the Kibelisk list (up to 10, the game's favorites limit) and has you click the star for each one: from then on those Teleports are always at the top of the list. It takes about a minute; Esc stops it.
+nap=Vuó preparà mo mo 'a ULTRA-FAST MODE? Wingman cerca dint'a lista Kibelisk 'e Teleport d'e boss principale (fino a 10, 'o limite d'e preferite d'o juoco) e pe' ognuno te fa cliccà 'a stelletta: 'a llà 'nnanze chilli Teleport stanno sempe ncoppa a 'a lista. Ce vo' quasi nu minuto; Esc 'o ferma.
+bro=Vuoi preparare subito la ULTRA-FAST MODE? Wingman cerca nella lista Kibelisk i Teleport dei boss principali (max 10, il limite dei preferiti del gioco) e per ognuno ti fa cliccare la stellina: da lì quei Teleport stanno sempre in cima. Ci vuole circa un minuto; Esc stoppa.
+es=¿Quieres preparar ya el ULTRA-FAST MODE? Wingman busca en la lista Kibelisk los Teleport de los jefes principales (hasta 10, el límite de favoritos del juego) y en cada uno te hace pulsar la estrella: desde entonces esos Teleport están siempre arriba en la lista. Tarda alrededor de un minuto; Esc lo detiene.
+fr=Tu veux préparer tout de suite l'ULTRA-FAST MODE ? Wingman cherche dans la liste Kibelisk les Teleport des boss principaux (jusqu'à 10, la limite des favoris du jeu) et te fait cliquer l'étoile pour chacun : ensuite, ces Teleport restent toujours en haut de la liste. Cela prend environ une minute ; Échap l'interrompt.
+de=Möchtest du den ULTRA-FAST MODE jetzt vorbereiten? Wingman sucht in der Kibelisk-Liste die Teleports der wichtigsten Bosse (bis zu 10, das Favoritenlimit des Spiels) und lässt dich bei jedem auf den Stern klicken: danach stehen diese Teleports immer oben in der Liste. Das dauert etwa eine Minute; Esc bricht ab.
+pt=Quer preparar agora o ULTRA-FAST MODE? O Wingman procura na lista Kibelisk os Teleport dos chefes principais (até 10, o limite de favoritos do jogo) e para cada um pede que você clique na estrela: a partir daí esses Teleport ficam sempre no topo da lista. Leva cerca de um minuto; Esc interrompe.
+ru=Подготовить ULTRA-FAST MODE прямо сейчас? Wingman найдёт в списке Kibelisk Teleport главных боссов (до 10 — лимит избранного в игре) и для каждого попросит нажать звёздочку: после этого эти Teleport всегда будут вверху списка. Это займёт около минуты; Esc прерывает.
+ko=지금 ULTRA-FAST MODE를 준비할까요? Wingman이 Kibelisk 목록에서 주요 보스의 Teleport(게임 즐겨찾기 한도인 최대 10개)를 찾아 하나씩 별을 클릭하게 해요. 그 뒤로는 그 Teleport들이 항상 목록 맨 위에 있어요. 약 1분 걸리고, Esc로 멈출 수 있어요.
+zh=要现在就准备 ULTRA-FAST MODE 吗？Wingman 会在 Kibelisk 列表中找到主要首领的 Teleport（最多 10 个，游戏收藏上限），并让你逐一点击星标：之后这些 Teleport 会一直位于列表顶部。大约需要一分钟；按 Esc 可中断。
+ja=今すぐ ULTRA-FAST MODE を準備しますか？Wingman が Kibelisk リストで主要ボスの Teleport（ゲームのお気に入り上限の最大 10 件）を探し、1 件ずつ星をクリックしてもらいます。以後それらの Teleport は常にリストの一番上に表示されます。約 1 分かかり、Esc で中断できます。
+it=Ora usi la NORMAL MODE: i preferiti servono quando passi alla ULTRA-FAST.
+en=You are using NORMAL MODE now: favorites help once you switch to ULTRA-FAST.
+nap=Mo ause 'a NORMAL MODE: 'e preferite servono quanno passe a 'a ULTRA-FAST.
+bro=Ora sei in NORMAL MODE: i preferiti servono quando passi alla ULTRA-FAST.
+es=Ahora usas el NORMAL MODE: los favoritos sirven cuando pases al ULTRA-FAST.
+fr=Tu utilises maintenant le NORMAL MODE : les favoris servent quand tu passes à l'ULTRA-FAST.
+de=Du nutzt gerade den NORMAL MODE: Die Favoriten helfen, sobald du zu ULTRA-FAST wechselst.
+pt=Agora você usa o NORMAL MODE: os favoritos servem quando você passar para o ULTRA-FAST.
+ru=Сейчас используется NORMAL MODE: избранное пригодится, когда перейдёте на ULTRA-FAST.
+ko=지금은 NORMAL MODE를 쓰고 있어요: 즐겨찾기는 ULTRA-FAST로 바꾸면 쓸모 있어요.
+zh=你现在使用的是 NORMAL MODE：切换到 ULTRA-FAST 后收藏才会派上用场。
+ja=現在は NORMAL MODE です。お気に入りは ULTRA-FAST に切り替えると役立ちます。
+it=Sì, prepara ora
+en=Yes, set it up now
+nap=Sì, prepara mo
+bro=Sì, vai ora
+es=Sí, prepararlo ahora
+fr=Oui, préparer maintenant
+de=Ja, jetzt vorbereiten
+pt=Sim, preparar agora
+ru=Да, подготовить сейчас
+ko=네, 지금 준비
+zh=是，现在准备
+ja=はい、今すぐ準備
+it=Più tardi
+en=Later
+nap=Cchiù tarde
+bro=Dopo
+es=Más tarde
+fr=Plus tard
+de=Später
+pt=Mais tarde
+ru=Позже
+ko=나중에
+zh=稍后
+ja=あとで
+it=Fatta per andare veloce: scelto il boss, puoi spammare tranquillamente click sinistro e F fino a Teleport compiuto. I click arrivano al gioco solo dove servono e il cursore resta sul punto giusto.
+en=Built for speed: once you pick the boss, you can safely spam left click and F until the Teleport is done. Clicks reach the game only where they are needed and the cursor stays on the right spot.
+nap=Fatta pe' ghì veloce: scigliuto 'o boss, puó spammà tranquillo click sinistro e F fino a quanno 'o Teleport è fatto. 'E click arrivano a 'o juoco sulo addò servono e 'o cursore resta 'ncopp'o punto justo.
+bro=Fatta per andare a manetta: scelto il boss, spamma pure click sinistro e F finché il Teleport non è fatto. I click arrivano al gioco solo dove servono e il cursore resta sul punto giusto.
+es=Hecho para ir rápido: una vez elegido el jefe, puedes spamear tranquilamente clic izquierdo y F hasta completar el Teleport. Los clics solo llegan al juego donde hacen falta y el cursor se queda en el punto correcto.
+fr=Conçu pour la vitesse : une fois le boss choisi, tu peux spammer sans crainte clic gauche et F jusqu'à ce que le Teleport soit fait. Les clics n'atteignent le jeu que là où il faut et le curseur reste au bon endroit.
+de=Für Tempo gebaut: Sobald du den Boss gewählt hast, kannst du bedenkenlos Linksklick und F spammen, bis der Teleport erledigt ist. Klicks erreichen das Spiel nur dort, wo sie gebraucht werden, und der Cursor bleibt an der richtigen Stelle.
+pt=Feito para ser rápido: depois de escolher o chefe, você pode spammar à vontade clique esquerdo e F até o Teleport terminar. Os cliques só chegam ao jogo onde são necessários e o cursor fica no ponto certo.
+ru=Создано для скорости: выбрав босса, можно спокойно спамить левый клик и F, пока Teleport не завершится. Клики доходят до игры только там, где нужно, а курсор остаётся в нужной точке.
+ko=속도를 위해 만들어졌어요: 보스를 고른 뒤에는 Teleport가 끝날 때까지 왼쪽 클릭과 F를 마음껏 연타해도 돼요. 클릭은 필요한 곳에서만 게임에 전달되고 커서는 알맞은 위치에 머물러요.
+zh=为速度而生：选好首领后，可以放心狂按左键和 F，直到 Teleport 完成。点击只会在需要的地方传给游戏，光标会停在正确位置。
+ja=スピード重視の設計：ボスを選んだら、Teleport が終わるまで左クリックと F を安心して連打できます。クリックは必要な場所でだけゲームに届き、カーソルは正しい位置にとどまります。
+it=Controllo i preferiti...
+en=Checking favorites...
+nap=Cuntrollo 'e preferite...
+bro=Check dei preferiti...
+es=Revisando los favoritos...
+fr=Vérification des favoris...
+de=Favoriten werden geprüft...
+pt=Verificando os favoritos...
+ru=Проверяю избранное...
+ko=즐겨찾기 확인 중...
+zh=正在检查收藏...
+ja=お気に入りを確認中...
+)" "`n"
+        s .= "
+(
+it=Leggo i Teleport già nei preferiti in cima alla lista
+en=Reading the Teleports already in the favorites at the top of the list
+nap=Leggo 'e Teleport ca stanno già dint'e preferite ncoppa a 'a lista
+bro=Leggo i Teleport già nei preferiti in cima alla lista
+es=Leyendo los Teleport que ya están en favoritos arriba de la lista
+fr=Lecture des Teleport déjà en favoris en haut de la liste
+de=Lese die Teleports, die oben in der Liste schon Favoriten sind
+pt=Lendo os Teleport que já estão nos favoritos no topo da lista
+ru=Читаю Teleport, уже добавленные в избранное вверху списка
+ko=목록 맨 위 즐겨찾기에 이미 있는 Teleport를 읽는 중
+zh=正在读取列表顶部已收藏的 Teleport
+ja=リスト上部のお気に入り済み Teleport を読み取り中
+it=già nei preferiti
+en=already in favorites
+nap=già dint'e preferite
+bro=già nei preferiti
+es=ya en favoritos
+fr=déjà en favoris
+de=schon in den Favoriten
+pt=já nos favoritos
+ru=уже в избранном
+ko=이미 즐겨찾기에 있음
+zh=已在收藏中
+ja=お気に入り登録済み
+it=Preferiti del gioco pieni: 10/10
+en=Game favorites full: 10/10
+nap=Preferite d'o juoco chine: 10/10
+bro=Preferiti del gioco pieni: 10/10
+es=Favoritos del juego llenos: 10/10
+fr=Favoris du jeu pleins : 10/10
+de=Favoriten des Spiels voll: 10/10
+pt=Favoritos do jogo cheios: 10/10
+ru=Избранное в игре заполнено: 10/10
+ko=게임 즐겨찾기가 가득 참: 10/10
+zh=游戏收藏已满：10/10
+ja=ゲームのお気に入りが満杯：10/10
 )" "`n"
         return s
     }
@@ -20431,6 +20997,10 @@ class Tutorial {
         g.AddText("xm y+" Round(6 * k) " w" cw, Tr(st.t))
         g.SetFont("s10 norm c" UiC("Text"), "Segoe UI")
         g.AddText("xm y+" Round(6 * k) " w" cw, Tr(st.x))
+        if st.HasOwnProp("last") {
+            g.SetFont("s10 norm c" UiC("SubText"), "Segoe UI")
+            g.AddText("xm y+" Round(8 * k) " w" cw, "🗺️  " Tr("Alla prima apertura della mappa nel gioco parte anche un breve tour del pannello Field Boss e delle modalità di Teleport."))
+        }
         if st.HasOwnProp("do") {
             g.SetFont("s10 bold c" (this.Done ? UiC("Ok") : UiC("Accent")), "Segoe UI")
             g.AddText("xm y+" Round(10 * k) " w" cw, this.Done ? "✔  " Tr("Fatto!") : "👉  " Tr(st.do))
@@ -20481,11 +21051,314 @@ class Tutorial {
 }
 
 ; ==============================================================================
+; === TOUR DELLA MAPPA (prima apertura della mappa con il pannello Field Boss) ===
+; ==============================================================================
+; Nel gioco niente velo scuro (coprirebbe la mappa che Wingman legge): solo un bordo luminoso che
+; pulsa attorno alla zona spiegata e un fumetto, entrambi sopra al gioco e senza rubargli il focus.
+; Spiega pannello, filtri, leggenda e le due modalità del Teleport (NORMAL e ULTRA-FAST), poi
+; chiede di cliccare un boss: da lì il tour finisce e parte la guida vera. Mappa chiusa = tour in
+; pausa, riprende alla riapertura. "MapTourDone" in settings.ini; si rifà da Manutenzione.
+class MapTour {
+    static On := false, Idx := 0, Steps := "", Fn := "", Ring := "", Bub := "", LastKey := ""
+    static Checked := false, Finished := false, Paused := false
+
+    ; da ShowPanel: la prima volta che compare il pannello dei Field Boss
+    static Maybe() {
+        if (this.On || PreviewMode)
+            return
+        if !this.Checked {
+            this.Checked := true
+            try this.Finished := IniRead(UserData.File, "App", "MapTourDone", "") = "1"
+        }
+        if !this.Finished
+            SetTimer(() => MapTour.Start(), -700)          ; dopo l'animazione di apertura della mappa
+    }
+
+    static Start() {
+        if (this.On || !FieldBoss.Shown || PreviewMode)
+            return
+        this.On := true, this.Paused := false, this.Steps := this.Define()
+        this.Fn := ObjBindMethod(this, "Tick")
+        this.Go(1, 1)
+        SetTimer(this.Fn, 150)
+    }
+
+    static Stop(finished := true) {
+        if !this.On
+            return
+        this.On := false
+        SetTimer(this.Fn, 0)
+        this.Free()
+        if finished {
+            this.Finished := true
+            try IniWrite("1", UserData.File, "App", "MapTourDone")
+        }
+    }
+
+    ; da Manutenzione: il tour riparte alla prossima apertura della mappa
+    static Reset(*) {
+        this.Checked := true, this.Finished := false
+        try IniWrite("0", UserData.File, "App", "MapTourDone")
+        ShowTip(Tr("Il tour della mappa partirà alla prossima apertura della mappa nel gioco."), 4000)
+    }
+
+    static Free() {
+        for name in ["Ring", "Bub"]
+            if IsObject(this.%name%)
+                try this.%name%.Destroy()
+        this.Ring := "", this.Bub := "", this.LastKey := ""
+    }
+
+    static Ultra() => FieldBossTeleportMode = "ultrafast"
+
+    ; "Sì, prepara ora": il tour finisce e parte la preparazione dei preferiti
+    static Prep(*) {
+        this.Stop(true)
+        FieldBoss.Request(ObjBindMethod(FieldBoss, "FavPrep"))
+    }
+
+    ; t = titolo, x = spiegazione, do = cosa provare, tgt = finestre/controlli da illuminare,
+    ; need = passo saltato se la sua zona non è a schermo, mode = passo di una modalità (✔ se attiva)
+    static Define() {
+        FB := FieldBoss
+        return [
+            {t: "Il pannello Field Boss", x: "Ogni volta che apri la mappa, qui a destra trovi tutti i Field Boss dalla A alla Z. Il colore indica il grado dei drop, il simbolo a destra l'importanza. Passando col mouse su un boss vedi la sua anteprima."
+           , tgt: () => [FB.Panel], need: true},
+            {t: "Filtri e riduci", x: "I filtri in alto mostrano o nascondono i boss di ogni grado; ▲ riduce il pannello quando ti copre la mappa."
+           , tgt: () => this.Chips(), need: true},
+            {t: "Leggenda dei tasti", x: "In alto vedi i tasti di Wingman e lo stato delle funzioni, ON o OFF. Esc annulla sempre la guida in corso."
+           , tgt: () => FB.LegendShown ? [FB.Legend] : [], need: true},
+            {t: "Due modalità di Teleport", active: true, x: "Wingman ha due modi per portarti al boss: NORMAL MODE e ULTRA-FAST MODE. Si sceglie in Impostazioni > Field Boss > Modalità Teleport."},
+            {t: "NORMAL MODE", mode: "normal", x: "Apre la lista Field Boss del gioco, trova il boss, cerca sulla mappa il Teleport più vicino e ti guida click dopo click fino al Travel. Più passi, ma sceglie sempre il Teleport più vicino a dove si trova il boss."},
+            {t: "ULTRA-FAST MODE", mode: "ultrafast", x: "Cerca subito nella lista Kibelisk a sinistra il Teleport del boss: lo clicchi e premi F due volte. I Teleport dei boss più importanti finiscono nei preferiti in cima alla lista, così non serve nemmeno scorrere. È la modalità consigliata."},
+            {t: "Preparazione accelerata", ask: true, x: "Vuoi preparare subito la ULTRA-FAST MODE? Wingman cerca nella lista Kibelisk i Teleport dei boss principali (fino a 10, il limite dei preferiti del gioco) e per ognuno ti fa cliccare la stellina: da lì in poi quei Teleport sono sempre in cima alla lista. Ci vuole circa un minuto; Esc interrompe."},
+            {t: "Proviamo!", x: "Quando clicchi un boss il tour finisce e Wingman ti guida: porta il cursore sul punto giusto e clicchi tu (il gioco non accetta click simulati), poi premi F due volte per il Travel e segui la freccia di volo. Esc annulla."
+           , do: "Prova: clicca un boss nel pannello.", tgt: () => [FB.Panel], wait: () => FB.CurBoss != "" || FB.Busy, last: true}
+        ]
+    }
+
+    static Chips() {
+        out := []
+        for key, c in FieldBoss.Chips
+            out.Push(c.ctrl)
+        if IsObject(FieldBoss.BtnToggle)
+            out.Push(FieldBoss.BtnToggle)
+        return out
+    }
+
+    ; dir = da che parte si va se un passo va saltato (zona non a schermo)
+    static Go(i, dir := 1) {
+        loop {
+            if (i > this.Steps.Length)
+                return this.Stop(true)
+            i := Max(1, i), st := this.Steps[i]
+            if (!st.HasOwnProp("need") || IsObject(this.TargetRect(st)) || (dir < 0 && i = 1))
+                break
+            i += dir
+        }
+        this.Idx := i
+        this.BuildBubble()
+        this.LastKey := "", this.Place()
+    }
+
+    static Tick() {
+        FB := FieldBoss
+        if (!FB.Shown || !IsObject(FB.Panel) || PreviewMode || !WinActive("ahk_exe " GameExe)) {
+            if !this.Paused                                  ; mappa chiusa: in pausa fino alla riapertura
+                this.Paused := true, this.Free()
+            return
+        }
+        if this.Paused
+            this.Paused := false, this.BuildBubble()
+        if (FB.CurBoss != "" || FB.Busy)                     ; boss scelto (in qualsiasi passo): parte la guida vera,
+            return this.Stop(true)                           ; il tour finisce
+        this.Place()
+        if IsObject(this.Ring)
+            WinSetTransparent(Round(150 + 105 * (0.5 + 0.5 * Sin(A_TickCount / 260))), this.Ring.Hwnd)
+    }
+
+    ; zone che Wingman legge per riconoscere la mappa (tab in alto, titolo, lista a sinistra):
+    ; né il fumetto né il bordo ci devono finire sopra, o la mappa sembrerebbe chiusa (sfarfallio)
+    static NoGo(g) {
+        out := []
+        for r in [FieldBossTool.RcTabs, FieldBossTool.RcMapTitle, FieldBossTool.RcList] {
+            rc := FieldBoss.Rc(r, g), m := Round(10 * g.s)
+            out.Push([rc[1] - m, rc[2] - m, rc[1] + rc[3] + m, rc[2] + rc[4] + m])
+        }
+        return out
+    }
+
+    static Hits(a, zones) {
+        for z in zones
+            if (a[1] < z[3] && a[3] > z[1] && a[2] < z[4] && a[4] > z[2])
+                return true
+        return false
+    }
+
+    static TargetRect(st) {
+        if !st.HasOwnProp("tgt")
+            return ""
+        objs := []
+        try objs := st.tgt.Call()
+        l := 1e9, t := 1e9, r := -1e9, b := -1e9
+        for o in objs {
+            if (!IsObject(o) || !o.HasProp("Hwnd") || !DllCall("IsWindowVisible", "Ptr", o.Hwnd))
+                continue
+            rc := Tutorial.Rect(o.Hwnd)
+            l := Min(l, rc[1]), t := Min(t, rc[2]), r := Max(r, rc[3]), b := Max(b, rc[4])
+        }
+        if (r < l)
+            return ""
+        p := Round(6 * FieldBoss.Geo().s)
+        return [l - p, t - p, r + p, b + p]
+    }
+
+    static Place() {
+        if !IsObject(this.Bub)
+            return
+        g := FieldBoss.Geo(), h := this.TargetRect(this.Steps[this.Idx]), zones := this.NoGo(g)
+        key := (IsObject(h) ? h[1] "," h[2] "," h[3] "," h[4] : "-") "|" g.x "," g.y "," g.w "," g.h "|" this.Idx
+        if (key = this.LastKey)
+            return
+        this.LastKey := key
+        if IsObject(h) {
+            if !IsObject(this.Ring) {
+                this.Ring := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08000020")   ; attraversabile
+                this.Ring.BackColor := UiC("Accent")
+            }
+            bw := Max(3, Round(4 * g.s)), rw := h[3] - h[1] + bw * 2, rh := h[4] - h[2] + bw * 2
+            this.Ring.Show(Format("NA x{} y{} w{} h{}", h[1] - bw, h[2] - bw, rw, rh))
+            outer := DllCall("CreateRoundRectRgn", "Int", 0, "Int", 0, "Int", rw + 1, "Int", rh + 1, "Int", 18, "Int", 18, "Ptr")
+            inner := DllCall("CreateRoundRectRgn", "Int", bw, "Int", bw, "Int", rw - bw + 1, "Int", rh - bw + 1, "Int", 14, "Int", 14, "Ptr")
+            DllCall("CombineRgn", "Ptr", outer, "Ptr", outer, "Ptr", inner, "Int", 4)
+            DllCall("DeleteObject", "Ptr", inner)
+            for z in zones {                                 ; il bordo non passa sopra le zone lette dall'OCR
+                ox := h[1] - bw, oy := h[2] - bw
+                cut := DllCall("CreateRectRgn", "Int", z[1] - ox, "Int", z[2] - oy, "Int", z[3] - ox, "Int", z[4] - oy, "Ptr")
+                DllCall("CombineRgn", "Ptr", outer, "Ptr", outer, "Ptr", cut, "Int", 4)
+                DllCall("DeleteObject", "Ptr", cut)
+            }
+            DllCall("SetWindowRgn", "Ptr", this.Ring.Hwnd, "Ptr", outer, "Int", true)
+        } else if IsObject(this.Ring)
+            this.Ring.Hide()
+        ; fumetto: il primo posto libero tra sinistra, sotto, destra e sopra la zona (o il centro), mai
+        ; sopra le zone che Wingman legge per capire che la mappa è aperta: coprirle "chiuderebbe" la
+        ; mappa e pannello e leggenda sparirebbero e ricomparirebbero di continuo
+        this.Bub.GetPos(,, &bw2, &bh2)
+        gap := Round(16 * g.s)
+        fit(x, y) => [Max(g.x + 8, Min(g.x + g.w - bw2 - 8, x)), Max(g.y + 8, Min(g.y + g.h - bh2 - 8, y))]
+        cands := []
+        if IsObject(h) {
+            low := h[4]
+            for z in zones                                    ; "sotto" = anche sotto ai tab, se la zona è lassù
+                if (h[1] < z[3] + bw2 && h[3] > z[1] - bw2 && h[2] < z[4] + Round(120 * g.s))
+                    low := Max(low, z[4])
+            cands.Push(fit(h[1] - gap - bw2, (h[2] + h[4] - bh2) // 2), fit((h[1] + h[3] - bw2) // 2, low + gap)
+                     , fit(h[3] + gap, (h[2] + h[4] - bh2) // 2), fit((h[1] + h[3] - bw2) // 2, h[2] - gap - bh2))
+        }
+        cands.Push(fit(g.x + (g.w - bw2) // 2, g.y + (g.h - bh2) // 2), fit(g.x + (g.w - bw2) // 2, g.y + Round(g.h * 0.62)))
+        pos := cands[cands.Length]
+        for c in cands {
+            box := [c[1], c[2], c[1] + bw2, c[2] + bh2]
+            if (!this.Hits(box, zones) && !(IsObject(h) && box[1] < h[3] && box[3] > h[1] && box[2] < h[4] && box[4] > h[2])) {
+                pos := c
+                break
+            }
+        }
+        x := pos[1], y := pos[2]
+        this.Bub.Show(Format("NA x{} y{}", x, y))
+        DllCall("SetWindowPos", "Ptr", this.Bub.Hwnd, "Ptr", -1, "Int", 0, "Int", 0, "Int", 0, "Int", 0, "UInt", 0x13)   ; sopra a tutto
+    }
+
+    static BuildBubble() {
+        if IsObject(this.Bub)
+            try this.Bub.Destroy()
+        this.LastKey := ""
+        st := this.Steps[this.Idx], k := FieldBoss.Geo().s, cw := Round(420 * k)
+        g := Gui("+AlwaysOnTop -Caption +ToolWindow +Border -DPIScale +E0x08000000")   ; cliccabile, non ruba il focus
+        g.BackColor := UiC("Deep"), g.MarginX := Round(18 * k), g.MarginY := Round(14 * k)
+        g.AddText(Format("x0 y0 w{} h{} Background{}", cw + Round(36 * k), Max(3, Round(4 * k)), UiC("Accent")))
+        g.SetFont("s" Round(8 * k) " bold c" UiC("Muted"), "Segoe UI")
+        g.AddText("xm y" Round(14 * k) " w" cw, "🗺️  " Tr("TOUR DELLA MAPPA") "   ·   " this.Idx " / " this.Steps.Length)
+        title := Tr(st.t)
+        if st.HasOwnProp("mode")
+            title .= FieldBossTeleportMode = st.mode ? "   ✔ " Tr("attiva") : ""
+        g.SetFont("s" Round(12 * k) " bold c" UiC("Accent"), "Segoe UI")
+        g.AddText("xm y+" Round(6 * k) " w" cw, title)
+        g.SetFont("s" Round(10 * k) " norm c" UiC("Text"), "Segoe UI")
+        g.AddText("xm y+" Round(6 * k) " w" cw, Tr(st.x))
+        if ((st.HasOwnProp("mode") && st.mode = "ultrafast") || (st.HasOwnProp("last") && this.Ultra())) {   ; consiglio ben visibile
+            g.SetFont("s" Round(10 * k) " bold c" UiC("Accent"), "Segoe UI")
+            g.AddText("xm y+" Round(8 * k) " w" cw, "⚡  " Tr("Fatta per andare veloce: scelto il boss, puoi spammare tranquillamente click sinistro e F fino a Teleport compiuto. I click arrivano al gioco solo dove servono e il cursore resta sul punto giusto."))
+        }
+        if st.HasOwnProp("active") {                         ; modalità attiva adesso
+            g.SetFont("s" Round(10 * k) " bold c" UiC("Ok"), "Segoe UI")
+            g.AddText("xm y+" Round(8 * k) " w" cw, Tr("Ora è attiva:") "  " (this.Ultra() ? "ULTRA-FAST MODE" : "NORMAL MODE"))
+        }
+        if st.HasOwnProp("do") {
+            g.SetFont("s" Round(10 * k) " bold c" UiC("Accent"), "Segoe UI")
+            g.AddText("xm y+" Round(10 * k) " w" cw, "👉  " Tr(st.do))
+        }
+        bh := Round(30 * k)
+        btn(opt, txt, fn, bg, fg) {
+            g.SetFont("s" Round(9 * k) " bold c" fg, "Segoe UI")
+            c := g.AddText(opt " h" bh " Center 0x200 Background" bg, txt)
+            c.OnEvent("Click", fn)
+            RoundCtl(c, 8)
+            return c
+        }
+        if st.HasOwnProp("ask") {                            ; domanda: prepara adesso / più tardi
+            if !this.Ultra() {
+                g.SetFont("s" Round(9 * k) " norm c" UiC("SubText"), "Segoe UI")
+                g.AddText("xm y+" Round(8 * k) " w" cw, Tr("Ora usi la NORMAL MODE: i preferiti servono quando passi alla ULTRA-FAST."))
+            }
+            btn("xm y+" Round(14 * k) " w" Round(250 * k), "⚡  " Tr("Sì, prepara ora"), (*) => MapTour.Prep(), UiC("Accent"), UiOn("Deep", "Accent"))
+            btn("x" (Round(18 * k) + cw - Round(160 * k)) " yp w" Round(160 * k), Tr("Più tardi") "  ▶", (*) => MapTour.Go(MapTour.Idx + 1, 1), UiC("Row"), UiOn("Text", "Row"))
+        }
+        btn("xm y+" Round(16 * k) " w" Round(130 * k), Tr("Salta il tour"), (*) => MapTour.Stop(true), UiC("Deep"), UiC("Muted"))
+        if (this.Idx > 1)
+            btn("x" (Round(18 * k) + cw - Round(238 * k)) " yp w" Round(110 * k), "◀  " Tr("Indietro"), (*) => MapTour.Go(MapTour.Idx - 1, -1), UiC("Row"), UiOn("Text", "Row"))
+        if st.HasOwnProp("last")
+            btn("x" (Round(18 * k) + cw - Round(120 * k)) " yp w" Round(120 * k), "✔  " Tr("Fine"), (*) => MapTour.Stop(true), UiC("Row"), UiOn("Text", "Row"))
+        else if !st.HasOwnProp("ask")
+            btn("x" (Round(18 * k) + cw - Round(120 * k)) " yp w" Round(120 * k), Tr("Avanti") "  ▶", (*) => MapTour.Go(MapTour.Idx + 1, 1), UiC("Accent"), UiOn("Deep", "Accent"))
+        g.Show("NA Hide AutoSize")
+        this.Bub := g
+    }
+}
+
+; ==============================================================================
 ; === NUMERO RANDOM (tiro con animazione + icona cliccabile) ===
 ; ==============================================================================
 ; Il numero compare grande a schermo: i valori scorrono sempre più lenti (roll), poi il risultato
 ; "esplode" con un alone del colore del tema, resta RandomHold secondi e svanisce.
 ; L'icona (dado + combinazione di tasti) si vede solo con il gioco in primo piano: un click = un tiro.
+; Intero casuale tra lo e hi (compresi) dal generatore crittografico di Windows (BCryptGenRandom,
+; lo stesso usato per le chiavi di sicurezza): imprevedibile, senza schemi ripetuti e senza la
+; distorsione del "modulo" (i valori che la creerebbero vengono scartati e si ripesca).
+; Se la funzione di Windows non risponde, si usa Random() di AutoHotkey.
+SecureRandom(lo, hi) {
+    static buf := Buffer(4), ok := true
+    if (hi < lo)
+        tmp := lo, lo := hi, hi := tmp
+    range := hi - lo + 1
+    if (range <= 1)
+        return lo
+    if !ok
+        return Random(lo, hi)
+    limit := 0x100000000 - Mod(0x100000000, range)     ; ultimo blocco incompleto: scartato
+    loop 64 {
+        if (DllCall("bcrypt\BCryptGenRandom", "Ptr", 0, "Ptr", buf, "UInt", 4, "UInt", 2, "Int") != 0) {
+            ok := false                                   ; BCRYPT_USE_SYSTEM_PREFERRED_RNG non disponibile
+            return Random(lo, hi)
+        }
+        v := NumGet(buf, 0, "UInt")
+        if (v < limit)
+            return lo + Mod(v, range)
+    }
+    return Random(lo, hi)
+}
+
 class RandomRoll {
     static Win := "", Fn := "", Icon := "", IconShown := false, Hot := false, TickFn := ""
     static CardOn := false, CardMiss := 0, CardFn := "", CardFail := 0, CardNext := 0, CardViaOcr := false, IconGeoH := 0
@@ -20668,13 +21541,17 @@ class RandomRoll {
     ; larghezza della finestra del numero: più larga con più numeri
     static BoxW(k) => Round(460 * k * [1, 1.45, 1.9, 2.35][Max(1, Min(4, Round(RandomCount)))])
 
-    ; N numeri diversi tra Lo e Hi, nell'ordine in cui escono
+    ; N numeri diversi tra Lo e Hi, nell'ordine in cui escono: Fisher-Yates parziale sull'intervallo,
+    ; con numeri del generatore crittografico di Windows (ogni sequenza ha la stessa probabilità)
     static Pick() {
-        out := [], used := Map()
-        while (out.Length < this.N) {
-            n := Random(this.Lo, this.Hi)
-            if !used.Has(n)
-                used[n] := 1, out.Push(n)
+        pool := []
+        loop this.Hi - this.Lo + 1
+            pool.Push(this.Lo + A_Index - 1)
+        out := []
+        loop this.N {
+            j := SecureRandom(A_Index, pool.Length)
+            tmp := pool[A_Index], pool[A_Index] := pool[j], pool[j] := tmp
+            out.Push(pool[A_Index])
         }
         return out
     }
