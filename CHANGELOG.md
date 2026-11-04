@@ -7,21 +7,19 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 ## v1.11
 
 ### 🇬🇧 English
+ℹ️ Version 1.10 was merged into this release for technical reasons, so its changes are listed here too.
+
 - 🎓 **Guided tour of the Settings** – The first time you open the Settings, an interactive tour shows you the whole window. A dark veil leaves only the explained area lit, with a glowing border and a balloon that tells you what it does; in some steps you try it yourself (switch mode, turn on the preview, search, pick a section or a setting) and the tour moves on by itself once you have done it. You can skip it at any time and take it again from Maintenance.
 - 📖 **Quick guide at the end of the setup** – At the end of the FIRST RUN QUICK-SETUP the quick guide opens in your language. It is the "How to use" infographic, with the keys for the HUD and the first steps; you can also open it from Maintenance and from the last step of the tour.
-
-### 🇮🇹 Italiano
-- 🎓 **Tour guidato delle Impostazioni** – La prima volta che apri le Impostazioni, un tour interattivo ti mostra tutta la finestra. Un velo scuro lascia illuminata solo la zona spiegata, con un bordo luminoso e un fumetto che dice a cosa serve; in alcuni passi provi tu (cambi modalità, accendi l'anteprima, cerchi, scegli una sezione o un'impostazione) e il tour va avanti da solo quando l'hai fatto. Puoi saltarlo quando vuoi e rifarlo da Manutenzione.
-- 📖 **Guida rapida alla fine del setup** – Alla fine del FIRST RUN QUICK-SETUP si apre la guida rapida nella tua lingua. È l'infografica "Come si usa", con i tasti per l'HUD e i primi passi; la apri anche da Manutenzione e dall'ultimo passo del tour.
-
-## v1.10
-
-### 🇬🇧 English
 - 🧭 **Kashapa always to the north** – After the teleport to Soul Ruler Kashapa the flight arrow now always points north. Reading the direction from the map got this boss wrong, so the direction is now fixed, even if your saved boss list still says "auto".
 - 🎲 **Die icon at the right size** – The die icon now always has the right size for your screen. If Wingman started while the game window was still small (launcher or loading), the icon stayed tiny; now it is rebuilt at the current size every time it appears.
 - 🎲 **Die icon only on the cards** – The die no longer shows up on other dark screens. The card screen is now recognized only when 3 to 6 cards of the same width, evenly spaced and centered, sit on the black background, and the icon disappears as soon as they are gone.
 
 ### 🇮🇹 Italiano
+ℹ️ La versione 1.10 è stata incorporata in questa release per motivi tecnici, quindi qui trovi anche le sue novità.
+
+- 🎓 **Tour guidato delle Impostazioni** – La prima volta che apri le Impostazioni, un tour interattivo ti mostra tutta la finestra. Un velo scuro lascia illuminata solo la zona spiegata, con un bordo luminoso e un fumetto che dice a cosa serve; in alcuni passi provi tu (cambi modalità, accendi l'anteprima, cerchi, scegli una sezione o un'impostazione) e il tour va avanti da solo quando l'hai fatto. Puoi saltarlo quando vuoi e rifarlo da Manutenzione.
+- 📖 **Guida rapida alla fine del setup** – Alla fine del FIRST RUN QUICK-SETUP si apre la guida rapida nella tua lingua. È l'infografica "Come si usa", con i tasti per l'HUD e i primi passi; la apri anche da Manutenzione e dall'ultimo passo del tour.
 - 🧭 **Kashapa sempre a nord** – Dopo il teletrasporto da Soul Ruler Kashapa la freccia di volo ora indica sempre il nord. La lettura della direzione dalla mappa sbagliava questo boss, quindi la direzione ora è fissa, anche se l'elenco boss salvato dice ancora "auto".
 - 🎲 **Icona del dado della misura giusta** – L'icona del dado ora ha sempre la misura giusta per il tuo schermo. Se Wingman partiva quando la finestra del gioco era ancora piccola (launcher o caricamento), l'icona restava minuscola; ora viene rifatta alla misura attuale ogni volta che compare.
 - 🎲 **Icona del dado solo sulle carte** – Il dado non compare più su altre schermate scure. La schermata delle carte ora viene riconosciuta solo quando sullo sfondo nero ci sono da 3 a 6 carte della stessa larghezza, a distanza regolare e centrate, e l'icona sparisce appena non ci sono più.
