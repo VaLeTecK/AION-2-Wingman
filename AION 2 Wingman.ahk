@@ -18996,6 +18996,66 @@ ru=СЕРВИС
 ko=서비스
 zh=服务
 ja=サービス
+it=Nuova versione disponibile
+en=New version available
+nap=Nova versione disponibile
+bro=Nuova versione disponibile, hype
+es=Nueva versión disponible
+fr=Nouvelle version disponible
+de=Neue Version verfügbar
+pt=Nova versão disponível
+ru=Доступна новая версия
+ko=새 버전이 있어요
+zh=有新版本可用
+ja=新しいバージョンがあります
+it=Si installa da sola appena esci dal gioco.
+en=It installs by itself as soon as you leave the game.
+nap=S'installa sola sola appena ascite d'o juoco.
+bro=Si installa da sola appena esci dal gioco.
+es=Se instala sola en cuanto salgas del juego.
+fr=Elle s'installe toute seule dès que tu quittes le jeu.
+de=Sie installiert sich von selbst, sobald du das Spiel verlässt.
+pt=Ela se instala sozinha assim que você sair do jogo.
+ru=Установится сама, как только вы выйдете из игры.
+ko=게임에서 나가면 자동으로 설치돼요.
+zh=退出游戏后会自动安装。
+ja=ゲームを終了するとすぐに自動でインストールされます。
+it=Te lo chiedo appena esci dal gioco.
+en=I will ask you as soon as you leave the game.
+nap=T'o cerco appena ascite d'o juoco.
+bro=Te lo chiedo appena esci dal gioco.
+es=Te lo preguntaré en cuanto salgas del juego.
+fr=Je te le demanderai dès que tu quitteras le jeu.
+de=Ich frage dich, sobald du das Spiel verlässt.
+pt=Vou perguntar assim que você sair do jogo.
+ru=Я спрошу, как только вы выйдете из игры.
+ko=게임에서 나가면 물어볼게요.
+zh=退出游戏后我会询问你。
+ja=ゲームを終了したらお聞きします。
+it=Aggiorna ora
+en=Update now
+nap=Aggiorna mo
+bro=Aggiorna ora
+es=Actualizar ahora
+fr=Mettre à jour
+de=Jetzt aktualisieren
+pt=Atualizar agora
+ru=Обновить сейчас
+ko=지금 업데이트
+zh=立即更新
+ja=今すぐ更新
+it=Cosa c'è di nuovo
+en=What's new
+nap=Che ce sta 'e nuovo
+bro=Cosa c'è di nuovo
+es=Novedades
+fr=Nouveautés
+de=Neuigkeiten
+pt=Novidades
+ru=Что нового
+ko=새로운 기능
+zh=新内容
+ja=新機能
 )" "`n"
         return s
     }
@@ -19296,7 +19356,7 @@ DonateKofi(*) => OpenUrl("https://ko-fi.com/VaLeTecK")
 ; Il controllo legge https://api.github.com/repos/<UpdateRepo>/releases/latest e confronta il tag
 ; con AppVersion. L'installazione scarica lo zip, lo estrae e copia i file sopra quelli attuali.
 class Updater {
-    static Latest := "", Err := "", Busy := false, TrayItem := ""
+    static Latest := "", Err := "", Busy := false, TrayItem := "", ToastWin := "", ToastFn := ""
 
     static Repo() => Trim(UpdateRepo)
     static IsNewer(ver) {
@@ -19462,8 +19522,9 @@ class Updater {
     }
 
     ; all'avvio: avviso "aggiornato", poi controllo in background ogni UpdateCheckHours ore
-    ; (anche mentre lo script resta aperto). Il primo controllo parte 20 s dopo l'avvio, oppure
-    ; quando scade l'intervallo se l'ultimo controllo è recente.
+    ; (anche mentre lo script resta aperto). Con UpdateCheckOnStart il primo controllo parte subito
+    ; (anche col gioco aperto) e una versione nuova viene segnalata appena trovata; senza, quando
+    ; scade l'intervallo se l'ultimo controllo è recente.
     static Startup() {
         done := ""
         try done := IniRead(UserData.File, "Update", "JustUpdated", "")
@@ -19473,9 +19534,11 @@ class Updater {
         }
         if (StrLower(Trim(UpdateMode)) = "spento")
             return
+        if UpdateCheckOnStart                             ; subito (appena finito l'avvio), anche col gioco aperto
+            return SetTimer(ObjBindMethod(this, "Background", true), -1500)
         wait := 20000, last := ""
         try last := IniRead(UserData.File, "Update", "LastCheck", "")
-        if (last != "" && !UpdateCheckOnStart) {          ; senza controllo all'avvio: aspetta la fine dell'intervallo
+        if (last != "") {                                 ; senza controllo all'avvio: aspetta la fine dell'intervallo
             try {
                 left := this.EveryMs() - DateDiff(A_Now, last, "Seconds") * 1000
                 wait := Max(20000, left)
@@ -19486,8 +19549,8 @@ class Updater {
 
     static EveryMs() => Max(1, UpdateCheckHours) * 3600000
 
-    static Background() {
-        if WinActive("ahk_exe " GameExe)                 ; mai durante il gioco: la richiesta può bloccare lo script per qualche secondo
+    static Background(startup := false) {
+        if (!startup && WinActive("ahk_exe " GameExe))   ; mai durante il gioco: la richiesta può bloccare lo script per qualche secondo
             return SetTimer(ObjBindMethod(this, "Background"), -120000)
         SetTimer(ObjBindMethod(this, "Background"), -this.EveryMs())   ; prossimo controllo
         if (StrLower(Trim(UpdateMode)) = "spento" || IsObject(this.Latest))
@@ -19503,7 +19566,52 @@ class Updater {
             try A_TrayMenu.Insert("1&", label, (*) => this.Install(this.Latest))
             this.TrayItem := label
         }
+        if (WinActive("ahk_exe " GameExe) || PreviewMode || IsObject(SettingsEditor.Win))
+            this.Toast(info)                             ; sta giocando (o ha le Impostazioni aperte): avviso discreto subito
         this.WhenFree()
+    }
+
+    ; Avviso in basso a destra, sopra al gioco ma senza rubargli il focus: versione nuova, cosa
+    ; succederà (installazione automatica o domanda all'uscita dal gioco) e pulsanti. Sparisce da solo.
+    static Toast(info) {
+        this.ToastClose()
+        g := RandomRoll.Geo(), k := g.s, cw := Round(380 * k)
+        t := Gui("+AlwaysOnTop -Caption +ToolWindow +Border -DPIScale +E0x08000000")   ; cliccabile, non ruba il focus
+        t.BackColor := UiC("Deep"), t.MarginX := Round(16 * k), t.MarginY := Round(12 * k)
+        t.AddText(Format("x0 y0 w{} h{} Background{}", cw + Round(32 * k), Max(3, Round(4 * k)), UiC("Accent")))
+        t.SetFont("s" Round(11 * k) " bold c" UiC("Accent"), "Segoe UI")
+        t.AddText("xm y" Round(14 * k) " w" (cw - Round(30 * k)), "🔔  " Tr("Nuova versione disponibile"))
+        t.SetFont("s" Round(11 * k) " bold c" UiC("Muted"), "Segoe UI")
+        x := t.AddText("x+" Round(4 * k) " yp w" Round(26 * k) " Center", "✕")
+        x.OnEvent("Click", (*) => Updater.ToastClose())
+        t.SetFont("s" Round(10 * k) " norm c" UiC("Text"), "Segoe UI")
+        t.AddText("xm y+" Round(6 * k) " w" cw, Tr("È disponibile AION 2 Wingman {1} (tu hai la {2}).", info.ver, AppVersion))
+        t.SetFont("s" Round(9 * k) " norm c" UiC("SubText"), "Segoe UI")
+        t.AddText("xm y+" Round(4 * k) " w" cw, StrLower(Trim(UpdateMode)) = "automatico"
+            ? Tr("Si installa da sola appena esci dal gioco.") : Tr("Te lo chiedo appena esci dal gioco."))
+        bh := Round(28 * k)
+        btn(opt, txt, fn, bg, fg) {
+            t.SetFont("s" Round(9 * k) " bold c" fg, "Segoe UI")
+            c := t.AddText(opt " h" bh " Center 0x200 Background" bg, txt)
+            c.OnEvent("Click", fn)
+            RoundCtl(c, 8)
+        }
+        btn("xm y+" Round(12 * k) " w" Round(170 * k), "⬇  " Tr("Aggiorna ora"), (*) => (Updater.ToastClose(), Updater.Install(info)), UiC("Accent"), UiOn("Deep", "Accent"))
+        btn("x+" Round(8 * k) " yp w" Round(150 * k), "📄  " Tr("Cosa c'è di nuovo"), (*) => OpenUrl(info.page), UiC("Row"), UiOn("Text", "Row"))
+        t.Show("NA Hide AutoSize")
+        t.GetPos(,, &tw, &th)
+        t.Show(Format("NA x{} y{}", g.x + g.w - tw - Round(24 * k), g.y + g.h - th - Round(90 * k)))
+        WinSetTransparent(240, t.Hwnd)
+        this.ToastWin := t
+        SetTimer(this.ToastFn := this.ToastFn || ObjBindMethod(this, "ToastClose"), -25000)
+    }
+
+    static ToastClose(*) {
+        if this.ToastFn
+            SetTimer(this.ToastFn, 0)
+        if IsObject(this.ToastWin)
+            try this.ToastWin.Destroy()
+        this.ToastWin := ""
     }
 
     ; mai mentre giochi: aspetta che il gioco non sia in primo piano (e che le Impostazioni siano chiuse)
