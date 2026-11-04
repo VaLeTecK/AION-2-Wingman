@@ -5105,6 +5105,7 @@ class SettingsEditor {
     ; ---- Menu: [titolo, introduzione, variabili]  oppure  [titolo, introduzione, [sottomenu...]] ----
     static Tree := [
         ["Home", "", "HOME"],
+        ["—", "PRINCIPALI", "DIV"],                     ; divisori del menu (gruppi)
         ["Preset", "", "PRESET"],
         ["Generale", "Impostazioni comuni a tutta la suite.", ["Language", "AutoExitWithGame", "GameExe", "ClickThrough", "SplashEnabled", "SplashHold", "SplashScale", "WingmanIcon", "GameMenuButtonEnabled"]],
         ["Tema", "Colori di tutta la suite. I temi pronti non si modificano: per crearne uno tuo partendo da un tema qualsiasi usa Editor temi.",
@@ -5118,6 +5119,7 @@ class SettingsEditor {
             ["CombatKey", "LootKey", "HudToggleKey", "HiddenCubeToggleKey", "FieldBossToggleKey",
              "FieldBossMapKey", "FieldBossTravelKey", "SettingsKey",
              "HiddenCubeTestKey", "FieldBossCoordKey", "FieldBossMapTestKey", "FieldBossScanKey"]],
+        ["—", "FUNZIONI", "DIV"],
         ["HUD overlay", "Mirino, barre e icone LOOT / COMBAT. Si accende con i segnali F9 / F10 inviati dalle tue macro.", [
             ["Generale e macro", "MACRO DI COMBAT: metti F9 in spam per tutta la durata della macro.`nMACRO DI LOOT: inserisci F10 con un wait di 1350 ms.`nSe le macro hanno pause più lunghe alza i Timeout.",
                 ["HudEnabled", "HudBaseHeight", "CombatTimeout", "LootTimeout", "CombatGrace", "LootGrace"]],
@@ -5190,6 +5192,7 @@ class SettingsEditor {
                 ["FieldBossTravelPresses", "FieldBossTravelWait", "FieldBossTeleportLock", "FieldBossDirHint", "FieldBossDirSeconds",
                  "FieldBossDirDelay", "FieldBossDirTop", "FieldBossDirScale"]],
             ["Elenco boss", "", "BOSS"]]],
+        ["—", "SERVIZIO", "DIV"],
         ["Aggiornamenti", "Controllo e installazione delle nuove versioni pubblicate su GitHub. Le tue impostazioni restano dopo ogni aggiornamento.",
             ["UpdateMode", "UpdateCheckOnStart", "UpdateCheckHours", "UpdateRepo"]],
         ["Manutenzione", "", "MAINT"]
@@ -5799,9 +5802,12 @@ class SettingsEditor {
         DllCall("SendMessage", "Ptr", this.Search.Hwnd, "UInt", 0x1501, "Ptr", 1, "WStr", "🔍  " Tr("Cerca un'impostazione..."))   ; EM_SETCUEBANNER
         this.Search.OnEvent("Change", (*) => this.Loading ? 0 : SetTimer(this.SearchFn := this.SearchFn || ObjBindMethod(this, "RunSearch"), -250))
         this.TV := g.AddTreeView("x12 y110 w280 h570 -Lines Background" UiC("WinField"))
+        this.TV.Opt("+0x8000")                            ; TVS_NOHSCROLL: i divisori non allargano il menu
         this.TV.OnEvent("ItemSelect", (c, item) => this.SelectNode(item))
+        this.TV.OnNotify(-12, ObjBindMethod(this, "TreeDraw"))          ; NM_CUSTOMDRAW: divisori in grigio
+        this.TV.OnNotify(-450, ObjBindMethod(this, "TreeSelChanging"))  ; TVN_SELCHANGINGW: divisori non selezionabili
         this.LastNode := 0
-        this.Nodes := Map()
+        this.Nodes := Map(), this.DivItems := Map()
         this.AddNodes(this.Tree, 0)
         listed := Map()                                   ; impostazioni non presenti nel menu -> "Altro"
         for id, n in this.Nodes
@@ -5815,6 +5821,7 @@ class SettingsEditor {
             id := this.TV.Add(this.Icon("Altro") Tr("Altro"), 0)
             this.Nodes[id] := {title: this.Icon("Altro") Tr("Altro"), intro: Tr("Impostazioni della CONFIG non ancora catalogate nei menu."), content: extra}
         }
+        this.TrimDividers()
 
         ; ---- titolo e introduzione della categoria ----
         g.SetFont("s14 bold c" UiC("WinText"), "Segoe UI")
@@ -6297,6 +6304,10 @@ class SettingsEditor {
     static AddNodes(list, parent) {
         for n in list {
             content := n[3], kids := IsObject(content) && content.Length && IsObject(content[1])
+            if (!IsObject(content) && content == "DIV") {         ; divisore tra gruppi: non selezionabile
+                this.DivItems[this.TV.Add("──  " Tr(n[2]) "  ──────────────────────────────", parent)] := true
+                continue
+            }
             if this.Basic {                                   ; menu semplificato: niente sottomenu, solo opzioni base
                 if !IsObject(content) {
                     if !this.BasicPanels.Has(content)
@@ -6326,6 +6337,77 @@ class SettingsEditor {
             if kids                                           ; ha dei sottomenu
                 this.AddNodes(content, id)
         }
+    }
+
+    ; divisori inutili (in fondo, o due di fila perché il gruppo è vuoto nella modalità Base): via
+    static TrimDividers() {
+        it := this.TV.GetNext()
+        while it {
+            nx := this.TV.GetNext(it)
+            if (this.DivItems.Has(it) && (!nx || this.DivItems.Has(nx)))
+                this.TV.Delete(it), this.DivItems.Delete(it)
+            it := nx
+        }
+    }
+
+    ; colori dei divisori: testo tenue, niente evidenziazione al passaggio del mouse
+    static TreeDraw(tv, lParam) {
+        P := A_PtrSize, stage := NumGet(lParam, 3 * P, "UInt")
+        if (stage = 0x1)                                   ; CDDS_PREPAINT
+            return 0x20                                    ; CDRF_NOTIFYITEMDRAW
+        if (stage != 0x10001)                              ; CDDS_ITEMPREPAINT
+            return 0
+        if !this.DivItems.Has(NumGet(lParam, 5 * P + 16, "UPtr"))
+            return 0
+        NumPut("UInt", NumGet(lParam, 6 * P + 16, "UInt") & ~0x41, lParam, 6 * P + 16)   ; niente HOT / SELECTED
+        NumPut("UInt", RgbToColorRef(ColorToRGB(UiC("Muted"))), lParam, 8 * P + 16)
+        NumPut("UInt", RgbToColorRef(ColorToRGB(UiC("WinField"))), lParam, 8 * P + 20)
+        return 0x2                                         ; CDRF_NEWFONT
+    }
+
+    ; click su un divisore: ignorato; frecce della tastiera: si salta il divisore
+    static TreeSelChanging(tv, lParam) {
+        P := A_PtrSize, tvi := P = 8 ? 56 : 40
+        newItem := NumGet(lParam, 4 * P + tvi + P, "UPtr")
+        if !this.DivItems.Has(newItem)
+            return 0
+        if (NumGet(lParam, 3 * P, "UInt") = 2)             ; TVC_BYKEYBOARD
+            SetTimer(ObjBindMethod(this, "SkipDivider", newItem, NumGet(lParam, 4 * P + P, "UPtr")), -1)
+        return 1
+    }
+
+    static SkipDivider(div, old) {
+        if !IsObject(this.Win)
+            return
+        top := old
+        while (top && (p := this.TV.GetParent(top)))
+            top := p
+        down := false, it := this.TV.GetNext()
+        while it {                                         ; la voce di prima era sopra o sotto il divisore?
+            if (it = top) {
+                down := true
+                break
+            }
+            if (it = div)
+                break
+            it := this.TV.GetNext(it)
+        }
+        if down {
+            t := this.TV.GetNext(div)
+            while (t && this.DivItems.Has(t))
+                t := this.TV.GetNext(t)
+        } else {
+            t := this.TV.GetPrev(div)
+            while (t && this.DivItems.Has(t))
+                t := this.TV.GetPrev(t)
+            while (t && (c := this.TV.GetChild(t))) {      ; ultima voce visibile del gruppo sopra
+                while (nx := this.TV.GetNext(c))
+                    c := nx
+                t := c
+            }
+        }
+        if t
+            this.TV.Modify(t, "Select Vis")
     }
 
     static SetMode(basic) {
@@ -18890,6 +18972,30 @@ ru=Избранное в игре заполнено: 10/10
 ko=게임 즐겨찾기가 가득 참: 10/10
 zh=游戏收藏已满：10/10
 ja=ゲームのお気に入りが満杯：10/10
+it=PRINCIPALI
+en=MAIN
+nap=PRINCIPALE
+bro=MAIN
+es=PRINCIPALES
+fr=PRINCIPAUX
+de=ALLGEMEIN
+pt=PRINCIPAIS
+ru=ОСНОВНЫЕ
+ko=기본
+zh=主要
+ja=メイン
+it=SERVIZIO
+en=SERVICE
+nap=SERVIZZIO
+bro=SERVIZIO
+es=SERVICIO
+fr=SERVICE
+de=SERVICE
+pt=SERVIÇO
+ru=СЕРВИС
+ko=서비스
+zh=服务
+ja=サービス
 )" "`n"
         return s
     }
