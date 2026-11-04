@@ -464,6 +464,30 @@ if ($ready) {
                    "   Start it manually from the desktop shortcut or by double-clicking 'AION 2 Wingman.ahk'.") Yellow
         }
     }
+    # guida rapida (infografica "Come si usa": tasti per l'HUD e primi passi) nella lingua scelta
+    $guideCodes = @{ english = 'EN'; italiano = 'IT'; napoletano = 'IT'; bro = 'IT'; spanish = 'ES'; french = 'FR';
+                     german = 'DE'; portuguese = 'PT'; russian = 'RU'; korean = 'KO'; chinese = 'ZH'; japanese = 'JA' }
+    $gc = $guideCodes[$Lang]
+    if (-not $gc) { $gc = 'EN' }
+    $guideDir = Join-Path $Dir 'INFOGRAPHICS'
+    $guide = $null
+    foreach ($c in @($gc, 'EN')) {
+        if (-not $guide) {
+            $guide = Get-ChildItem -LiteralPath $guideDir -Filter ("AION2Wingman_" + $c + "_2_*.png") -ErrorAction SilentlyContinue | Select-Object -First 1
+        }
+    }
+    if ($guide) {
+        try {
+            $psi = New-Object Diagnostics.ProcessStartInfo
+            $psi.FileName        = $guide.FullName
+            $psi.UseShellExecute = $true
+            [void][Diagnostics.Process]::Start($psi)
+            Say (L "   Apro la guida rapida: tasti per l'HUD e primi passi." `
+                   "   Opening the quick guide: HUD keys and first steps.") Green
+        } catch {
+            Say ((L "   Guida rapida: " "   Quick guide: ") + $guide.FullName) Yellow
+        }
+    }
 } else {
     Say (L "Sistema i punti in rosso e rilancia il FIRST RUN QUICK-SETUP." "Fix the red items and run the FIRST RUN QUICK-SETUP again.") Red
 }

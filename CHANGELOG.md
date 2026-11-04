@@ -4,6 +4,28 @@ Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descriz
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
 A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal del pacchetto.
 
+## v1.11
+
+### 🇬🇧 English
+- 🎓 **Guided tour of the Settings** – The first time you open the Settings, an interactive tour shows you the whole window. A dark veil leaves only the explained area lit, with a glowing border and a balloon that tells you what it does; in some steps you try it yourself (switch mode, turn on the preview, search, pick a section or a setting) and the tour moves on by itself once you have done it. You can skip it at any time and take it again from Maintenance.
+- 📖 **Quick guide at the end of the setup** – At the end of the FIRST RUN QUICK-SETUP the quick guide opens in your language. It is the "How to use" infographic, with the keys for the HUD and the first steps; you can also open it from Maintenance and from the last step of the tour.
+
+### 🇮🇹 Italiano
+- 🎓 **Tour guidato delle Impostazioni** – La prima volta che apri le Impostazioni, un tour interattivo ti mostra tutta la finestra. Un velo scuro lascia illuminata solo la zona spiegata, con un bordo luminoso e un fumetto che dice a cosa serve; in alcuni passi provi tu (cambi modalità, accendi l'anteprima, cerchi, scegli una sezione o un'impostazione) e il tour va avanti da solo quando l'hai fatto. Puoi saltarlo quando vuoi e rifarlo da Manutenzione.
+- 📖 **Guida rapida alla fine del setup** – Alla fine del FIRST RUN QUICK-SETUP si apre la guida rapida nella tua lingua. È l'infografica "Come si usa", con i tasti per l'HUD e i primi passi; la apri anche da Manutenzione e dall'ultimo passo del tour.
+
+## v1.10
+
+### 🇬🇧 English
+- 🧭 **Kashapa always to the north** – After the teleport to Soul Ruler Kashapa the flight arrow now always points north. Reading the direction from the map got this boss wrong, so the direction is now fixed, even if your saved boss list still says "auto".
+- 🎲 **Die icon at the right size** – The die icon now always has the right size for your screen. If Wingman started while the game window was still small (launcher or loading), the icon stayed tiny; now it is rebuilt at the current size every time it appears.
+- 🎲 **Die icon only on the cards** – The die no longer shows up on other dark screens. The card screen is now recognized only when 3 to 6 cards of the same width, evenly spaced and centered, sit on the black background, and the icon disappears as soon as they are gone.
+
+### 🇮🇹 Italiano
+- 🧭 **Kashapa sempre a nord** – Dopo il teletrasporto da Soul Ruler Kashapa la freccia di volo ora indica sempre il nord. La lettura della direzione dalla mappa sbagliava questo boss, quindi la direzione ora è fissa, anche se l'elenco boss salvato dice ancora "auto".
+- 🎲 **Icona del dado della misura giusta** – L'icona del dado ora ha sempre la misura giusta per il tuo schermo. Se Wingman partiva quando la finestra del gioco era ancora piccola (launcher o caricamento), l'icona restava minuscola; ora viene rifatta alla misura attuale ogni volta che compare.
+- 🎲 **Icona del dado solo sulle carte** – Il dado non compare più su altre schermate scure. La schermata delle carte ora viene riconosciuta solo quando sullo sfondo nero ci sono da 3 a 6 carte della stessa larghezza, a distanza regolare e centrate, e l'icona sparisce appena non ci sono più.
+
 ## v1.09
 
 ### 🇬🇧 English
@@ -11,7 +33,7 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 - ✥ **Movable toolbar** – The EDIT OVERLAY toolbar can be dragged anywhere on the screen. It remembers where you left it, so it never covers the part of the HUD you are working on.
 - 🎲 **Multiple random numbers** – A single roll can now draw from 1 to 4 numbers at once. The new "Numbers per roll" setting (RandomCount) picks how many, always all different from each other, shown side by side in the order they came out.
 - 🧲 **Gentler snap** – Elements follow the mouse freely and snap only near the grid lines. The snap now works like a magnet that grabs only when you pass close to a line, instead of locking the element to the grid at every step.
- – The bars now have animated effects in ON state too. They are mirrored, both halves pointing toward the center: light trails with a spark at the head ("comet", on by default), a halo breathing around the bars ("pulse") or the bar lighting up intermittently ("glow"); they can be combined, and speed and color are adjustable in Settings > HUD overlay > Bars.
+- ☄️ **Bar effects** – The bars now have animated effects in ON state too. They are mirrored, both halves pointing toward the center: light trails with a spark at the head ("comet", on by default), a halo breathing around the bars ("pulse") or the bar lighting up intermittently ("glow"); they can be combined, and speed and color are adjustable in Settings > HUD overlay > Bars.
 - 🧭 **Direction of the new boss** – Picking another boss replaces the old flight direction right away. If you teleport to a boss and quickly move on to another one, the arrow of the previous boss disappears as soon as you choose the new one and only the new direction is shown.
 - 🎲 **More reliable die icon** – The die now shows up every time on the Shugo reward cards. Wingman recognizes the card screen from two lines of pixels (the black background above the cards and the cards themselves), without waiting for text to be read; the text reading stays only as a backup, and the check remains very light.
 
@@ -20,7 +42,7 @@ A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal de
 - ✥ **Barra spostabile** – La barra degli strumenti di EDIT OVERLAY si può trascinare in qualsiasi punto dello schermo. Ricorda dove l'hai lasciata, così non copre mai la parte dell'HUD su cui stai lavorando.
 - 🎲 **Più numeri random** – Un solo tiro ora può estrarre da 1 a 4 numeri insieme. La nuova impostazione "Numeri per tiro" (RandomCount) sceglie quanti, sempre diversi tra loro, mostrati affiancati nell'ordine in cui sono usciti.
 - 🧲 **Snap più morbido** – Gli elementi seguono liberamente il mouse e si agganciano solo vicino alle linee della griglia. Lo snap ora funziona come una calamita che afferra solo quando passi vicino a una linea, invece di bloccare l'elemento sulla griglia a ogni passo.
- – Ora anche le barre hanno effetti animati nello stato ON. Sono speculari, con le due metà che puntano verso il centro: scie luminose con una scintilla in testa ("comet", acceso di default), alone che respira attorno alle barre ("pulse") oppure la barra che si illumina a intermittenza ("glow"); si possono combinare, e velocità e colore si regolano in Impostazioni > HUD overlay > Barre.
+- ☄️ **Effetti delle barre** – Ora anche le barre hanno effetti animati nello stato ON. Sono speculari, con le due metà che puntano verso il centro: scie luminose con una scintilla in testa ("comet", acceso di default), alone che respira attorno alle barre ("pulse") oppure la barra che si illumina a intermittenza ("glow"); si possono combinare, e velocità e colore si regolano in Impostazioni > HUD overlay > Barre.
 - 🧭 **Direzione del nuovo boss** – Scegliendo un altro boss la vecchia direzione di volo viene sostituita subito. Se ti teletrasporti da un boss e poco dopo passi a un altro, la freccia del boss precedente sparisce appena scegli il nuovo e compare solo la nuova direzione.
 - 🎲 **Icona del dado più affidabile** – Il dado ora compare ogni volta sulle carte premio degli Shugo. Wingman riconosce la schermata delle carte da due righe di pixel (lo sfondo nero sopra le carte e le carte stesse), senza aspettare la lettura del testo; la lettura del testo resta solo come riserva, e il controllo rimane leggerissimo.
 

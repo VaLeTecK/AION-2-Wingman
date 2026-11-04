@@ -23,7 +23,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.09"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.11"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -724,7 +724,7 @@ global FieldBossList := [
     ["Immortal Gartua",                    "oro",    1,  "15. Remote Island",                         "E"],
     ["High Commander Lagta",               "oro",    2,  "57. Kumrica's Cellar",                      "W"],
     ["Silent Dartan",                      "oro",    3,  "40. Graverobber Campsite",                  "NW"],
-    ["Soul Ruler Kashapa",                 "oro",    3,  "54. Idun's Lake",                           "auto"],
+    ["Soul Ruler Kashapa",                 "oro",    3,  "54. Idun's Lake",                           "N"],
     ["Sharp Shylak",                       "oro",    3,  "58. Collapsed Hall of Fame",                "SE"],
     ["Dark Shadow Vishwada",               "oro",    3,  "57. Kumrica's Cellar",                      "W"],
     ["Drakan Battalion Weapon Guruta",     "oro",    3,  "51. Steel Hammer Temporary Trading Post",   "E"],
@@ -3828,7 +3828,16 @@ class FieldBossTool {     ; Field Boss - by VaLeTecK
         return idx.Has(code) ? FieldBossTool.DirAt(idx[code]) : ""
     }
 
-    BossDir(name) => this.Bosses.Has(name) ? FieldBossTool.DirFromCode(this.Bosses[name].dir) : ""
+    ; Boss con direzione obbligata: valgono anche se nell'Elenco boss salvato c'è ancora "auto"
+    ; (la lettura automatica dalla mappa li sbaglia)
+    static ForcedDir := Map("Soul Ruler Kashapa", "N")
+
+    BossDir(name) {
+        code := this.Bosses.Has(name) ? this.Bosses[name].dir : ""
+        if (FieldBossTool.ForcedDir.Has(name) && (Trim(code) = "" || code = "auto"))
+            code := FieldBossTool.ForcedDir[name]
+        return FieldBossTool.DirFromCode(code)
+    }
 
     ; Teleport di riferimento predefinito (ULTRA-FAST MODE) per i boss di Altgard:
     ; usato quando nell'Elenco boss il Teleport è vuoto
@@ -5385,6 +5394,7 @@ class SettingsEditor {
             return
         }
         this.Build()
+        Tutorial.AutoStart()                              ; la prima volta: tour guidato della finestra
     }
 
     ; ---------------- Lettura della CONFIG dal file dello script ----------------
@@ -5848,6 +5858,8 @@ class SettingsEditor {
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
         this.MaintCtrls := []
         for it in [["🧙  " Tr("Riesegui il FIRST RUN QUICK-SETUP"), (*) => this.RunSetup()]
+                 , ["🎓  " Tr("Rifai il tour delle Impostazioni"), (*) => Tutorial.Start()]
+                 , ["📖  " Tr("Apri la guida rapida"), (*) => Tutorial.OpenGuide()]
                  , ["🔄  " Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow()]
                  , ["🌐  " Tr("Pagina del progetto su GitHub"), (*) => Updater.OpenPage()]
                  , ["🐞  " Tr("Bug e consigli su GitHub"), ReportBug]
@@ -5886,11 +5898,11 @@ class SettingsEditor {
         this.KofiBtn.OnEvent("Click", DonateKofi)
         RoundCtl(this.PayPalBtn, 10), RoundCtl(this.KofiBtn, 10)
         g.SetFont("s10 norm c" UiC("WinText"), "Segoe UI")
-        b := g.AddButton("x" (W - 482) " y" (H - 46) " w170 h34 Default", Tr("Salva e riavvia"))
+        this.SaveBtn := b := g.AddButton("x" (W - 482) " y" (H - 46) " w170 h34 Default", Tr("Salva e riavvia"))
         b.OnEvent("Click", (*) => this.Save())
-        b := g.AddButton("x" (W - 304) " y" (H - 46) " w160 h34", Tr("Annulla modifiche"))
+        this.DiscardBtn := b := g.AddButton("x" (W - 304) " y" (H - 46) " w160 h34", Tr("Annulla modifiche"))
         b.OnEvent("Click", (*) => this.Discard())
-        b := g.AddButton("x" (W - 136) " y" (H - 46) " w124 h34", Tr("Chiudi"))
+        this.CloseBtn := b := g.AddButton("x" (W - 136) " y" (H - 46) " w124 h34", Tr("Chiudi"))
         b.OnEvent("Click", (*) => this.Close())
 
         ModernWindow(g, Map(this.LV.Hwnd, 1))             ; elenco principale: colonna "Valore" evidenziata
@@ -17736,6 +17748,582 @@ ru=Сохранить
 ko=저장
 zh=保存
 ja=保存
+it=TOUR DELLE IMPOSTAZIONI
+en=SETTINGS TOUR
+nap=GIRO D'E MPUSTAZIUNE
+bro=TOUR DEI SETTAGGI
+es=TOUR DE AJUSTES
+fr=VISITE DES PARAMÈTRES
+de=EINSTELLUNGEN-TOUR
+pt=TOUR DAS CONFIGURAÇÕES
+ru=ОБЗОР НАСТРОЕК
+ko=설정 둘러보기
+zh=设置导览
+ja=設定ツアー
+it=Fatto!
+en=Done!
+nap=Fatto!
+bro=Fatto, ez!
+es=¡Hecho!
+fr=C'est fait !
+de=Erledigt!
+pt=Feito!
+ru=Готово!
+ko=완료!
+zh=完成！
+ja=できました！
+it=Salta il tour
+en=Skip the tour
+nap=Zompa 'o giro
+bro=Skippa il tour
+es=Saltar el tour
+fr=Passer la visite
+de=Tour überspringen
+pt=Pular o tour
+ru=Пропустить обзор
+ko=둘러보기 건너뛰기
+zh=跳过导览
+ja=ツアーをスキップ
+it=Apri la guida rapida
+en=Open the quick guide
+nap=Arape 'a guida rapida
+bro=Apri la guida veloce
+es=Abrir la guía rápida
+fr=Ouvrir le guide rapide
+de=Kurzanleitung öffnen
+pt=Abrir o guia rápido
+ru=Открыть краткое руководство
+ko=빠른 가이드 열기
+zh=打开快速指南
+ja=クイックガイドを開く
+it=Rifai il tour delle Impostazioni
+en=Take the Settings tour again
+nap=Rifà 'o giro d'e Mpustaziune
+bro=Rifai il tour dei settaggi
+es=Repetir el tour de Ajustes
+fr=Refaire la visite des paramètres
+de=Einstellungen-Tour wiederholen
+pt=Refazer o tour das Configurações
+ru=Пройти обзор настроек ещё раз
+ko=설정 둘러보기 다시 하기
+zh=重新进行设置导览
+ja=設定ツアーをもう一度
+it=Benvenuto in AION 2 Wingman!
+en=Welcome to AION 2 Wingman!
+nap=Benvenuto 'ncopp'a AION 2 Wingman!
+bro=Benvenuto su AION 2 Wingman, bro!
+es=¡Bienvenido a AION 2 Wingman!
+fr=Bienvenue dans AION 2 Wingman !
+de=Willkommen bei AION 2 Wingman!
+pt=Bem-vindo ao AION 2 Wingman!
+ru=Добро пожаловать в AION 2 Wingman!
+ko=AION 2 Wingman에 오신 걸 환영해요!
+zh=欢迎使用 AION 2 Wingman！
+ja=AION 2 Wingman へようこそ！
+it=Questo breve tour ti mostra la finestra delle Impostazioni e cosa puoi fare. La zona illuminata è attiva: quando te lo chiedo, provala. Puoi saltare il tour quando vuoi e rifarlo da Manutenzione.
+en=This short tour shows you the Settings window and what you can do with it. The highlighted area is live: when I ask you to, try it out. You can skip the tour at any time and take it again from Maintenance.
+nap=Stu giro curto te fa vedé 'a fenesta d'e Mpustaziune e chello ca puó fà. 'A zona allummata funziona: quanno t'o dico, pruvala. Puó zumpà 'o giro quanno vuó e 'o rifà 'a Manutenzione.
+bro=Questo tour veloce ti fa vedere la finestra dei settaggi e cosa puoi fare. La zona illuminata è attiva: quando te lo dico, provala. Puoi skipparlo quando vuoi e rifarlo da Manutenzione.
+es=Este breve tour te muestra la ventana de Ajustes y lo que puedes hacer. La zona iluminada está activa: cuando te lo pida, pruébala. Puedes saltar el tour cuando quieras y repetirlo desde Mantenimiento.
+fr=Cette courte visite te présente la fenêtre des paramètres et ce que tu peux y faire. La zone éclairée est active : quand je te le demande, essaie-la. Tu peux passer la visite à tout moment et la refaire depuis Maintenance.
+de=Diese kurze Tour zeigt dir das Einstellungsfenster und was du damit machen kannst. Der hervorgehobene Bereich ist aktiv: Wenn ich dich darum bitte, probier ihn aus. Du kannst die Tour jederzeit überspringen und unter Wartung wiederholen.
+pt=Este breve tour mostra a janela de Configurações e o que você pode fazer. A área destacada está ativa: quando eu pedir, experimente. Você pode pular o tour quando quiser e refazê-lo em Manutenção.
+ru=Этот короткий обзор покажет окно настроек и его возможности. Подсвеченная область активна: когда я попрошу, попробуйте её. Обзор можно пропустить в любой момент и пройти снова из раздела «Обслуживание».
+ko=이 짧은 둘러보기에서 설정 창과 할 수 있는 일을 보여 드려요. 밝게 표시된 영역은 실제로 작동해요: 요청하면 직접 해 보세요. 언제든 건너뛸 수 있고 유지 관리에서 다시 할 수 있어요.
+zh=这个简短的导览会介绍设置窗口以及你能做的事。高亮区域可以直接操作：我提示时请试一试。你可以随时跳过导览，并在“维护”中重新进行。
+ja=この短いツアーで設定ウィンドウとできることを紹介します。ハイライトされた部分は実際に操作できます。指示があったら試してみてください。ツアーはいつでもスキップでき、メンテナンスからやり直せます。
+it=Le funzioni
+en=The features
+nap='E funziune
+bro=Le feature
+es=Las funciones
+fr=Les fonctions
+de=Die Funktionen
+pt=As funções
+ru=Функции
+ko=기능
+zh=功能
+ja=機能
+it=Le tre funzioni principali: HUD overlay, Hidden Cube e Field Boss. Un click su una scheda la accende o la spegne; la modifica vale dopo "Salva e riavvia".
+en=The three main features: HUD overlay, Hidden Cube and Field Boss. A click on a card turns it on or off; the change applies after "Save and restart".
+nap='E tre funziune principale: HUD overlay, Hidden Cube e Field Boss. Nu click 'ncopp'a na scheda l'appiccia o 'a stuta; 'a mudifica vale doppo "Sarva e riavvia".
+bro=Le tre feature principali: HUD overlay, Hidden Cube e Field Boss. Un click su una scheda la accende o la spegne; vale dopo "Salva e riavvia".
+es=Las tres funciones principales: HUD overlay, Hidden Cube y Field Boss. Un clic en una tarjeta la activa o la desactiva; el cambio se aplica tras "Guardar y reiniciar".
+fr=Les trois fonctions principales : HUD overlay, Hidden Cube et Field Boss. Un clic sur une carte l'active ou la désactive ; le changement s'applique après "Enregistrer et redémarrer".
+de=Die drei Hauptfunktionen: HUD overlay, Hidden Cube und Field Boss. Ein Klick auf eine Karte schaltet sie ein oder aus; die Änderung gilt nach "Speichern und neu starten".
+pt=As três funções principais: HUD overlay, Hidden Cube e Field Boss. Um clique em um cartão liga ou desliga; a mudança vale depois de "Salvar e reiniciar".
+ru=Три основные функции: HUD overlay, Hidden Cube и Field Boss. Клик по карточке включает или выключает её; изменение применится после «Сохранить и перезапустить».
+ko=세 가지 주요 기능: HUD overlay, Hidden Cube, Field Boss. 카드를 클릭하면 켜지거나 꺼져요. 변경은 "저장 후 재시작" 뒤에 적용돼요.
+zh=三个主要功能：HUD overlay、Hidden Cube 和 Field Boss。点击卡片即可开启或关闭；更改在“保存并重启”后生效。
+ja=3 つの主な機能：HUD overlay、Hidden Cube、Field Boss。カードをクリックするとオン／オフが切り替わります。変更は「保存して再起動」の後に反映されます。
+it=Scorciatoie
+en=Shortcuts
+nap=Scurciatoie
+bro=Scorciatoie
+es=Accesos directos
+fr=Raccourcis
+de=Verknüpfungen
+pt=Atalhos
+ru=Ярлыки
+ko=바로 가기
+zh=快捷入口
+ja=ショートカット
+it=Da qui raggiungi subito le pagine più usate: preset di risoluzione, tema, tasti, aggiornamenti, guida online e manutenzione.
+en=From here you jump straight to the most used pages: resolution presets, theme, keys, updates, online guide and maintenance.
+nap='A ccà vaje subbeto 'e paggine cchiù ausate: preset 'e risoluzione, tema, taste, aggiornamente, guida online e manutenzione.
+bro=Da qui vai dritto alle pagine più usate: preset risoluzione, tema, tasti, aggiornamenti, guida online e manutenzione.
+es=Desde aquí llegas al instante a las páginas más usadas: presets de resolución, tema, teclas, actualizaciones, guía en línea y mantenimiento.
+fr=D'ici, tu accèdes directement aux pages les plus utilisées : préréglages de résolution, thème, touches, mises à jour, guide en ligne et maintenance.
+de=Von hier aus erreichst du sofort die meistgenutzten Seiten: Auflösungs-Presets, Design, Tasten, Updates, Online-Anleitung und Wartung.
+pt=Daqui você chega direto às páginas mais usadas: presets de resolução, tema, teclas, atualizações, guia online e manutenção.
+ru=Отсюда сразу попадаешь на самые нужные страницы: пресеты разрешения, тема, клавиши, обновления, онлайн-руководство и обслуживание.
+ko=여기서 자주 쓰는 페이지로 바로 이동해요: 해상도 프리셋, 테마, 키, 업데이트, 온라인 가이드, 유지 관리.
+zh=从这里可直接进入常用页面：分辨率预设、主题、按键、更新、在线指南和维护。
+ja=よく使うページにすぐ移動できます：解像度プリセット、テーマ、キー、更新、オンラインガイド、メンテナンス。
+it=Base o Avanzata
+en=Basic or Advanced
+nap=Base o Avanzata
+bro=Base o Avanzata
+es=Básica o Avanzada
+fr=De base ou Avancé
+de=Einfach oder Erweitert
+pt=Básica ou Avançada
+ru=Базовый или Расширенный
+ko=기본 또는 고급
+zh=基础或高级
+ja=基本または詳細
+)" "`n"
+        s .= "
+(
+it=Base mostra solo le impostazioni essenziali, Avanzata le mostra tutte. La scelta viene ricordata.
+en=Basic shows only the essential settings, Advanced shows all of them. Your choice is remembered.
+nap=Base fa vedé sulo 'e mpustaziune essenziale, Avanzata 'e fa vedé tutte quante. 'A scelta s'arricorda.
+bro=Base ti fa vedere solo le cose essenziali, Avanzata tutto quanto. La scelta resta salvata.
+es=Básica muestra solo los ajustes esenciales, Avanzada los muestra todos. La elección se recuerda.
+fr=De base n'affiche que l'essentiel, Avancé affiche tous les paramètres. Le choix est mémorisé.
+de=Einfach zeigt nur die wichtigsten Einstellungen, Erweitert zeigt alle. Die Wahl wird gespeichert.
+pt=Básica mostra só as configurações essenciais, Avançada mostra todas. A escolha é lembrada.
+ru=Базовый режим показывает только основные настройки, Расширенный — все. Выбор запоминается.
+ko=기본은 꼭 필요한 설정만, 고급은 모든 설정을 보여 줘요. 선택은 기억돼요.
+zh=基础只显示必要的设置，高级显示全部设置。选择会被记住。
+ja=基本は必要な設定だけ、詳細はすべての設定を表示します。選択は記憶されます。
+it=Prova: clicca l'altra modalità.
+en=Try it: click the other mode.
+nap=Pruova: clicca 'a ata modalità.
+bro=Prova: clicca l'altra modalità.
+es=Pruébalo: haz clic en el otro modo.
+fr=Essaie : clique sur l'autre mode.
+de=Probier's: klick auf den anderen Modus.
+pt=Experimente: clique no outro modo.
+ru=Попробуйте: нажмите на другой режим.
+ko=해 보세요: 다른 모드를 클릭하세요.
+zh=试一试：点击另一个模式。
+ja=試してみよう：もう一方のモードをクリック。
+it=Cambia la lingua di questa finestra all'istante; il resto di Wingman la usa dopo "Salva e riavvia".
+en=Changes the language of this window instantly; the rest of Wingman uses it after "Save and restart".
+nap=Cagna 'a lengua 'e sta fenesta subbeto; 'o riesto 'e Wingman l'ausa doppo "Sarva e riavvia".
+bro=Cambia la lingua di questa finestra al volo; il resto di Wingman la usa dopo "Salva e riavvia".
+es=Cambia el idioma de esta ventana al instante; el resto de Wingman lo usa tras "Guardar y reiniciar".
+fr=Change la langue de cette fenêtre immédiatement ; le reste de Wingman l'utilise après "Enregistrer et redémarrer".
+de=Ändert die Sprache dieses Fensters sofort; der Rest von Wingman übernimmt sie nach "Speichern und neu starten".
+pt=Muda o idioma desta janela na hora; o resto do Wingman o usa depois de "Salvar e reiniciar".
+ru=Мгновенно меняет язык этого окна; остальной Wingman применит его после «Сохранить и перезапустить».
+ko=이 창의 언어를 바로 바꿔요. Wingman의 나머지 부분은 "저장 후 재시작" 뒤에 적용돼요.
+zh=立即更改此窗口的语言；Wingman 的其他部分在“保存并重启”后使用新语言。
+ja=このウィンドウの言語をすぐに変更します。Wingman のほかの部分は「保存して再起動」の後に反映されます。
+it=Anteprima dal vivo
+en=Live preview
+nap=Anteprima 'a vivo
+bro=Anteprima live
+es=Vista previa en vivo
+fr=Aperçu en direct
+de=Live-Vorschau
+pt=Prévia ao vivo
+ru=Живой предпросмотр
+ko=실시간 미리 보기
+zh=实时预览
+ja=ライブプレビュー
+it=Con l'anteprima accesa vedi subito sullo schermo l'effetto di ogni modifica: mirino, barre, icone e pannelli, anche senza il gioco aperto.
+en=With the preview on you instantly see every change on screen: crosshair, bars, icons and panels, even without the game running.
+nap=Cu l'anteprima appicciata vide subbeto 'ncopp'a 'o schermo l'effetto 'e ogne mudifica: mirino, barre, icone e pannielle, pure senza 'o juoco apierto.
+bro=Con l'anteprima accesa vedi subito a schermo ogni modifica: mirino, barre, icone e pannelli, anche senza il gioco aperto.
+es=Con la vista previa activada ves al instante en pantalla cada cambio: mira, barras, iconos y paneles, incluso sin el juego abierto.
+fr=Avec l'aperçu activé, tu vois aussitôt chaque modification à l'écran : viseur, barres, icônes et panneaux, même sans le jeu lancé.
+de=Mit eingeschalteter Vorschau siehst du jede Änderung sofort auf dem Bildschirm: Fadenkreuz, Balken, Symbole und Panels, auch ohne laufendes Spiel.
+pt=Com a prévia ligada você vê na hora cada mudança na tela: mira, barras, ícones e painéis, mesmo sem o jogo aberto.
+ru=С включённым предпросмотром сразу видно каждое изменение на экране: прицел, полосы, значки и панели, даже без запущенной игры.
+ko=미리 보기를 켜면 조준선, 바, 아이콘, 패널 등 모든 변경이 바로 화면에 보여요. 게임을 켜지 않아도 돼요.
+zh=开启预览后，每项更改都会立即显示在屏幕上：准星、条、图标和面板，即使没有打开游戏。
+ja=プレビューをオンにすると、照準、バー、アイコン、パネルなどの変更がすぐ画面に表示されます。ゲームを起動していなくても大丈夫です。
+it=Prova: accendi l'anteprima con la levetta.
+en=Try it: turn on the preview with the switch.
+nap=Pruova: appiccia l'anteprima cu 'a levetta.
+bro=Prova: accendi l'anteprima con la levetta.
+es=Pruébalo: activa la vista previa con el interruptor.
+fr=Essaie : active l'aperçu avec l'interrupteur.
+de=Probier's: schalte die Vorschau mit dem Schalter ein.
+pt=Experimente: ligue a prévia com a chave.
+ru=Попробуйте: включите предпросмотр переключателем.
+ko=해 보세요: 스위치로 미리 보기를 켜세요.
+zh=试一试：用开关打开预览。
+ja=試してみよう：スイッチでプレビューをオン。
+it=Stato dell'HUD
+en=HUD state
+nap=Stato 'e ll'HUD
+bro=Stato dell'HUD
+es=Estado del HUD
+fr=État du HUD
+de=HUD-Zustand
+pt=Estado do HUD
+ru=Состояние HUD
+ko=HUD 상태
+zh=HUD 状态
+ja=HUD の状態
+it=ON mostra l'HUD come durante il combattimento o il loot, OFF come quando è inattivo. Così controlli i due aspetti.
+en=ON shows the HUD as it looks during combat or loot, OFF as it looks when idle. This way you can check both looks.
+nap=ON fa vedé l'HUD comme quanno cumbatte o faje loot, OFF comme quanno sta fermo. Accussì cuntrulle tutt'e dduje.
+bro=ON ti mostra l'HUD come in combat o loot, OFF come quando è fermo. Così controlli entrambi i look.
+es=ON muestra el HUD como en combate o al recoger botín, OFF como cuando está inactivo. Así revisas ambos aspectos.
+fr=ON montre le HUD comme en combat ou pendant le loot, OFF comme lorsqu'il est inactif. Tu vérifies ainsi les deux apparences.
+de=ON zeigt das HUD wie im Kampf oder beim Looten, OFF wie im Leerlauf. So prüfst du beide Ansichten.
+pt=ON mostra o HUD como em combate ou loot, OFF como quando está inativo. Assim você confere os dois visuais.
+ru=ON показывает HUD как в бою или при сборе добычи, OFF — как в простое. Так можно проверить оба вида.
+ko=ON은 전투나 루팅 중의 HUD를, OFF는 대기 중의 HUD를 보여 줘요. 두 모습을 모두 확인할 수 있어요.
+zh=ON 显示战斗或拾取时的 HUD，OFF 显示闲置时的 HUD。这样可以检查两种外观。
+ja=ON は戦闘中やルート中の HUD、OFF は待機中の HUD を表示します。両方の見た目を確認できます。
+it=Prova: clicca ON oppure OFF.
+en=Try it: click ON or OFF.
+nap=Pruova: clicca ON o OFF.
+bro=Prova: clicca ON o OFF.
+es=Pruébalo: haz clic en ON u OFF.
+fr=Essaie : clique sur ON ou OFF.
+de=Probier's: klick auf ON oder OFF.
+pt=Experimente: clique em ON ou OFF.
+ru=Попробуйте: нажмите ON или OFF.
+ko=해 보세요: ON 또는 OFF를 클릭하세요.
+zh=试一试：点击 ON 或 OFF。
+ja=試してみよう：ON か OFF をクリック。
+it=Scegli quali elementi far vedere nell'anteprima: mirino, barre, icone, pannello Field Boss, numero random e così via.
+en=Choose which elements to show in the preview: crosshair, bars, icons, Field Boss panel, random number and so on.
+nap=Scigli quale elemente fà vedé dint'a l'anteprima: mirino, barre, icone, panniello Field Boss, nummero random e accussì via.
+bro=Scegli cosa far vedere nell'anteprima: mirino, barre, icone, pannello Field Boss, numero random e via dicendo.
+es=Elige qué elementos mostrar en la vista previa: mira, barras, iconos, panel Field Boss, número aleatorio, etc.
+fr=Choisis les éléments à afficher dans l'aperçu : viseur, barres, icônes, panneau Field Boss, nombre aléatoire, etc.
+de=Wähle, welche Elemente die Vorschau zeigt: Fadenkreuz, Balken, Symbole, Field-Boss-Panel, Zufallszahl usw.
+pt=Escolha quais elementos mostrar na prévia: mira, barras, ícones, painel Field Boss, número aleatório e assim por diante.
+ru=Выберите, какие элементы показывать в предпросмотре: прицел, полосы, значки, панель Field Boss, случайное число и т. д.
+ko=미리 보기에 보일 요소를 고르세요: 조준선, 바, 아이콘, Field Boss 패널, 랜덤 숫자 등.
+zh=选择预览中显示的元素：准星、条、图标、Field Boss 面板、随机数等。
+ja=プレビューに表示する要素を選べます：照準、バー、アイコン、Field Boss パネル、ランダム数字など。
+it=✥ Edit: EDIT OVERLAY
+en=✥ Edit: EDIT OVERLAY
+nap=✥ Edit: EDIT OVERLAY
+bro=✥ Edit: EDIT OVERLAY
+es=✥ Edit: EDIT OVERLAY
+fr=✥ Edit: EDIT OVERLAY
+de=✥ Edit: EDIT OVERLAY
+pt=✥ Edit: EDIT OVERLAY
+ru=✥ Edit: EDIT OVERLAY
+ko=✥ Edit: EDIT OVERLAY
+zh=✥ Edit: EDIT OVERLAY
+ja=✥ Edit: EDIT OVERLAY
+)" "`n"
+        s .= "
+(
+it=Sposti gli elementi trascinandoli direttamente sullo schermo, con griglia, snap, annulla e ripeti (Ctrl+Z / Ctrl+Y) e layout salvabili. Esc per uscire.
+en=Move the elements by dragging them right on the screen, with grid, snap, undo and redo (Ctrl+Z / Ctrl+Y) and savable layouts. Esc to exit.
+nap=Spuoste l'elemente trascinannole direttamente 'ncopp'a 'o schermo, cu griglia, snap, annulla e ripeti (Ctrl+Z / Ctrl+Y) e layout ca se sarvano. Esc pe' ascì.
+bro=Sposti gli elementi trascinandoli dritti sullo schermo, con griglia, snap, annulla e ripeti (Ctrl+Z / Ctrl+Y) e layout salvabili. Esc per uscire.
+es=Mueve los elementos arrastrándolos directamente en la pantalla, con cuadrícula, ajuste, deshacer y rehacer (Ctrl+Z / Ctrl+Y) y diseños guardables. Esc para salir.
+fr=Déplace les éléments en les faisant glisser directement à l'écran, avec grille, aimantation, annuler et rétablir (Ctrl+Z / Ctrl+Y) et dispositions enregistrables. Échap pour quitter.
+de=Verschiebe die Elemente per Ziehen direkt auf dem Bildschirm, mit Raster, Einrasten, Rückgängig und Wiederholen (Strg+Z / Strg+Y) und speicherbaren Layouts. Esc zum Beenden.
+pt=Mova os elementos arrastando-os direto na tela, com grade, encaixe, desfazer e refazer (Ctrl+Z / Ctrl+Y) e layouts salváveis. Esc para sair.
+ru=Перемещайте элементы перетаскиванием прямо на экране: сетка, привязка, отмена и возврат (Ctrl+Z / Ctrl+Y) и сохраняемые раскладки. Esc — выход.
+ko=요소를 화면에서 바로 끌어서 옮겨요. 격자, 스냅, 되돌리기/다시 실행(Ctrl+Z / Ctrl+Y), 저장 가능한 레이아웃 지원. 나가려면 Esc.
+zh=直接在屏幕上拖动元素来移动，支持网格、吸附、撤销和重做（Ctrl+Z / Ctrl+Y）以及可保存的布局。按 Esc 退出。
+ja=画面上で要素を直接ドラッグして移動できます。グリッド、スナップ、元に戻す／やり直し（Ctrl+Z / Ctrl+Y）、保存できるレイアウト付き。Esc で終了。
+it=Ricerca
+en=Search
+nap=Cerca
+bro=Cerca
+es=Búsqueda
+fr=Recherche
+de=Suche
+pt=Pesquisa
+ru=Поиск
+ko=검색
+zh=搜索
+ja=検索
+it=Trova un'impostazione scrivendo una parola: cerca nei nomi, nelle descrizioni e nei valori.
+en=Find a setting by typing a word: it searches names, descriptions and values.
+nap=Truove na mpustazione scrivenno na parola: cerca dint'e nomme, dint'e descrizziune e dint'e valure.
+bro=Trovi un'impostazione scrivendo una parola: cerca in nomi, descrizioni e valori.
+es=Encuentra un ajuste escribiendo una palabra: busca en nombres, descripciones y valores.
+fr=Trouve un paramètre en tapant un mot : la recherche porte sur les noms, les descriptions et les valeurs.
+de=Finde eine Einstellung, indem du ein Wort eintippst: gesucht wird in Namen, Beschreibungen und Werten.
+pt=Encontre uma configuração digitando uma palavra: a busca é feita em nomes, descrições e valores.
+ru=Найдите настройку, введя слово: поиск идёт по названиям, описаниям и значениям.
+ko=단어를 입력해 설정을 찾아요: 이름, 설명, 값에서 검색해요.
+zh=输入一个词来查找设置：会在名称、描述和数值中搜索。
+ja=単語を入力して設定を探せます。名前、説明、値から検索します。
+it=Prova: scrivi una parola, ad esempio "colore".
+en=Try it: type a word, for example "color".
+nap=Pruova: scrive na parola, pe' esempio "colore".
+bro=Prova: scrivi una parola, tipo "colore".
+es=Pruébalo: escribe una palabra, por ejemplo "color".
+fr=Essaie : tape un mot, par exemple "couleur".
+de=Probier's: tippe ein Wort ein, zum Beispiel "Farbe".
+pt=Experimente: digite uma palavra, por exemplo "cor".
+ru=Попробуйте: введите слово, например «цвет».
+ko=해 보세요: 단어를 입력하세요. 예: "색".
+zh=试一试：输入一个词，例如“颜色”。
+ja=試してみよう：単語を入力。例：「色」。
+it=Menu delle sezioni
+en=Sections menu
+nap=Menù d'e sezziune
+bro=Menu delle sezioni
+es=Menú de secciones
+fr=Menu des sections
+de=Bereichsmenü
+pt=Menu de seções
+ru=Меню разделов
+ko=섹션 메뉴
+zh=分区菜单
+ja=セクションメニュー
+it=Le impostazioni sono divise per argomento: HUD, tasti, Field Boss, temi, preset e altro.
+en=Settings are grouped by topic: HUD, keys, Field Boss, themes, presets and more.
+nap='E mpustaziune so' spartute pe' argumento: HUD, taste, Field Boss, teme, preset e ato.
+bro=I settaggi sono divisi per argomento: HUD, tasti, Field Boss, temi, preset e altro.
+es=Los ajustes están agrupados por tema: HUD, teclas, Field Boss, temas, presets y más.
+fr=Les paramètres sont classés par thème : HUD, touches, Field Boss, thèmes, préréglages et plus.
+de=Die Einstellungen sind nach Thema gruppiert: HUD, Tasten, Field Boss, Designs, Presets und mehr.
+pt=As configurações são agrupadas por assunto: HUD, teclas, Field Boss, temas, presets e mais.
+ru=Настройки сгруппированы по темам: HUD, клавиши, Field Boss, темы, пресеты и другое.
+ko=설정은 주제별로 나뉘어 있어요: HUD, 키, Field Boss, 테마, 프리셋 등.
+zh=设置按主题分组：HUD、按键、Field Boss、主题、预设等。
+ja=設定はテーマ別に分かれています：HUD、キー、Field Boss、テーマ、プリセットなど。
+it=Prova: clicca una sezione del menu.
+en=Try it: click a section of the menu.
+nap=Pruova: clicca na sezzione d'o menù.
+bro=Prova: clicca una sezione del menu.
+es=Pruébalo: haz clic en una sección del menú.
+fr=Essaie : clique sur une section du menu.
+de=Probier's: klick auf einen Bereich im Menü.
+pt=Experimente: clique em uma seção do menu.
+ru=Попробуйте: нажмите на раздел меню.
+ko=해 보세요: 메뉴의 섹션을 클릭하세요.
+zh=试一试：点击菜单中的一个分区。
+ja=試してみよう：メニューのセクションをクリック。
+it=Elenco delle impostazioni
+en=List of settings
+nap=Elenco d'e mpustaziune
+bro=Lista dei settaggi
+es=Lista de ajustes
+fr=Liste des paramètres
+de=Liste der Einstellungen
+pt=Lista de configurações
+ru=Список настроек
+ko=설정 목록
+zh=设置列表
+ja=設定の一覧
+it=Ogni riga è un'impostazione con il suo valore attuale. Le righe modificate e non ancora salvate hanno il segno ●.
+en=Each row is a setting with its current value. Rows changed and not yet saved have the ● mark.
+nap=Ogne riga è na mpustazione cu 'o valore 'e mo. 'E righe cagnate e nun ancora sarvate teneno 'o segno ●.
+bro=Ogni riga è un settaggio col suo valore attuale. Le righe cambiate e non ancora salvate hanno il ●.
+es=Cada fila es un ajuste con su valor actual. Las filas modificadas y aún sin guardar llevan la marca ●.
+fr=Chaque ligne est un paramètre avec sa valeur actuelle. Les lignes modifiées et pas encore enregistrées portent le signe ●.
+de=Jede Zeile ist eine Einstellung mit ihrem aktuellen Wert. Geänderte, noch nicht gespeicherte Zeilen tragen das Zeichen ●.
+pt=Cada linha é uma configuração com seu valor atual. As linhas alteradas e ainda não salvas têm a marca ●.
+ru=Каждая строка — настройка с текущим значением. Изменённые, но не сохранённые строки отмечены знаком ●.
+ko=각 행은 현재 값이 표시된 설정이에요. 바뀌었지만 아직 저장하지 않은 행에는 ● 표시가 있어요.
+zh=每一行是一项设置及其当前值。已修改但尚未保存的行带有 ● 标记。
+ja=各行は設定と現在の値です。変更してまだ保存していない行には ● が付きます。
+it=Prova: clicca un'impostazione dell'elenco.
+en=Try it: click a setting in the list.
+nap=Pruova: clicca na mpustazione d'o elenco.
+bro=Prova: clicca un settaggio della lista.
+es=Pruébalo: haz clic en un ajuste de la lista.
+fr=Essaie : clique sur un paramètre de la liste.
+de=Probier's: klick auf eine Einstellung in der Liste.
+pt=Experimente: clique em uma configuração da lista.
+ru=Попробуйте: нажмите на настройку в списке.
+ko=해 보세요: 목록에서 설정을 클릭하세요.
+zh=试一试：点击列表中的一项设置。
+ja=試してみよう：一覧の設定をクリック。
+it=Descrizione e valore
+en=Description and value
+nap=Descrizzione e valore
+bro=Descrizione e valore
+es=Descripción y valor
+fr=Description et valeur
+de=Beschreibung und Wert
+pt=Descrição e valor
+ru=Описание и значение
+ko=설명과 값
+zh=说明和数值
+ja=説明と値
+it=A sinistra leggi cosa fa l'impostazione, a destra cambi il valore: interruttore, cursore, menu, colore o tasto. L'esempio mostra l'effetto e "Valore originale" annulla la modifica.
+en=On the left you read what the setting does, on the right you change the value: switch, slider, menu, color or key. The example shows the effect and "Original value" undoes the change.
+nap=A sinistra liegge che fa 'a mpustazione, a destra cagne 'o valore: interruttore, cursore, menù, culore o tasto. L'esempio fa vedé l'effetto e "Valore originale" annulla 'a mudifica.
+bro=A sinistra leggi cosa fa il settaggio, a destra cambi il valore: interruttore, cursore, menu, colore o tasto. L'esempio mostra l'effetto e "Valore originale" annulla la modifica.
+es=A la izquierda lees qué hace el ajuste, a la derecha cambias el valor: interruptor, deslizador, menú, color o tecla. El ejemplo muestra el efecto y "Valor original" deshace el cambio.
+fr=À gauche tu lis ce que fait le paramètre, à droite tu changes la valeur : interrupteur, curseur, menu, couleur ou touche. L'exemple montre l'effet et "Valeur d'origine" annule la modification.
+de=Links liest du, was die Einstellung bewirkt, rechts änderst du den Wert: Schalter, Regler, Menü, Farbe oder Taste. Das Beispiel zeigt die Wirkung und "Originalwert" macht die Änderung rückgängig.
+pt=À esquerda você lê o que a configuração faz, à direita muda o valor: chave, controle deslizante, menu, cor ou tecla. O exemplo mostra o efeito e "Valor original" desfaz a mudança.
+ru=Слева описано, что делает настройка, справа меняется значение: переключатель, ползунок, меню, цвет или клавиша. Пример показывает эффект, а «Исходное значение» отменяет изменение.
+ko=왼쪽에서 설정이 하는 일을 읽고, 오른쪽에서 값을 바꿔요: 스위치, 슬라이더, 메뉴, 색 또는 키. 예시가 효과를 보여 주고 "원래 값"은 변경을 취소해요.
+zh=左侧说明该设置的作用，右侧修改数值：开关、滑块、菜单、颜色或按键。示例会显示效果，“原始值”可撤销更改。
+ja=左側で設定の働きを読み、右側で値を変更します：スイッチ、スライダー、メニュー、色、キー。例で効果が分かり、「元の値」で変更を取り消せます。
+)" "`n"
+        s .= "
+(
+it=Modifiche in sospeso
+en=Pending changes
+nap=Mudifiche 'n sospeso
+bro=Modifiche in sospeso
+es=Cambios pendientes
+fr=Modifications en attente
+de=Ausstehende Änderungen
+pt=Alterações pendentes
+ru=Несохранённые изменения
+ko=보류 중인 변경
+zh=待保存的更改
+ja=保留中の変更
+it=Qui vedi quante modifiche non sono ancora salvate; "Vedi modifiche" le elenca tutte, con il valore di prima e quello nuovo.
+en=Here you see how many changes are not saved yet; "View changes" lists them all, with the old and the new value.
+nap=Ccà vide quante mudifiche nun so' ancora sarvate; "Vedi modifiche" 'e elenca tutte, cu 'o valore 'e primma e chillo nuovo.
+bro=Qui vedi quante modifiche non hai ancora salvato; "Vedi modifiche" te le elenca tutte, col valore di prima e quello nuovo.
+es=Aquí ves cuántos cambios no se han guardado aún; "Ver cambios" los enumera todos, con el valor anterior y el nuevo.
+fr=Ici tu vois combien de modifications ne sont pas encore enregistrées ; "Voir les modifications" les liste toutes, avec l'ancienne et la nouvelle valeur.
+de=Hier siehst du, wie viele Änderungen noch nicht gespeichert sind; "Änderungen anzeigen" listet sie alle mit altem und neuem Wert auf.
+pt=Aqui você vê quantas alterações ainda não foram salvas; "Ver alterações" lista todas, com o valor anterior e o novo.
+ru=Здесь видно, сколько изменений ещё не сохранено; «Показать изменения» перечисляет их все со старым и новым значением.
+ko=아직 저장하지 않은 변경이 몇 개인지 여기서 보여요. "변경 사항 보기"는 이전 값과 새 값을 모두 나열해요.
+zh=这里显示尚未保存的更改数量；“查看更改”会列出全部更改及其旧值和新值。
+ja=まだ保存していない変更の数がここに表示されます。「変更を表示」で前の値と新しい値を一覧できます。
+it=Salva, annulla, chiudi
+en=Save, discard, close
+nap=Sarva, annulla, chiude
+bro=Salva, annulla, chiudi
+es=Guardar, descartar, cerrar
+fr=Enregistrer, annuler, fermer
+de=Speichern, verwerfen, schließen
+pt=Salvar, descartar, fechar
+ru=Сохранить, отменить, закрыть
+ko=저장, 취소, 닫기
+zh=保存、放弃、关闭
+ja=保存・取り消し・閉じる
+it="Salva e riavvia" scrive tutto e riavvia Wingman con i nuovi valori. "Annulla modifiche" torna ai valori salvati. "Chiudi" chiude solo questa finestra.
+en="Save and restart" writes everything and restarts Wingman with the new values. "Discard changes" goes back to the saved values. "Close" closes only this window.
+nap="Sarva e riavvia" scrive tutto e fa ripartì Wingman cu 'e valure nuove. "Annulla modifiche" torna a 'e valure sarvate. "Chiudi" chiude sulo sta fenesta.
+bro="Salva e riavvia" scrive tutto e riavvia Wingman coi nuovi valori. "Annulla modifiche" torna ai valori salvati. "Chiudi" chiude solo questa finestra.
+es="Guardar y reiniciar" escribe todo y reinicia Wingman con los nuevos valores. "Descartar cambios" vuelve a los valores guardados. "Cerrar" cierra solo esta ventana.
+fr="Enregistrer et redémarrer" écrit tout et redémarre Wingman avec les nouvelles valeurs. "Annuler les modifications" revient aux valeurs enregistrées. "Fermer" ferme seulement cette fenêtre.
+de="Speichern und neu starten" schreibt alles und startet Wingman mit den neuen Werten neu. "Änderungen verwerfen" kehrt zu den gespeicherten Werten zurück. "Schließen" schließt nur dieses Fenster.
+pt="Salvar e reiniciar" grava tudo e reinicia o Wingman com os novos valores. "Descartar alterações" volta aos valores salvos. "Fechar" fecha só esta janela.
+ru=«Сохранить и перезапустить» записывает всё и перезапускает Wingman с новыми значениями. «Отменить изменения» возвращает сохранённые значения. «Закрыть» закрывает только это окно.
+ko="저장 후 재시작"은 모두 저장하고 새 값으로 Wingman을 다시 시작해요. "변경 취소"는 저장된 값으로 돌아가요. "닫기"는 이 창만 닫아요.
+zh=“保存并重启”会写入全部内容并以新值重启 Wingman。“放弃更改”恢复为已保存的值。“关闭”只关闭此窗口。
+ja=「保存して再起動」はすべてを書き込み、新しい値で Wingman を再起動します。「変更を取り消す」は保存済みの値に戻します。「閉じる」はこのウィンドウだけを閉じます。
+it=Termina e riavvia
+en=Quit and restart
+nap=Fernisce e riavvia
+bro=Chiudi e riavvia
+es=Salir y reiniciar
+fr=Quitter et redémarrer
+de=Beenden und neu starten
+pt=Encerrar e reiniciar
+ru=Выход и перезапуск
+ko=종료와 재시작
+zh=退出和重启
+ja=終了と再起動
+it=⏻ chiude del tutto Wingman (non solo la finestra), ⟳ lo riavvia.
+en=⏻ closes Wingman completely (not just the window), ⟳ restarts it.
+nap=⏻ chiude Wingman 'e tutto (nun sulo 'a fenesta), ⟳ 'o fa ripartì.
+bro=⏻ chiude Wingman del tutto (non solo la finestra), ⟳ lo riavvia.
+es=⏻ cierra Wingman por completo (no solo la ventana), ⟳ lo reinicia.
+fr=⏻ ferme complètement Wingman (pas seulement la fenêtre), ⟳ le redémarre.
+de=⏻ beendet Wingman komplett (nicht nur das Fenster), ⟳ startet es neu.
+pt=⏻ fecha o Wingman por completo (não só a janela), ⟳ o reinicia.
+ru=⏻ полностью закрывает Wingman (не только окно), ⟳ перезапускает его.
+ko=⏻는 Wingman을 완전히 종료하고(창만이 아니라), ⟳는 다시 시작해요.
+zh=⏻ 完全退出 Wingman（不只是窗口），⟳ 重新启动它。
+ja=⏻ は Wingman を完全に終了し（ウィンドウだけでなく）、⟳ は再起動します。
+it=Bug, consigli e donazioni
+en=Bugs, ideas and donations
+nap=Bug, cunziglie e donazziune
+bro=Bug, idee e donazioni
+es=Errores, ideas y donaciones
+fr=Bugs, idées et dons
+de=Fehler, Ideen und Spenden
+pt=Bugs, ideias e doações
+ru=Ошибки, идеи и пожертвования
+ko=버그, 제안, 후원
+zh=错误、建议和捐赠
+ja=バグ・提案・寄付
+it=Segnala un problema o proponi un'idea su GitHub. Wingman è gratuito al 100%: le donazioni sono facoltative.
+en=Report a problem or suggest an idea on GitHub. Wingman is 100% free: donations are optional.
+nap=Segnala nu prubblema o prupone n'idea 'ncopp'a GitHub. Wingman è gratis 'o 100%: 'e donazziune so' facoltative.
+bro=Segnala un problema o butta lì un'idea su GitHub. Wingman è gratis al 100%: donare è facoltativo.
+es=Informa de un problema o propón una idea en GitHub. Wingman es 100% gratis: las donaciones son opcionales.
+fr=Signale un problème ou propose une idée sur GitHub. Wingman est 100 % gratuit : les dons sont facultatifs.
+de=Melde ein Problem oder schlage eine Idee auf GitHub vor. Wingman ist zu 100 % kostenlos: Spenden sind freiwillig.
+pt=Relate um problema ou sugira uma ideia no GitHub. O Wingman é 100% gratuito: doações são opcionais.
+ru=Сообщите о проблеме или предложите идею на GitHub. Wingman полностью бесплатен: пожертвования необязательны.
+ko=GitHub에서 문제를 알리거나 아이디어를 제안하세요. Wingman은 100% 무료예요: 후원은 선택이에요.
+zh=在 GitHub 上报告问题或提出建议。Wingman 完全免费：捐赠是自愿的。
+ja=GitHub で問題を報告したりアイデアを提案したりできます。Wingman は完全無料で、寄付は任意です。
+it=Qui trovi il FIRST RUN QUICK-SETUP, gli aggiornamenti, le cartelle di Wingman e il pulsante per rifare questo tour.
+en=Here you find the FIRST RUN QUICK-SETUP, updates, the Wingman folders and the button to take this tour again.
+nap=Ccà truove 'o FIRST RUN QUICK-SETUP, l'aggiornamente, 'e cartelle 'e Wingman e 'o buttone pe' rifà stu giro.
+bro=Qui trovi il FIRST RUN QUICK-SETUP, gli aggiornamenti, le cartelle di Wingman e il tasto per rifare questo tour.
+es=Aquí encuentras el FIRST RUN QUICK-SETUP, las actualizaciones, las carpetas de Wingman y el botón para repetir este tour.
+fr=Ici tu trouves le FIRST RUN QUICK-SETUP, les mises à jour, les dossiers de Wingman et le bouton pour refaire cette visite.
+de=Hier findest du das FIRST RUN QUICK-SETUP, die Updates, die Wingman-Ordner und die Schaltfläche, um diese Tour zu wiederholen.
+pt=Aqui você encontra o FIRST RUN QUICK-SETUP, as atualizações, as pastas do Wingman e o botão para refazer este tour.
+ru=Здесь FIRST RUN QUICK-SETUP, обновления, папки Wingman и кнопка, чтобы пройти этот обзор снова.
+ko=여기에 FIRST RUN QUICK-SETUP, 업데이트, Wingman 폴더, 그리고 이 둘러보기를 다시 하는 버튼이 있어요.
+zh=这里有 FIRST RUN QUICK-SETUP、更新、Wingman 文件夹，以及重新进行本导览的按钮。
+ja=ここには FIRST RUN QUICK-SETUP、更新、Wingman のフォルダー、このツアーをやり直すボタンがあります。
+it=Tutto pronto!
+en=All set!
+nap=Tutto pronto!
+bro=Tutto pronto, let's go!
+es=¡Todo listo!
+fr=Tout est prêt !
+de=Alles bereit!
+pt=Tudo pronto!
+ru=Всё готово!
+ko=모두 준비됐어요!
+zh=一切就绪！
+ja=準備完了！
+)" "`n"
+        s .= "
+(
+it=Le Impostazioni si aprono con Ctrl+Shift+F12 o con un doppio click sull'icona "H" vicino all'orologio. Nella guida rapida trovi i tasti per l'HUD e i primi passi. Buon gioco!
+en=Settings open with Ctrl+Shift+F12 or with a double click on the "H" icon near the clock. The quick guide has the HUD keys and the first steps. Have fun!
+nap='E Mpustaziune s'arapeno cu Ctrl+Shift+F12 o cu nu doppio click 'ncopp'a ll'icona "H" vicino a ll'orologio. Dint'a guida rapida truove 'e taste pe' ll'HUD e 'e primme passe. Buon divertimento!
+bro=I settaggi si aprono con Ctrl+Shift+F12 o con doppio click sull'icona "H" vicino all'orologio. Nella guida veloce trovi i tasti per l'HUD e i primi passi. GG!
+es=Los Ajustes se abren con Ctrl+Shift+F12 o con doble clic en el icono "H" junto al reloj. En la guía rápida tienes las teclas del HUD y los primeros pasos. ¡A jugar!
+fr=Les paramètres s'ouvrent avec Ctrl+Shift+F12 ou un double-clic sur l'icône "H" près de l'horloge. Le guide rapide présente les touches du HUD et les premiers pas. Bon jeu !
+de=Die Einstellungen öffnest du mit Strg+Shift+F12 oder per Doppelklick auf das "H"-Symbol neben der Uhr. In der Kurzanleitung findest du die HUD-Tasten und die ersten Schritte. Viel Spaß!
+pt=As Configurações abrem com Ctrl+Shift+F12 ou com um clique duplo no ícone "H" perto do relógio. No guia rápido estão as teclas do HUD e os primeiros passos. Bom jogo!
+ru=Настройки открываются по Ctrl+Shift+F12 или двойным щелчком по значку «H» рядом с часами. В кратком руководстве — клавиши HUD и первые шаги. Приятной игры!
+ko=설정은 Ctrl+Shift+F12 또는 시계 옆 "H" 아이콘을 두 번 클릭하면 열려요. 빠른 가이드에 HUD 키와 첫 단계가 있어요. 즐거운 게임 되세요!
+zh=按 Ctrl+Shift+F12 或双击时钟旁的“H”图标即可打开设置。快速指南中有 HUD 按键和入门步骤。祝游戏愉快！
+ja=設定は Ctrl+Shift+F12、または時計の近くの「H」アイコンをダブルクリックで開きます。クイックガイドに HUD のキーと最初の手順があります。楽しんでください！
+it=Le Impostazioni si aprono con Ctrl+Shift+F12, con un doppio click sull'icona "H" vicino all'orologio oppure dal menu del gioco (Esc), con l'icona di Wingman in alto a destra. Nella guida rapida trovi i tasti per l'HUD e i primi passi. Buon gioco!
+en=Settings open with Ctrl+Shift+F12, with a double click on the "H" icon near the clock, or from the game menu (Esc) with the Wingman icon at the top right. The quick guide has the HUD keys and the first steps. Have fun!
+nap='E Mpustaziune s'arapeno cu Ctrl+Shift+F12, cu nu doppio click 'ncopp'a ll'icona "H" vicino a ll'orologio o d'o menù d'o juoco (Esc), cu ll'icona 'e Wingman ncoppa a destra. Dint'a guida rapida truove 'e taste pe' ll'HUD e 'e primme passe. Buon divertimento!
+bro=I settaggi si aprono con Ctrl+Shift+F12, con doppio click sull'icona "H" vicino all'orologio oppure dal menu del gioco (Esc), con l'icona di Wingman in alto a destra. Nella guida veloce trovi i tasti per l'HUD e i primi passi. GG!
+es=Los Ajustes se abren con Ctrl+Shift+F12, con doble clic en el icono "H" junto al reloj o desde el menú del juego (Esc), con el icono de Wingman arriba a la derecha. En la guía rápida tienes las teclas del HUD y los primeros pasos. ¡A jugar!
+fr=Les paramètres s'ouvrent avec Ctrl+Shift+F12, un double-clic sur l'icône "H" près de l'horloge, ou depuis le menu du jeu (Échap) avec l'icône de Wingman en haut à droite. Le guide rapide présente les touches du HUD et les premiers pas. Bon jeu !
+de=Die Einstellungen öffnest du mit Strg+Shift+F12, per Doppelklick auf das "H"-Symbol neben der Uhr oder im Spielmenü (Esc) über das Wingman-Symbol oben rechts. In der Kurzanleitung findest du die HUD-Tasten und die ersten Schritte. Viel Spaß!
+pt=As Configurações abrem com Ctrl+Shift+F12, com um clique duplo no ícone "H" perto do relógio ou pelo menu do jogo (Esc), com o ícone do Wingman no canto superior direito. No guia rápido estão as teclas do HUD e os primeiros passos. Bom jogo!
+ru=Настройки открываются по Ctrl+Shift+F12, двойным щелчком по значку «H» рядом с часами или из меню игры (Esc) через значок Wingman вверху справа. В кратком руководстве — клавиши HUD и первые шаги. Приятной игры!
+ko=설정은 Ctrl+Shift+F12, 시계 옆 "H" 아이콘 더블 클릭, 또는 게임 메뉴(Esc)의 오른쪽 위 Wingman 아이콘으로 열 수 있어요. 빠른 가이드에 HUD 키와 첫 단계가 있어요. 즐거운 게임 되세요!
+zh=按 Ctrl+Shift+F12、双击时钟旁的“H”图标，或在游戏菜单（Esc）中点击右上角的 Wingman 图标即可打开设置。快速指南中有 HUD 按键和入门步骤。祝游戏愉快！
+ja=設定は Ctrl+Shift+F12、時計の近くの「H」アイコンのダブルクリック、またはゲームメニュー（Esc）の右上にある Wingman アイコンから開けます。クイックガイドに HUD のキーと最初の手順があります。楽しんでください！
 )" "`n"
         return s
     }
@@ -19525,6 +20113,374 @@ class OverlayEditor {
 }
 
 ; ==============================================================================
+; === TOUR GUIDATO DELLE IMPOSTAZIONI (primo avvio, o da Manutenzione) ===
+; ==============================================================================
+; Sopra la finestra Impostazioni compare un velo scuro con un "buco" sulla zona spiegata, un bordo
+; luminoso che pulsa attorno a lei e un fumetto con la spiegazione. La zona illuminata resta
+; cliccabile: alcuni passi chiedono di provare (cambiare modalità, accendere l'anteprima,
+; cercare, scegliere una voce...) e vanno avanti da soli quando l'hai fatto.
+; Il resto della finestra è bloccato finché il tour è aperto. "TutorialDone" in settings.ini.
+class Tutorial {
+    static On := false, Idx := 0, Steps := "", Fn := "", Dim := "", Ring := "", Bub := ""
+    static Owner := 0, LastKey := "", Done := false, Ref := "", T0 := 0, Hidden := false, NextBtn := ""
+
+    ; da Open(): la prima volta che si aprono le Impostazioni parte da solo
+    static AutoStart() {
+        done := ""
+        try done := IniRead(UserData.File, "App", "TutorialDone", "")
+        if (done != "1")
+            SetTimer(() => Tutorial.Start(), -700)
+    }
+
+    static Start(*) {
+        S := SettingsEditor
+        if (this.On || !IsObject(S.Win))
+            return
+        this.On := true, this.Steps := this.Define(), this.Idx := 0, this.Hidden := false
+        this.Fn := ObjBindMethod(this, "Tick")
+        this.Go(1)
+        SetTimer(this.Fn, 120)
+    }
+
+    ; finished = true: il tour non riparte più da solo
+    static Stop(finished := true) {
+        if !this.On
+            return
+        this.On := false
+        SetTimer(this.Fn, 0)
+        this.Free()
+        if finished
+            try IniWrite("1", UserData.File, "App", "TutorialDone")
+        if IsObject(SettingsEditor.Win)
+            try SettingsEditor.GoNode("HOME")
+    }
+
+    static Free() {
+        for name in ["Dim", "Ring", "Bub"]
+            if IsObject(this.%name%)
+                try this.%name%.Destroy()
+        this.Dim := "", this.Ring := "", this.Bub := "", this.Owner := 0, this.LastKey := ""
+    }
+
+    ; ---------------- I passi ----------------
+    ; t = titolo, x = spiegazione, do = cosa provare (passo interattivo), tgt = controlli da illuminare,
+    ; enter = preparazione, wait = condizione che completa il passo, leave = pulizia
+    static Define() {
+        S := SettingsEditor
+        return [
+            {t: "Benvenuto in AION 2 Wingman!", x: "Questo breve tour ti mostra la finestra delle Impostazioni e cosa puoi fare. La zona illuminata è attiva: quando te lo chiedo, provala. Puoi saltare il tour quando vuoi e rifarlo da Manutenzione."
+           , enter: () => S.GoNode("HOME")},
+            {t: "Le funzioni", x: "Le tre funzioni principali: HUD overlay, Hidden Cube e Field Boss. Un click su una scheda la accende o la spegne; la modifica vale dopo `"Salva e riavvia`"."
+           , tgt: () => this.Cards(), enter: () => S.GoNode("HOME")},
+            {t: "Scorciatoie", x: "Da qui raggiungi subito le pagine più usate: preset di risoluzione, tema, tasti, aggiornamenti, guida online e manutenzione."
+           , tgt: () => this.HomeButtons()},
+            {t: "Base o Avanzata", x: "Base mostra solo le impostazioni essenziali, Avanzata le mostra tutte. La scelta viene ricordata."
+           , do: "Prova: clicca l'altra modalità.", tgt: () => [S.ModeB, S.ModeA]
+           , enter: () => this.Ref := S.Basic, wait: () => S.Basic != this.Ref},
+            {t: "Lingua", x: "Cambia la lingua di questa finestra all'istante; il resto di Wingman la usa dopo `"Salva e riavvia`"."
+           , tgt: () => [S.LangDdl]},
+            {t: "Anteprima dal vivo", x: "Con l'anteprima accesa vedi subito sullo schermo l'effetto di ogni modifica: mirino, barre, icone e pannelli, anche senza il gioco aperto."
+           , do: "Prova: accendi l'anteprima con la levetta.", tgt: () => [S.PrevTrack, S.PrevChk], wait: () => PreviewMode},
+            {t: "Stato dell'HUD", x: "ON mostra l'HUD come durante il combattimento o il loot, OFF come quando è inattivo. Così controlli i due aspetti."
+           , do: "Prova: clicca ON oppure OFF.", tgt: () => [S.PrevOn, S.PrevOff]
+           , enter: () => this.Ref := PreviewHudOn, wait: () => PreviewHudOn != this.Ref},
+            {t: "Elementi nell'anteprima", x: "Scegli quali elementi far vedere nell'anteprima: mirino, barre, icone, pannello Field Boss, numero random e così via."
+           , tgt: () => [S.PrevElemBtn]},
+            {t: "✥ Edit: EDIT OVERLAY", x: "Sposti gli elementi trascinandoli direttamente sullo schermo, con griglia, snap, annulla e ripeti (Ctrl+Z / Ctrl+Y) e layout salvabili. Esc per uscire."
+           , tgt: () => [S.EditBtn]},
+            {t: "Ricerca", x: "Trova un'impostazione scrivendo una parola: cerca nei nomi, nelle descrizioni e nei valori."
+           , do: "Prova: scrivi una parola, ad esempio `"colore`".", tgt: () => [S.Search]
+           , wait: () => Trim(S.Search.Value) != "", leave: () => this.ClearSearch()},
+            {t: "Menu delle sezioni", x: "Le impostazioni sono divise per argomento: HUD, tasti, Field Boss, temi, preset e altro."
+           , do: "Prova: clicca una sezione del menu.", tgt: () => [S.TV]
+           , enter: () => this.Ref := S.TV.GetSelection(), wait: () => S.TV.GetSelection() != this.Ref},
+            {t: "Elenco delle impostazioni", x: "Ogni riga è un'impostazione con il suo valore attuale. Le righe modificate e non ancora salvate hanno il segno ●."
+           , do: "Prova: clicca un'impostazione dell'elenco.", tgt: () => [S.LV]
+           , enter: () => this.EnsureList(), wait: () => S.HasProp("Cur") && S.Cur != "" && S.Cur != this.Ref},
+            {t: "Descrizione e valore", x: "A sinistra leggi cosa fa l'impostazione, a destra cambi il valore: interruttore, cursore, menu, colore o tasto. L'esempio mostra l'effetto e `"Valore originale`" annulla la modifica."
+           , tgt: () => this.EditorArea()},
+            {t: "Modifiche in sospeso", x: "Qui vedi quante modifiche non sono ancora salvate; `"Vedi modifiche`" le elenca tutte, con il valore di prima e quello nuovo."
+           , tgt: () => [S.ChgBtn, S.Status]},
+            {t: "Salva, annulla, chiudi", x: "`"Salva e riavvia`" scrive tutto e riavvia Wingman con i nuovi valori. `"Annulla modifiche`" torna ai valori salvati. `"Chiudi`" chiude solo questa finestra."
+           , tgt: () => [S.SaveBtn, S.DiscardBtn, S.CloseBtn]},
+            {t: "Termina e riavvia", x: "⏻ chiude del tutto Wingman (non solo la finestra), ⟳ lo riavvia."
+           , tgt: () => [S.QuitBtn, S.RestartBtn]},
+            {t: "Bug, consigli e donazioni", x: "Segnala un problema o proponi un'idea su GitHub. Wingman è gratuito al 100%: le donazioni sono facoltative."
+           , tgt: () => [S.BugBtn, S.PayPalBtn, S.KofiBtn]},
+            {t: "Manutenzione", x: "Qui trovi il FIRST RUN QUICK-SETUP, gli aggiornamenti, le cartelle di Wingman e il pulsante per rifare questo tour."
+           , tgt: () => S.MaintCtrls, enter: () => S.GoNode("MAINT")},
+            {t: "Tutto pronto!", x: "Le Impostazioni si aprono con Ctrl+Shift+F12, con un doppio click sull'icona `"H`" vicino all'orologio oppure dal menu del gioco (Esc), con l'icona di Wingman in alto a destra. Nella guida rapida trovi i tasti per l'HUD e i primi passi. Buon gioco!"
+           , last: true}
+        ]
+    }
+
+    static Cards() {
+        out := []
+        for c in SettingsEditor.HomeCards
+            out.Push(c.ctrl)
+        return out
+    }
+
+    static HomeButtons() {
+        out := []
+        for c in SettingsEditor.HomeCtrls
+            if (c.Type = "Button")
+                out.Push(c)
+        return out
+    }
+
+    static EditorArea() {
+        S := SettingsEditor
+        return [S.DName, S.DDesc, S.HdrVal, S.EChk, S.EEdit, S.ECap, S.ESlider, S.ENumVal, S.EDdl, S.EPick, S.EReset, S.HdrEx, S.ExTxt]
+    }
+
+    ; l'elenco si vede solo nelle sezioni normali: se serve si apre "Tasti"
+    static EnsureList() {
+        S := SettingsEditor
+        if !DllCall("IsWindowVisible", "Ptr", S.LV.Hwnd)
+            S.GoNode("Tasti")
+        this.Ref := ""
+        try this.Ref := S.Cur
+    }
+
+    static ClearSearch() {
+        S := SettingsEditor
+        if (IsObject(S.Win) && S.Search.Value != "")
+            S.Search.Value := "", S.RunSearch()
+    }
+
+    ; ---------------- Navigazione ----------------
+    static Go(i) {
+        if (this.Idx >= 1 && this.Idx <= this.Steps.Length && this.Steps[this.Idx].HasOwnProp("leave"))
+            try this.Steps[this.Idx].leave.Call()
+        if (i > this.Steps.Length)
+            return this.Stop(true)
+        this.Idx := Max(1, i), st := this.Steps[this.Idx]
+        this.Done := false, this.T0 := 0
+        if st.HasOwnProp("enter")
+            try st.enter.Call()
+        try if (st.HasOwnProp("wait") && st.wait.Call())   ; già fatto (es. anteprima già accesa)
+            this.Done := true
+        this.LastKey := "", this.BuildBubble()
+        this.Place()
+    }
+
+    static Next(*) {
+        st := this.Steps[this.Idx]
+        if (st.HasOwnProp("wait") && !this.Done)            ; passo da provare: si può comunque andare avanti
+            this.Done := true
+        this.Go(this.Idx + 1)
+    }
+
+    static Prev(*) => this.Idx > 1 ? this.Go(this.Idx - 1) : 0
+
+    static Tick() {
+        S := SettingsEditor
+        if !IsObject(S.Win)                                  ; finestra chiusa: tour finito
+            return this.Stop(true)
+        hide := OverlayEditor.On || !DllCall("IsWindowVisible", "Ptr", S.Win.Hwnd) || DllCall("IsIconic", "Ptr", S.Win.Hwnd)
+        if hide {
+            if !this.Hidden
+                this.Hidden := true, this.Free()
+            return
+        }
+        if (this.Hidden || S.Win.Hwnd != this.Owner) {       ; ricostruita (modalità, lingua, tema) o di nuovo visibile
+            this.Hidden := false, this.Free(), this.BuildBubble()
+        }
+        st := this.Steps[this.Idx]
+        if (!this.Done && st.HasOwnProp("wait")) {
+            ok := false
+            try ok := st.wait.Call()
+            if ok {
+                this.Done := true, this.T0 := A_TickCount
+                this.BuildBubble()                         ; "✔ Fatto!" e pulsante Avanti acceso
+            }
+        }
+        if (this.Done && this.T0 && A_TickCount - this.T0 > 900) {   ; passo provato: avanti da solo
+            this.T0 := 0
+            return this.Go(this.Idx + 1)
+        }
+        this.Place()
+        if IsObject(this.Ring)                               ; bordo che pulsa
+            WinSetTransparent(Round(150 + 105 * (0.5 + 0.5 * Sin(A_TickCount / 260))), this.Ring.Hwnd)
+    }
+
+    ; ---------------- Finestre ----------------
+    static Rect(hwnd) {
+        r := Buffer(16)
+        DllCall("GetWindowRect", "Ptr", hwnd, "Ptr", r)
+        return [NumGet(r, 0, "Int"), NumGet(r, 4, "Int"), NumGet(r, 8, "Int"), NumGet(r, 12, "Int")]
+    }
+
+    ; area interna della finestra (senza barra del titolo: la finestra resta spostabile)
+    static ClientRect(hwnd) {
+        r := Buffer(16), pt := Buffer(8, 0)
+        DllCall("GetClientRect", "Ptr", hwnd, "Ptr", r)
+        DllCall("ClientToScreen", "Ptr", hwnd, "Ptr", pt)
+        x := NumGet(pt, 0, "Int"), y := NumGet(pt, 4, "Int")
+        return [x, y, x + NumGet(r, 8, "Int"), y + NumGet(r, 12, "Int")]
+    }
+
+    ; unione dei rettangoli (schermo) dei controlli visibili del passo
+    static TargetRect() {
+        st := this.Steps[this.Idx]
+        if !st.HasOwnProp("tgt")
+            return ""
+        ctrls := []
+        try ctrls := st.tgt.Call()
+        l := 1e9, t := 1e9, r := -1e9, b := -1e9
+        for c in ctrls {
+            if (!IsObject(c) || !c.HasProp("Hwnd") || !DllCall("IsWindowVisible", "Ptr", c.Hwnd))
+                continue
+            rc := this.Rect(c.Hwnd)
+            l := Min(l, rc[1]), t := Min(t, rc[2]), r := Max(r, rc[3]), b := Max(b, rc[4])
+        }
+        if (r < l)
+            return ""
+        p := Round(6 * A_ScreenDPI / 96)
+        return [l - p, t - p, r + p, b + p]
+    }
+
+    ; velo, bordo e fumetto riposizionati solo quando cambia qualcosa (finestra spostata, zona diversa)
+    static Place() {
+        S := SettingsEditor
+        if (!IsObject(S.Win) || !IsObject(this.Bub))
+            return
+        w := this.ClientRect(S.Win.Hwnd), h := this.TargetRect()
+        key := w[1] "," w[2] "," w[3] "," w[4] "|" (IsObject(h) ? h[1] "," h[2] "," h[3] "," h[4] : "-") "|" this.Idx
+        if (key = this.LastKey)
+            return
+        this.LastKey := key
+        ww := w[3] - w[1], wh := w[4] - w[2]
+        if !IsObject(this.Dim) {
+            this.Dim := Gui("-Caption +ToolWindow -DPIScale +Owner" S.Win.Hwnd " +E0x08000000")
+            this.Dim.BackColor := "000000"
+            this.Ring := Gui("-Caption +ToolWindow -DPIScale +Owner" S.Win.Hwnd " +E0x08000020")
+            this.Ring.BackColor := UiC("Accent")
+        }
+        this.Dim.Show(Format("NA x{} y{} w{} h{}", w[1], w[2], ww, wh))
+        WinSetTransparent(150, this.Dim.Hwnd)
+        rgn := DllCall("CreateRectRgn", "Int", 0, "Int", 0, "Int", ww, "Int", wh, "Ptr")
+        if IsObject(h) {                                     ; buco sulla zona spiegata: lì i click passano
+            hole := DllCall("CreateRoundRectRgn", "Int", h[1] - w[1], "Int", h[2] - w[2], "Int", h[3] - w[1] + 1, "Int", h[4] - w[2] + 1, "Int", 14, "Int", 14, "Ptr")
+            DllCall("CombineRgn", "Ptr", rgn, "Ptr", rgn, "Ptr", hole, "Int", 4)    ; RGN_DIFF
+            DllCall("DeleteObject", "Ptr", hole)
+            bw := Max(2, Round(3 * A_ScreenDPI / 96))
+            rw := h[3] - h[1] + bw * 2, rh := h[4] - h[2] + bw * 2
+            this.Ring.Show(Format("NA x{} y{} w{} h{}", h[1] - bw, h[2] - bw, rw, rh))
+            outer := DllCall("CreateRoundRectRgn", "Int", 0, "Int", 0, "Int", rw + 1, "Int", rh + 1, "Int", 18, "Int", 18, "Ptr")
+            inner := DllCall("CreateRoundRectRgn", "Int", bw, "Int", bw, "Int", rw - bw + 1, "Int", rh - bw + 1, "Int", 14, "Int", 14, "Ptr")
+            DllCall("CombineRgn", "Ptr", outer, "Ptr", outer, "Ptr", inner, "Int", 4)
+            DllCall("DeleteObject", "Ptr", inner)
+            DllCall("SetWindowRgn", "Ptr", this.Ring.Hwnd, "Ptr", outer, "Int", true)
+        } else
+            this.Ring.Hide()
+        DllCall("SetWindowRgn", "Ptr", this.Dim.Hwnd, "Ptr", rgn, "Int", true)
+        this.PlaceBubble(w, h)
+    }
+
+    ; fumetto sotto la zona, o sopra, o di lato; senza zona al centro della finestra
+    static PlaceBubble(w, h) {
+        this.Bub.GetPos(,, &bw, &bh)
+        try MonitorGetWorkArea(this.MonitorOf(w), &ml, &mt, &mr, &mb)
+        catch
+            ml := 0, mt := 0, mr := A_ScreenWidth, mb := A_ScreenHeight
+        gap := Round(14 * A_ScreenDPI / 96)
+        if !IsObject(h) {
+            x := (w[1] + w[3] - bw) // 2, y := (w[2] + w[4] - bh) // 2
+        } else {
+            x := (h[1] + h[3] - bw) // 2
+            if (h[4] + gap + bh <= mb)
+                y := h[4] + gap
+            else if (h[2] - gap - bh >= mt)
+                y := h[2] - gap - bh
+            else {                                           ; zona molto alta: di lato
+                y := (h[2] + h[4] - bh) // 2
+                x := (h[3] + gap + bw <= mr) ? h[3] + gap : h[1] - gap - bw
+            }
+        }
+        x := Max(ml + 8, Min(mr - bw - 8, x)), y := Max(mt + 8, Min(mb - bh - 8, y))
+        this.Bub.Show(Format("NA x{} y{}", x, y))
+        DllCall("SetWindowPos", "Ptr", this.Bub.Hwnd, "Ptr", 0, "Int", 0, "Int", 0, "Int", 0, "Int", 0, "UInt", 0x13)   ; sopra il velo
+    }
+
+    static MonitorOf(w) {
+        cx := (w[1] + w[3]) // 2, cy := (w[2] + w[4]) // 2
+        loop MonitorGetCount() {
+            MonitorGet(A_Index, &l, &t, &r, &b)
+            if (cx >= l && cx < r && cy >= t && cy < b)
+                return A_Index
+        }
+        return MonitorGetPrimary()
+    }
+
+    static BuildBubble() {
+        S := SettingsEditor
+        if !IsObject(S.Win)
+            return
+        if IsObject(this.Bub)
+            try this.Bub.Destroy()
+        this.Owner := S.Win.Hwnd, this.LastKey := ""
+        st := this.Steps[this.Idx], k := A_ScreenDPI / 96, cw := Round(400 * k)
+        g := Gui("-Caption +ToolWindow +Border -DPIScale +Owner" S.Win.Hwnd " +E0x08000000")
+        g.BackColor := UiC("Deep"), g.MarginX := Round(18 * k), g.MarginY := Round(14 * k)
+        g.AddText(Format("x0 y0 w{} h{} Background{}", cw + Round(36 * k), Max(3, Round(4 * k)), UiC("Accent")))
+        g.SetFont("s8 bold c" UiC("Muted"), "Segoe UI")
+        g.AddText("xm y" Round(14 * k) " w" cw, "🎓  " Tr("TOUR DELLE IMPOSTAZIONI") "   ·   " this.Idx " / " this.Steps.Length)
+        g.SetFont("s12 bold c" UiC("Accent"), "Segoe UI")
+        g.AddText("xm y+" Round(6 * k) " w" cw, Tr(st.t))
+        g.SetFont("s10 norm c" UiC("Text"), "Segoe UI")
+        g.AddText("xm y+" Round(6 * k) " w" cw, Tr(st.x))
+        if st.HasOwnProp("do") {
+            g.SetFont("s10 bold c" (this.Done ? UiC("Ok") : UiC("Accent")), "Segoe UI")
+            g.AddText("xm y+" Round(10 * k) " w" cw, this.Done ? "✔  " Tr("Fatto!") : "👉  " Tr(st.do))
+        }
+        bh := Round(30 * k)
+        btn(opt, txt, fn, bg, fg) {
+            g.SetFont("s9 bold c" fg, "Segoe UI")
+            c := g.AddText(opt " h" bh " Center 0x200 Background" bg, txt)
+            c.OnEvent("Click", fn)
+            RoundCtl(c, 8)
+            return c
+        }
+        y := "y+" Round(16 * k)
+        if st.HasOwnProp("last") {
+            btn("xm " y " w" Round(190 * k), "📖  " Tr("Apri la guida rapida"), (*) => Tutorial.OpenGuide(), UiC("Row"), UiOn("Text", "Row"))
+            btn("x+" Round(8 * k) " yp w" Round(110 * k), "◀  " Tr("Indietro"), (*) => Tutorial.Prev(), UiC("Row"), UiOn("Text", "Row"))
+            btn("x+" Round(8 * k) " yp w" Round(92 * k), "✔  " Tr("Fine"), (*) => Tutorial.Stop(true), UiC("Accent"), UiOn("Deep", "Accent"))
+        } else {
+            btn("xm " y " w" Round(130 * k), Tr("Salta il tour"), (*) => Tutorial.Stop(true), UiC("Deep"), UiC("Muted"))
+            if (this.Idx > 1)
+                btn("x" (Round(18 * k) + cw - Round(238 * k)) " yp w" Round(110 * k), "◀  " Tr("Indietro"), (*) => Tutorial.Prev(), UiC("Row"), UiOn("Text", "Row"))
+            wantTry := st.HasOwnProp("wait") && !this.Done      ; da provare: "Avanti" resta, ma più discreto
+            btn("x" (Round(18 * k) + cw - Round(120 * k)) " yp w" Round(120 * k), Tr("Avanti") "  ▶", (*) => Tutorial.Next()
+              , wantTry ? UiC("Row") : UiC("Accent"), wantTry ? UiOn("Text", "Row") : UiOn("Deep", "Accent"))
+        }
+        g.Show("NA Hide AutoSize")
+        this.Bub := g
+    }
+
+    ; guida rapida (infografica "Come si usa") nella lingua scelta, o in inglese
+    static GuideFile() {
+        static codes := Map("english", "EN", "italiano", "IT", "napoletano", "IT", "bro", "IT", "spanish", "ES", "french", "FR"
+                          , "german", "DE", "portuguese", "PT", "russian", "RU", "korean", "KO", "chinese", "ZH", "japanese", "JA")
+        lang := Language
+        try lang := SettingsEditor.Unq(SettingsEditor.Val("Language"))
+        for c in [codes.Has(lang) ? codes[lang] : "EN", "EN"]
+            loop files A_ScriptDir "\INFOGRAPHICS\AION2Wingman_" c "_2_*.png"
+                return A_LoopFileFullPath
+        return ""
+    }
+
+    static OpenGuide(*) {
+        f := this.GuideFile()
+        if (f = "")
+            return OpenUrl("https://github.com/VaLeTecK/AION-2-Wingman#readme")
+        try Run('"' f '"')
+    }
+}
+
+; ==============================================================================
 ; === NUMERO RANDOM (tiro con animazione + icona cliccabile) ===
 ; ==============================================================================
 ; Il numero compare grande a schermo: i valori scorrono sempre più lenti (roll), poi il risultato
@@ -19532,7 +20488,7 @@ class OverlayEditor {
 ; L'icona (dado + combinazione di tasti) si vede solo con il gioco in primo piano: un click = un tiro.
 class RandomRoll {
     static Win := "", Fn := "", Icon := "", IconShown := false, Hot := false, TickFn := ""
-    static CardOn := false, CardMiss := 0, CardFn := "", CardFail := 0, CardNext := 0
+    static CardOn := false, CardMiss := 0, CardFn := "", CardFail := 0, CardNext := 0, CardViaOcr := false, IconGeoH := 0
 
     static Init() {
         HotIfWinActive("ahk_exe " GameExe)
@@ -19561,20 +20517,25 @@ class RandomRoll {
         if (IsObject(FieldBoss) && (FieldBoss.Busy || FieldBoss.Shown))
             return
         g := this.Geo()
-        if !this.DarkBand(g) {                             ; niente fondo nero: niente carte
-            if (this.CardOn && ++this.CardMiss >= 2)
-                this.CardOn := false
+        ; serve SEMPRE il fondo nero uniforme sopra le carte; poi le carte riconosciute dai pixel
+        ; (oppure, se l'icona è stata accesa dall'OCR, basta che il fondo nero resti)
+        seen := this.DarkBand(g) && (this.CardsOk(g) || this.CardOn && this.CardViaOcr)
+        if seen {
+            this.CardMiss := 0
+            if !this.CardOn
+                this.CardOn := true, this.CardViaOcr := false
             return
         }
-        this.CardMiss := 0
-        if this.CardOn
+        if this.CardOn {                                   ; due letture mancate di fila = icona via
+            if (++this.CardMiss >= 2)
+                this.CardOn := false, this.CardMiss := 0
             return
-        if (this.CardRuns(g) >= 3)                         ; carte riconosciute dai pixel: subito
-            return (this.CardOn := true)
-        if (!FieldBossTool.OcrBusy && A_TickCount >= this.CardNext) {   ; riserva: titolo con l'OCR
+        }
+        ; riserva: le scritte dei pulsanti in basso con l'OCR (solo col fondo nero, al massimo ogni 2,5 s)
+        if (!FieldBossTool.OcrBusy && A_TickCount >= this.CardNext && this.DarkBand(g)) {
             this.CardNext := A_TickCount + 2500
             if this.TitleSeen(g)
-                this.CardOn := true
+                this.CardOn := true, this.CardViaOcr := true, this.CardMiss := 0
         }
     }
 
@@ -19590,26 +20551,46 @@ class RandomRoll {
         return n && sum / n < 32 && mx < 55
     }
 
-    ; quante "carte" (tratti chiari larghi, separati da spazi neri) ci sono a metà altezza
-    static CardRuns(g) {
-        x := g.x + Round(g.w * 0.15), w := Round(g.w * 0.70), stp := Max(3, Round(g.s * 4))
-        buf := FieldBossTool.Capture(x, g.y + Round(g.h * 0.51), w, 1)
-        runs := 0, len := 0, gap := 0, minLen := g.w * 0.07, minGap := g.w * 0.006
+    ; Le carte a metà altezza: da 3 a 6 tratti chiari, tutti della stessa larghezza (6-16% dello
+    ; schermo), separati da spazi neri regolari e centrati nello schermo. Altre schermate scure
+    ; (caricamenti, menu, notte) non hanno questa forma.
+    static CardsOk(g) {
+        x0 := Round(g.w * 0.08), w := Round(g.w * 0.84), stp := Max(3, Round(g.s * 4))
+        buf := FieldBossTool.Capture(g.x + x0, g.y + Round(g.h * 0.51), w, 1)
+        runs := [], st := -1, last := 0, gap := 0, minGap := g.w * 0.006
         loop w // stp {
-            c := NumGet(buf, (A_Index - 1) * stp * 4, "UInt")
+            i := (A_Index - 1) * stp
+            c := NumGet(buf, i * 4, "UInt")
             v := (((c >> 16) & 0xFF) + ((c >> 8) & 0xFF) + (c & 0xFF)) / 3
             if (v > 35) {
-                len += stp, gap := 0
+                if (st < 0)
+                    st := i
+                last := i, gap := 0
             } else {
                 gap += stp
-                if (gap >= minGap) {                        ; spazio tra due carte: chiude il tratto
-                    if (len >= minLen)
-                        runs += 1
-                    len := 0
+                if (st >= 0 && gap >= minGap) {                 ; spazio tra due carte: chiude il tratto
+                    if (last + stp - st >= g.w * 0.04)
+                        runs.Push([st, last + stp - st])
+                    st := -1
                 }
             }
         }
-        return runs + (len >= minLen ? 1 : 0)
+        if (st >= 0 && last + stp - st >= g.w * 0.04)
+            runs.Push([st, last + stp - st])
+        if (runs.Length < 3 || runs.Length > 6)
+            return false
+        lo := 1e9, hi := 0, glo := 1e9, ghi := 0
+        for i, r in runs {
+            lo := Min(lo, r[2]), hi := Max(hi, r[2])
+            if (i > 1)
+                gp := r[1] - (runs[i - 1][1] + runs[i - 1][2]), glo := Min(glo, gp), ghi := Max(ghi, gp)
+        }
+        if (lo < g.w * 0.06 || hi > g.w * 0.16 || hi / lo > 1.35)
+            return false
+        if (glo < g.w * 0.004 || ghi > g.w * 0.05 || ghi - glo > g.w * 0.02)
+            return false
+        mid := x0 + (runs[1][1] + runs[runs.Length][1] + runs[runs.Length][2]) / 2
+        return Abs(mid - g.w / 2) <= g.w * 0.04
     }
 
     ; titolo in alto ("Mysterious Track / Select the reward...") oppure, se non si legge, i pulsanti
@@ -19626,8 +20607,8 @@ class RandomRoll {
             }
             FieldBossTool.OcrBusy := false
             n := FieldBossTool.Norm(txt)
-            if (InStr(n, "mysterious") || InStr(n, "track") && InStr(n, "select") || InStr(n, "selectthereward")
-             || InStr(n, "cancelselection") || InStr(n, "completeselect"))
+            if (InStr(n, "mysterious") || InStr(n, "selectthereward") || InStr(n, "cancelselection")
+             || InStr(n, "completeselect") || InStr(n, "selectioncomplete"))
                 return true
         }
         return false
@@ -19811,7 +20792,8 @@ class RandomRoll {
             SetTimer(this.TickFn, RandomIconEnabled ? 120 : 0), SetTimer(this.CardFn, RandomIconEnabled && RandomIconMode != "always" ? 800 : 0)
         if !RandomIconEnabled
             return
-        k := this.Geo().s * RandomIconScale
+        geo := this.Geo(), this.IconGeoH := geo.h
+        k := geo.s * RandomIconScale
         w := Round(104 * k), h := Round(96 * k)
         g := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x08000000")   ; cliccabile ma non ruba il focus al gioco
         g.BackColor := UiC("Deep"), g.MarginX := 0, g.MarginY := 0
@@ -19840,6 +20822,10 @@ class RandomRoll {
             this.IconShown := want
             if want {
                 g := this.Geo()
+                if (g.h != this.IconGeoH) {                 ; creata con il gioco ancora piccolo (avvio, launcher):
+                    this.BuildIcon()                        ; si rifà alla misura attuale
+                    this.IconShown := true
+                }
                 this.Icon.Show(Format("NA x{} y{}", g.x + Round(g.w * RandomIconX / 100) - this.IconW // 2
                                                   , g.y + Round(g.h * RandomIconY / 100) - this.IconH // 2))
             } else
