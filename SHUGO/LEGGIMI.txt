@@ -1,0 +1,16 @@
+SHUGO TIME - immagini degli Shugo / Shugo images
+
+IT: Immagini PNG con sfondo trasparente, con la base del personaggio in basso. Durante l'avviso
+    SHUGO TIME sbucano dai bordi dello schermo e rientrano (mai la stessa due volte di fila).
+    - nome normale (shugo_01.png): sbuca da sotto o da sopra
+    - nome che finisce con _dx (shugo_14_dx.png): il personaggio si affaccia da una parete alla sua
+      destra: sbuca dal bordo destro (o dal sinistro, specchiato), in basso
+    - nome che finisce con _sx: come _dx ma con la parete a sinistra
+    Puoi aggiungerne o toglierne quante vuoi.
+
+EN: PNG images with a transparent background, with the bottom of the character at the bottom.
+    During the SHUGO TIME alert they pop out from the screen edges and slide back.
+    - plain name (shugo_01.png): pops out from the bottom or the top
+    - name ending in _dx: the character leans out from a wall on its right: pops out from the
+      right edge (or the left one, mirrored), low on the screen
+    - name ending in _sx: like _dx, with the wall on the left

@@ -23,7 +23,7 @@ if !A_IsAdmin {
     ExitApp
 }
 
-global AppVersion := "1.11"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
+global AppVersion := "1.12"                ; versione dell'applicazione (solo nelle interfacce: il file si chiama sempre "AION 2 Wingman.ahk")
 A_IconTip := "AION 2 Wingman " AppVersion " - by VaLeTecK"   ; testo dell'icona nella barra di Windows
 ListLines false
 KeyHistory 0                 ; nessuno storico dei tasti in memoria
@@ -738,6 +738,21 @@ global FieldBossList := [
 ; Di solito non serve toccarlo.
 
 ; ------------------------------------------------------------------------------
+; [AVVISI] Avvisi a schermo a orari fissi (ora locale del PC)
+; ------------------------------------------------------------------------------
+; SHUGO TIME: a ogni inizio dell'ora, per ShugoTimeMinutes minuti, compaiono scritte "SHUGO TIME!!"
+; sempre più frequenti, con colori, inclinazioni ed effetti a caso (zoom, spin, rimbalzo...).
+; All'inizio restano ai lati; nell'ultimo tratto arrivano anche al centro, semitrasparenti.
+global ShugoTimeAlert       := true            ; false = nessun avviso SHUGO TIME
+global ShugoTimeMinutes     := 3               ; per quanti minuti dall'inizio dell'ora (1-30)
+global ShugoTimeOnlyInGame  := false           ; true = solo con il gioco in primo piano
+global ShugoTimeText        := "SHUGO TIME!!"  ; testo delle scritte
+global ShugoTimeTestKey     := "^+F11"         ; Ctrl+Shift+F11 = prova l'avviso adesso (di nuovo = stop)
+global ShugoTimeTestSeconds := 60              ; durata della prova in secondi (tutta la progressione, accelerata)
+global ShugoTimePeek        := true            ; true = durante SHUGO TIME gli Shugo sbucano a mezzo busto dai bordi
+                                               ; dello schermo (immagini .png nella cartella SHUGO accanto allo script)
+
+; ------------------------------------------------------------------------------
 ; [RANDOM] Numero casuale con animazione di "roll" (es. per decidere a chi va un drop)
 ; ------------------------------------------------------------------------------
 ; Numero casuale tra il minimo e il massimo, grande a schermo, con animazione di roll.
@@ -1192,6 +1207,7 @@ if (LootKey != "")
 HotIfWinActive()
 
 RandomRoll.Init()                            ; numero random (tasto + icona cliccabile)
+ShugoTime.Init()                             ; avvisi: SHUGO TIME a ogni inizio dell'ora
 GameMenuButton.Init()                        ; icona di Wingman + pulsante nel menu del gioco
 ; Il menu del gioco si apre/chiude con Esc: il pulsante guarda lo schermo solo dopo Esc.
 ; (InputHook "visibile": Esc arriva al gioco come sempre e non tocca gli altri tasti di Wingman)
@@ -1218,7 +1234,8 @@ A_TrayMenu.Insert("1&", Tr("Impostazioni AION 2 Wingman"), (*) => SettingsEditor
 A_TrayMenu.Insert("2&", Tr("Controlla aggiornamenti"), (*) => Updater.CheckNow())
 A_TrayMenu.Insert("3&", Tr("Dona con PayPal"), DonatePayPal)
 A_TrayMenu.Insert("4&", Tr("Dona con Ko-fi"), DonateKofi)
-A_TrayMenu.Insert("5&")
+A_TrayMenu.Insert("5&", "SHUGO TIME!!  ·  " Tr("prova"), (*) => ShugoTime.TestToggle())
+A_TrayMenu.Insert("6&")
 A_TrayMenu.Default := Tr("Impostazioni AION 2 Wingman")
 
 ; Accende/spegne un tool mentre giochi e lo conferma con un avviso
@@ -5192,6 +5209,8 @@ class SettingsEditor {
                 ["FieldBossTravelPresses", "FieldBossTravelWait", "FieldBossTeleportLock", "FieldBossDirHint", "FieldBossDirSeconds",
                  "FieldBossDirDelay", "FieldBossDirTop", "FieldBossDirScale"]],
             ["Elenco boss", "", "BOSS"]]],
+        ["Avvisi", "Avvisi a schermo a orari fissi, in base all'ora del tuo PC.",
+            ["ShugoTimeAlert", "ShugoTimeMinutes", "ShugoTimeOnlyInGame", "ShugoTimeText", "ShugoTimePeek", "ShugoTimeTestKey", "ShugoTimeTestSeconds"]],
         ["—", "SERVIZIO", "DIV"],
         ["Aggiornamenti", "Controllo e installazione delle nuove versioni pubblicate su GitHub. Le tue impostazioni restano dopo ogni aggiornamento.",
             ["UpdateMode", "UpdateCheckOnStart", "UpdateCheckHours", "UpdateRepo"]],
@@ -5208,6 +5227,8 @@ class SettingsEditor {
         "FieldBossHideInDungeon", "Nascondi il pannello nei dungeon", "FieldBossDungeons", "Nomi dei dungeon",
         "FieldBossDungeonPanel", "Menu Teleport nei dungeon", "FieldBossBossImage", "Immagine del boss", "FieldBossBossImageStyle", "Stile dell'anteprima del boss",
         "RandomKey", "Tasto del numero random", "RandomMin", "Numero minimo", "RandomMax", "Numero massimo", "RandomCount", "Numeri per tiro",
+        "ShugoTimeAlert", "SHUGO TIME a ogni ora", "ShugoTimeMinutes", "SHUGO TIME: durata (minuti)", "ShugoTimeOnlyInGame", "SHUGO TIME: solo in gioco",
+        "ShugoTimeText", "SHUGO TIME: testo", "ShugoTimeTestKey", "SHUGO TIME: tasto di prova", "ShugoTimeTestSeconds", "SHUGO TIME: durata della prova (s)", "ShugoTimePeek", "SHUGO TIME: Shugo dai bordi",
         "RandomHold", "Durata del risultato (s)", "RandomScale", "Dimensione del numero", "RandomX", "Posizione orizzontale (%)",
         "RandomY", "Posizione verticale (%)", "RandomIconEnabled", "Icona del random", "RandomIconMode", "Quando si vede l'icona", "RandomIconX", "Icona: posizione orizzontale (%)",
         "RandomIconY", "Icona: posizione verticale (%)", "RandomIconScale", "Icona: dimensione",
@@ -5441,7 +5462,7 @@ class SettingsEditor {
         "FieldBossCheckEvery", [100, 5000, 1], "FieldBossHintScale", [0.3, 4, 0], "FieldBossHintBottom", [0, 2000, 1],
         "FieldBossPanelScale", [0.5, 4, 0], "FieldBossPanelMarginR", [0, 3000, 1], "FieldBossPanelOffsetY", [-1500, 1500, 1],
         "FieldBossFadeAlpha", [0, 255, 1], "FieldBossLegendScale", [0.3, 4, 0], "FieldBossLegendY", [0, 100, 1], "FieldBossLegendAlpha", [0, 255, 1],
-        "FieldBossListScroll", [1, 200, 1], "RandomMin", [0, 999, 1], "RandomMax", [1, 999, 1], "RandomCount", [1, 4, 1],
+        "FieldBossListScroll", [1, 200, 1], "RandomMin", [0, 999, 1], "RandomMax", [1, 999, 1], "RandomCount", [1, 4, 1], "ShugoTimeMinutes", [1, 30, 1], "ShugoTimeTestSeconds", [10, 600, 1],
         "RandomHold", [0, 30, 0], "RandomScale", [0.3, 4, 0], "RandomX", [0, 100, 0], "RandomY", [0, 100, 0],
         "RandomIconX", [0, 100, 0], "RandomIconY", [0, 100, 0], "RandomIconScale", [0.3, 4, 0], "FieldBossUltraScrollStep", [1, 200, 1], "FieldBossZoomOut", [0, 50, 1], "FieldBossZoomBack", [0, 50, 1], "FieldBossLootClickDist", [20, 500, 1],
         "FieldBossTravelPresses", [1, 5, 1], "FieldBossTravelWait", [1, 600, 1], "FieldBossDirSeconds", [1, 300, 1],
@@ -6282,7 +6303,7 @@ class SettingsEditor {
         "HUD overlay", "🖥️", "Tema", "🌈", "Generale e macro", "🎮", "Colori", "🎨", "Mirino", "🎯", "Barre", "📊",
         "Icone - generale", "🔲", "Icona Loot", "💰", "Icona Combat", "⚔️", "Effetti Loot", "✨", "Effetti Combat", "💥",
         "Transizioni", "🌗", "Hidden Cube", "🧊", "Field Boss", "🐉", "Fasi di click", "🖱️", "Pannello", "📋",
-        "Leggenda", "🏷️", "Ricerca e Teleport", "🔍", "Travel e direzione", "🧭", "Numero random", "🎲", "Elenco boss", "👑", "Aggiornamenti", "🔄", "Manutenzione", "🛠️", "Editor temi", "🖌️", "Altro", "📁")
+        "Leggenda", "🏷️", "Ricerca e Teleport", "🔍", "Travel e direzione", "🧭", "Numero random", "🎲", "Elenco boss", "👑", "Avvisi", "🔔", "Aggiornamenti", "🔄", "Manutenzione", "🛠️", "Editor temi", "🖌️", "Altro", "📁")
     static Icon(title) => this.Icons.Has(title) ? this.Icons[title] "  " : ""
 
     ; Modalità "Base": solo le opzioni principali (menu semplificato, senza nomi tecnici);
@@ -6296,7 +6317,7 @@ class SettingsEditor {
         "LootShape", 1, "CombatShape", 1, "LootEmoji", 1, "CombatEmoji", 1,
         "HiddenCubeEnabled", 1, "HiddenCubeLockMouse", 1, "HiddenCubeAutoClick", 1,
         "FieldBossEnabled", 1, "FieldBossTeleportMode", 1, "FieldBossHideInDungeon", 1, "FieldBossDungeonPanel", 1, "FieldBossBossImage", 1, "FieldBossBossImageStyle", 1,
-        "RandomKey", 1, "RandomCount", 1, "RandomIconEnabled", 1, "RandomIconMode", 1, "RandomX", 1, "RandomY", 1, "RandomIconX", 1, "RandomIconY", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
+        "RandomKey", 1, "RandomCount", 1, "ShugoTimeAlert", 1, "ShugoTimeMinutes", 1, "ShugoTimeOnlyInGame", 1, "ShugoTimeTestKey", 1, "ShugoTimeTestSeconds", 1, "ShugoTimePeek", 1, "RandomIconEnabled", 1, "RandomIconMode", 1, "RandomX", 1, "RandomY", 1, "RandomIconX", 1, "RandomIconY", 1, "FieldBossLockMouse", 1, "FieldBossBlockClicks", 1, "FieldBossHints", 1,
         "FieldBossPanelScale", 1, "FieldBossShowLegend", 1, "FieldBossTravelPresses", 1, "FieldBossTeleportLock", 1, "FieldBossDirHint", 1,
         "UpdateMode", 1, "UpdateCheckOnStart", 1)
     static BasicPanels := Map("HOME", 1, "PRESET", 1, "BOSS", 1, "MAINT", 1)
@@ -19056,6 +19077,213 @@ ru=Что нового
 ko=새로운 기능
 zh=新内容
 ja=新機能
+it=Avvisi
+en=Alerts
+nap=Avvise
+bro=Avvisi
+es=Avisos
+fr=Alertes
+de=Hinweise
+pt=Avisos
+ru=Оповещения
+ko=알림
+zh=提醒
+ja=通知
+it=Avvisi a schermo a orari fissi, in base all'ora del tuo PC.
+en=On-screen alerts at set times, based on your PC clock.
+nap=Avvise 'ncopp'o schermo a ore fisse, cu ll'ora d'o PC tuojo.
+bro=Avvisi a schermo a orari fissi, con l'ora del tuo PC.
+es=Avisos en pantalla a horas fijas, según la hora de tu PC.
+fr=Alertes à l'écran à heures fixes, selon l'horloge de ton PC.
+de=Bildschirmhinweise zu festen Zeiten, nach der Uhr deines PCs.
+pt=Avisos na tela em horários fixos, pelo relógio do seu PC.
+ru=Оповещения на экране в определённое время по часам вашего ПК.
+ko=PC 시계를 기준으로 정해진 시간에 화면 알림을 띄워요.
+zh=根据电脑时间在固定时间显示屏幕提醒。
+ja=PC の時計に合わせて決まった時刻に画面通知を表示します。
+it=SHUGO TIME a ogni ora
+en=SHUGO TIME every hour
+nap=SHUGO TIME a ogne ora
+bro=SHUGO TIME ogni ora
+es=SHUGO TIME cada hora
+fr=SHUGO TIME chaque heure
+de=SHUGO TIME jede Stunde
+pt=SHUGO TIME a cada hora
+ru=SHUGO TIME каждый час
+ko=매시 SHUGO TIME
+zh=每小时 SHUGO TIME
+ja=毎時 SHUGO TIME
+it=SHUGO TIME: durata (minuti)
+en=SHUGO TIME: duration (minutes)
+nap=SHUGO TIME: quanto dura (minute)
+bro=SHUGO TIME: durata (minuti)
+es=SHUGO TIME: duración (minutos)
+fr=SHUGO TIME : durée (minutes)
+de=SHUGO TIME: Dauer (Minuten)
+pt=SHUGO TIME: duração (minutos)
+ru=SHUGO TIME: длительность (минуты)
+ko=SHUGO TIME: 지속 시간(분)
+zh=SHUGO TIME：持续时间（分钟）
+ja=SHUGO TIME：長さ（分）
+it=SHUGO TIME: solo in gioco
+en=SHUGO TIME: only in game
+nap=SHUGO TIME: sulo dint'o juoco
+bro=SHUGO TIME: solo in game
+es=SHUGO TIME: solo en el juego
+fr=SHUGO TIME : seulement en jeu
+de=SHUGO TIME: nur im Spiel
+pt=SHUGO TIME: só no jogo
+ru=SHUGO TIME: только в игре
+ko=SHUGO TIME: 게임 중에만
+zh=SHUGO TIME：仅在游戏中
+ja=SHUGO TIME：ゲーム中のみ
+it=SHUGO TIME: testo
+en=SHUGO TIME: text
+nap=SHUGO TIME: testo
+bro=SHUGO TIME: testo
+es=SHUGO TIME: texto
+fr=SHUGO TIME : texte
+de=SHUGO TIME: Text
+pt=SHUGO TIME: texto
+ru=SHUGO TIME: текст
+ko=SHUGO TIME: 문구
+zh=SHUGO TIME：文字
+ja=SHUGO TIME：文字
+it=SHUGO TIME: tasto di prova
+en=SHUGO TIME: test key
+nap=SHUGO TIME: tasto 'e prova
+bro=SHUGO TIME: tasto di prova
+es=SHUGO TIME: tecla de prueba
+fr=SHUGO TIME : touche de test
+de=SHUGO TIME: Test-Taste
+pt=SHUGO TIME: tecla de teste
+ru=SHUGO TIME: клавиша проверки
+ko=SHUGO TIME: 테스트 키
+zh=SHUGO TIME：测试键
+ja=SHUGO TIME：テストキー
+it=SHUGO TIME: durata della prova (s)
+en=SHUGO TIME: test length (s)
+nap=SHUGO TIME: quanto dura 'a prova (s)
+bro=SHUGO TIME: durata del test (s)
+es=SHUGO TIME: duración de la prueba (s)
+fr=SHUGO TIME : durée du test (s)
+de=SHUGO TIME: Testdauer (s)
+pt=SHUGO TIME: duração do teste (s)
+ru=SHUGO TIME: длительность проверки (с)
+ko=SHUGO TIME: 테스트 시간(초)
+zh=SHUGO TIME：测试时长（秒）
+ja=SHUGO TIME：テストの長さ（秒）
+it=prova
+en=test
+nap=prova
+bro=test
+es=prueba
+fr=test
+de=Test
+pt=teste
+ru=проверка
+ko=테스트
+zh=测试
+ja=テスト
+@=ShugoTimeAlert
+en=false = no SHUGO TIME alert
+nap=false = nisciun avviso SHUGO TIME
+bro=false = niente avviso SHUGO TIME
+es=false = sin aviso SHUGO TIME
+fr=false = pas d'alerte SHUGO TIME
+de=false = kein SHUGO-TIME-Hinweis
+pt=false = sem aviso SHUGO TIME
+ru=false = без оповещения SHUGO TIME
+ko=false = SHUGO TIME 알림 없음
+zh=false = 不显示 SHUGO TIME 提醒
+ja=false = SHUGO TIME 通知なし
+@=ShugoTimeMinutes
+en=for how many minutes from the start of the hour (1-30)
+nap=pe' quante minute 'a ll'inizio 'e ll'ora (1-30)
+bro=per quanti minuti dall'inizio dell'ora (1-30)
+es=durante cuántos minutos desde el inicio de la hora (1-30)
+fr=pendant combien de minutes après le début de l'heure (1-30)
+de=wie viele Minuten ab Stundenbeginn (1-30)
+pt=por quantos minutos a partir do início da hora (1-30)
+ru=сколько минут с начала часа (1-30)
+ko=매시 시작부터 몇 분 동안 (1-30)
+zh=从整点开始持续多少分钟（1-30）
+ja=毎時の始まりから何分間（1〜30）
+@=ShugoTimeOnlyInGame
+en=true = only with the game in the foreground
+nap=true = sulo cu 'o juoco 'nnanze
+bro=true = solo col gioco in primo piano
+es=true = solo con el juego en primer plano
+fr=true = seulement avec le jeu au premier plan
+de=true = nur wenn das Spiel im Vordergrund ist
+pt=true = só com o jogo em primeiro plano
+ru=true = только когда игра на переднем плане
+ko=true = 게임이 앞에 있을 때만
+zh=true = 仅当游戏在前台时
+ja=true = ゲームが前面にあるときだけ
+@=ShugoTimeText
+en=text of the alerts
+nap=testo d'e scritte
+bro=testo delle scritte
+es=texto de los avisos
+fr=texte des alertes
+de=Text der Hinweise
+pt=texto dos avisos
+ru=текст надписей
+ko=알림 문구
+zh=提醒文字
+ja=通知の文字
+@=ShugoTimeTestKey
+en=Ctrl+Shift+F11 = test the alert now (again = stop)
+nap=Ctrl+Shift+F11 = prova l'avviso mo (n'ata vota = stop)
+bro=Ctrl+Shift+F11 = testa l'avviso ora (di nuovo = stop)
+es=Ctrl+Shift+F11 = probar el aviso ahora (otra vez = parar)
+fr=Ctrl+Shift+F11 = tester l'alerte maintenant (encore = arrêt)
+de=Strg+Shift+F11 = Hinweis jetzt testen (nochmal = Stopp)
+pt=Ctrl+Shift+F11 = testar o aviso agora (de novo = parar)
+ru=Ctrl+Shift+F11 = проверить оповещение сейчас (ещё раз = стоп)
+ko=Ctrl+Shift+F11 = 지금 알림 테스트 (한 번 더 = 정지)
+zh=Ctrl+Shift+F11 = 立即测试提醒（再按 = 停止）
+ja=Ctrl+Shift+F11 = 今すぐ通知をテスト（もう一度 = 停止）
+@=ShugoTimeTestSeconds
+en=length of the test in seconds (the whole progression, sped up)
+nap=quanto dura 'a prova in secunde (tutta 'a progressione, cchiù veloce)
+bro=durata del test in secondi (tutta la progressione, accelerata)
+es=duración de la prueba en segundos (toda la progresión, acelerada)
+fr=durée du test en secondes (toute la progression, accélérée)
+de=Testdauer in Sekunden (der ganze Ablauf, beschleunigt)
+pt=duração do teste em segundos (toda a progressão, acelerada)
+ru=длительность проверки в секундах (вся последовательность, ускоренно)
+ko=테스트 시간(초, 전체 진행을 빠르게)
+zh=测试时长（秒，整个过程加速）
+ja=テストの長さ（秒、全体の流れを早送り）
+)" "`n"
+        s .= "
+(
+it=SHUGO TIME: Shugo dai bordi
+en=SHUGO TIME: Shugo from the edges
+nap=SHUGO TIME: Shugo d'e bbuorde
+bro=SHUGO TIME: Shugo dai bordi
+es=SHUGO TIME: Shugo desde los bordes
+fr=SHUGO TIME : Shugo depuis les bords
+de=SHUGO TIME: Shugo von den Rändern
+pt=SHUGO TIME: Shugo pelas bordas
+ru=SHUGO TIME: Шуго с краёв экрана
+ko=SHUGO TIME: 가장자리에서 슈고
+zh=SHUGO TIME：从边缘探出的 Shugo
+ja=SHUGO TIME：端から Shugo
+@=ShugoTimePeek
+en=true = during SHUGO TIME the Shugo pop out half body from the screen edges\n(.png images in the SHUGO folder next to the script)
+nap=true = mentre ce sta SHUGO TIME 'e Shugo esceno a miezo busto d'e bbuorde d'o schermo\n(immagini .png dint'a cartella SHUGO vicino a 'o script)
+bro=true = durante SHUGO TIME gli Shugo sbucano a mezzo busto dai bordi dello schermo\n(immagini .png nella cartella SHUGO accanto allo script)
+es=true = durante SHUGO TIME los Shugo asoman de medio cuerpo por los bordes de la pantalla\n(imágenes .png en la carpeta SHUGO junto al script)
+fr=true = pendant SHUGO TIME les Shugo surgissent à mi-corps des bords de l'écran\n(images .png dans le dossier SHUGO à côté du script)
+de=true = während SHUGO TIME schauen Shugo halb vom Bildschirmrand herein\n(.png-Bilder im Ordner SHUGO neben dem Skript)
+pt=true = durante o SHUGO TIME os Shugo aparecem até a cintura pelas bordas da tela\n(imagens .png na pasta SHUGO ao lado do script)
+ru=true = во время SHUGO TIME Шуго выглядывают по пояс с краёв экрана\n(изображения .png в папке SHUGO рядом со скриптом)
+ko=true = SHUGO TIME 동안 슈고가 화면 가장자리에서 상반신만 쏙 나와요\n(스크립트 옆 SHUGO 폴더의 .png 이미지)
+zh=true = SHUGO TIME 期间 Shugo 会从屏幕边缘探出半身\n（脚本旁 SHUGO 文件夹中的 .png 图片）
+ja=true = SHUGO TIME の間、Shugo が画面の端から半身をのぞかせます\n（スクリプト横の SHUGO フォルダーの .png 画像）
 )" "`n"
         return s
     }
@@ -21538,6 +21766,375 @@ class MapTour {
             btn("x" (Round(18 * k) + cw - Round(120 * k)) " yp w" Round(120 * k), Tr("Avanti") "  ▶", (*) => MapTour.Go(MapTour.Idx + 1, 1), UiC("Accent"), UiOn("Deep", "Accent"))
         g.Show("NA Hide AutoSize")
         this.Bub := g
+    }
+}
+
+; ==============================================================================
+; === AVVISI: SHUGO TIME ===
+; ==============================================================================
+; A ogni inizio dell'ora (ora locale del PC), per ShugoTimeMinutes minuti, compaiono scritte
+; "SHUGO TIME!!" sempre più frequenti: grandi, colori e inclinazioni a caso, con zoom rapido in
+; entrata e in uscita e, man mano che si va avanti, sempre più effetti (spin, rimbalzo, scivolata,
+; tremolio, ribaltamento). All'inizio restano ai lati dello schermo; nell'ultimo tratto (gli ultimi
+; ~40 s su 3 minuti) arrivano anche al centro, semitrasparenti.
+; Ogni scritta è una piccola finestra a strati attraversabile dai click; il testo viene disegnato una
+; volta sola in un'immagine, poi a ogni fotogramma si ridisegna solo quella (scalata e ruotata) su
+; un'unica superficie condivisa, grande quanto serve in quel momento: leggero anche a 4K.
+class ShugoTime {
+    static On := false, Test := false, T0 := 0, Dur := 0, Sprites := [], NextSpawn := 0, LastHour := ""
+    static Pics := [], Pool := [], NextPeek := 0, LastPic := 0, Odd := false                       ; immagini degli Shugo (cartella SHUGO) e prossima "sbucata"
+    static Fn := "", ClockFn := "", hdc := 0, hbm := 0, obm := 0, G := 0, DW := 0, DH := 0, Fam := 0, Fmt := 0
+
+    static Init() {
+        this.Fn := ObjBindMethod(this, "Tick"), this.ClockFn := ObjBindMethod(this, "Clock")
+        if (ShugoTimeTestKey != "")
+            try Hotkey(ShugoTimeTestKey, (*) => ShugoTime.TestToggle())   ; prova: funziona anche fuori dal gioco
+        if ShugoTimeAlert
+            SetTimer(this.ClockFn, 1000)
+    }
+
+    ; ogni secondo: siamo nei primi minuti dell'ora e questa ora non è ancora stata segnalata?
+    ; (avviato a metà dei minuti, si parte dal punto giusto della progressione)
+    static Clock() {
+        if this.On
+            return
+        mins := Max(1, Min(30, Round(ShugoTimeMinutes)))
+        if (A_Min + 0 >= mins)
+            return
+        key := A_YYYY A_MM A_DD A_Hour
+        if (key = this.LastHour)
+            return
+        if (ShugoTimeOnlyInGame && !WinActive("ahk_exe " GameExe))
+            return
+        this.LastHour := key
+        this.Start(mins * 60000, (A_Min * 60 + A_Sec) * 1000)
+    }
+
+    static TestToggle() {
+        if this.On
+            return this.Stop()
+        this.Start(Max(10, Round(ShugoTimeTestSeconds)) * 1000, 0, true)
+        ShowTip("SHUGO TIME!!  ·  " Tr("prova") "  ·  " FieldBossTool.KeyLabel(ShugoTimeTestKey) " = stop", 2500)
+    }
+
+    static Start(dur, elapsed := 0, test := false) {
+        this.Stop()
+        g := RandomRoll.Geo()
+        this.DW := g.w, this.DH := g.h                       ; superficie condivisa: al massimo lo schermo di gioco
+        this.hdc := DllCall("CreateCompatibleDC", "Ptr", 0, "Ptr")
+        bi := Buffer(40, 0)
+        NumPut("UInt", 40, bi, 0), NumPut("Int", this.DW, bi, 4), NumPut("Int", -this.DH, bi, 8)
+        NumPut("UShort", 1, bi, 12), NumPut("UShort", 32, bi, 14)
+        this.hbm := DllCall("CreateDIBSection", "Ptr", this.hdc, "Ptr", bi, "UInt", 0, "Ptr*", &bits := 0, "Ptr", 0, "UInt", 0, "Ptr")
+        this.obm := DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.hbm, "Ptr")
+        DllCall("gdiplus\GdipCreateFromHDC", "Ptr", this.hdc, "Ptr*", &gr := 0)
+        DllCall("gdiplus\GdipSetInterpolationMode", "Ptr", gr, "Int", 1)   ; bassa qualità: molto più veloce, a quelle misure non si nota
+        DllCall("gdiplus\GdipSetPixelOffsetMode", "Ptr", gr, "Int", 4)    ; Half: scalatura senza scatti di mezzo pixel
+        this.G := gr
+        for name in ["Impact", "Arial Black", "Segoe UI"] {   ; il primo carattere disponibile
+            DllCall("gdiplus\GdipCreateFontFamilyFromName", "WStr", name, "Ptr", 0, "Ptr*", &fam := 0)
+            if fam
+                break
+        }
+        DllCall("gdiplus\GdipCreateStringFormat", "Int", 0x1000, "Int", 0, "Ptr*", &fmt := 0)   ; senza a capo
+        this.Fam := fam, this.Fmt := fmt
+        this.Pool := []                                        ; 8 scritte pronte, in colori diversi
+        loop 8
+            this.Pool.Push(this.MakeText(Round(90 * g.s), this.RandColor()))
+        this.Pics := []                                        ; Shugo a mezzo busto: solo l'elenco dei file della cartella
+        if ShugoTimePeek                                       ; SHUGO; ogni immagine si carica quando serve (sono tante)
+            loop files A_ScriptDir "\SHUGO\*.png"
+                this.Pics.Push(A_LoopFileFullPath)
+        this.On := true, this.Test := test, this.Dur := dur, this.T0 := A_TickCount - elapsed, this.NextSpawn := 0
+        this.NextPeek := A_TickCount + 1500
+        SetTimer(this.Fn, 16)                                   ; 60 giri al secondo (scritte ridisegnate a 30)
+    }
+
+    static Stop() {
+        SetTimer(this.Fn, 0)
+        for sp in this.Sprites
+            this.Free(sp)
+        this.Sprites := []
+        for tb in this.Pool
+            DllCall("gdiplus\GdipDisposeImage", "Ptr", tb.bmp)
+        this.Pics := [], this.Pool := []
+        if this.G {
+            DllCall("gdiplus\GdipDeleteGraphics", "Ptr", this.G)
+            DllCall("SelectObject", "Ptr", this.hdc, "Ptr", this.obm)
+            DllCall("DeleteObject", "Ptr", this.hbm), DllCall("DeleteDC", "Ptr", this.hdc)
+            DllCall("gdiplus\GdipDeleteStringFormat", "Ptr", this.Fmt), DllCall("gdiplus\GdipDeleteFontFamily", "Ptr", this.Fam)
+            this.G := 0
+        }
+        this.On := false, this.Test := false
+    }
+
+    static Tick() {
+        Critical "On"
+        now := A_TickCount, p := (now - this.T0) / this.Dur
+        if (ShugoTimeOnlyInGame && !this.Test && !WinActive("ahk_exe " GameExe)) {   ; fuori dal gioco: niente scritte
+            for sp in this.Sprites
+                this.Free(sp)
+            this.Sprites := []
+            if (p >= 1)
+                this.Stop()
+            return
+        }
+        if (p >= 1 && !this.Sprites.Length)
+            return this.Stop()
+        texts := 0
+        for sp in this.Sprites
+            texts += !sp.HasOwnProp("peek")
+        if (p < 1 && now >= this.NextSpawn && texts < Round(2 + 4 * p ** 1.4)) {
+            this.Spawn(p)
+            this.NextSpawn := now + 2600 * 0.1 ** p * Random(0.6, 1.4)     ; da ~2,6 s fino a ~0,26 s tra una scritta e l'altra
+        }
+        if (p < 1 && this.Pics.Length && now >= this.NextPeek) {   ; Shugo dai bordi
+            peeks := 0
+            for sp in this.Sprites
+                peeks += sp.HasOwnProp("peek")
+            if (peeks < 1 + Round(2 * p))
+                this.SpawnPeek(p)
+            this.NextPeek := now + 3500 * 0.4 ** p * Random(0.7, 1.3)  ; da uno ogni ~3,5 s fino a uno ogni ~1,4 s
+        }
+        ; Shugo a ogni giro (60 al secondo: costa solo spostare la finestra); scritte un giro sì e uno no
+        this.Odd := !this.Odd, keep := []
+        for sp in this.Sprites {
+            alive := sp.HasOwnProp("peek") ? this.MovePeek(sp, now)
+                   : this.Odd ? this.Draw(sp, now) : (now - sp.t0 < sp.life)
+            if alive
+                keep.Push(sp)
+            else
+                this.Free(sp)
+        }
+        this.Sprites := keep
+    }
+
+    ; colore vivace a caso (tinta qualsiasi, saturazione e luminosità alte)
+    static RandColor() {
+        h := Random(0.0, 6.0), s := Random(0.75, 1.0), i := Floor(h), f := h - i
+        q := 1 - s * f, t := 1 - s * (1 - f), pp := 1 - s
+        rgb := [[1, t, pp], [q, 1, pp], [pp, 1, t], [pp, q, 1], [t, pp, 1], [1, pp, q]][Mod(i, 6) + 1]
+        return (Round(rgb[1] * 255) << 16) | (Round(rgb[2] * 255) << 8) | Round(rgb[3] * 255)
+    }
+
+    ; Scritta già pronta come immagine (alone, contorno scuro, riempimento sfumato). Se ne preparano
+    ; poche all'avvio dell'avviso, in colori diversi, e si riusano: crearle è la parte più pesante.
+    static MakeText(fs, col) {
+        DllCall("gdiplus\GdipCreatePath", "Int", 0, "Ptr*", &path := 0)
+        rc := Buffer(16), NumPut("Float", 0, "Float", 0, "Float", fs * 12, "Float", fs * 2, rc)
+        DllCall("gdiplus\GdipAddPathString", "Ptr", path, "WStr", ShugoTimeText, "Int", -1, "Ptr", this.Fam, "Int", 1, "Float", fs, "Ptr", rc, "Ptr", this.Fmt)
+        b := Buffer(16, 0)
+        DllCall("gdiplus\GdipGetPathWorldBounds", "Ptr", path, "Ptr", b, "Ptr", 0, "Ptr", 0)
+        bx := NumGet(b, 0, "Float"), by := NumGet(b, 4, "Float"), tw := NumGet(b, 8, "Float"), th := NumGet(b, 12, "Float")
+        pad := Round(fs * 0.22), bw := Ceil(tw) + pad * 2, bh := Ceil(th) + pad * 2
+        DllCall("gdiplus\GdipCreateBitmapFromScan0", "Int", bw, "Int", bh, "Int", 0, "Int", 0xE200B, "Ptr", 0, "Ptr*", &bmp := 0)   ; 32bpp PARGB
+        DllCall("gdiplus\GdipGetImageGraphicsContext", "Ptr", bmp, "Ptr*", &ig := 0)
+        DllCall("gdiplus\GdipSetSmoothingMode", "Ptr", ig, "Int", 4)
+        DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", ig, "Float", pad - bx, "Float", pad - by, "Int", 0)
+        DllCall("gdiplus\GdipCreatePen1", "UInt", 0, "Float", 1, "Int", 2, "Ptr*", &pen := 0)
+        DllCall("gdiplus\GdipSetPenLineJoin", "Ptr", pen, "Int", 2)
+        for w in [[0.36, 0x30], [0.18, 0x70]] {               ; alone del colore della scritta
+            DllCall("gdiplus\GdipSetPenWidth", "Ptr", pen, "Float", fs * w[1])
+            DllCall("gdiplus\GdipSetPenColor", "Ptr", pen, "UInt", (w[2] << 24) | col)
+            DllCall("gdiplus\GdipDrawPath", "Ptr", ig, "Ptr", pen, "Ptr", path)
+        }
+        DllCall("gdiplus\GdipSetPenWidth", "Ptr", pen, "Float", fs * 0.09)
+        DllCall("gdiplus\GdipSetPenColor", "Ptr", pen, "UInt", 0xF0100818)
+        DllCall("gdiplus\GdipDrawPath", "Ptr", ig, "Ptr", pen, "Ptr", path)
+        light := LerpRGB(col, 0xFFFFFF, 0.55)
+        r2 := Buffer(16), NumPut("Float", bx, "Float", by, "Float", tw, "Float", th, r2)
+        DllCall("gdiplus\GdipCreateLineBrushFromRect", "Ptr", r2, "UInt", 0xFF000000 | light, "UInt", 0xFF000000 | col, "Int", 1, "Int", 0, "Ptr*", &br := 0)
+        DllCall("gdiplus\GdipFillPath", "Ptr", ig, "Ptr", br, "Ptr", path)
+        DllCall("gdiplus\GdipDeleteBrush", "Ptr", br), DllCall("gdiplus\GdipDeletePen", "Ptr", pen)
+        DllCall("gdiplus\GdipDeleteGraphics", "Ptr", ig), DllCall("gdiplus\GdipDeletePath", "Ptr", path)
+        return {bmp: bmp, w: bw, h: bh}
+    }
+
+    static Spawn(p) {
+        g := RandomRoll.Geo(), k := g.s
+        left := 1 - p                                          ; quanto manca (0..1)
+        center := left < 0.22 && Random(0.0, 1.0) < (0.22 - left) / 0.22 * 0.8   ; ultimo tratto: sempre più al centro
+        tb := this.Pool[Random(1, this.Pool.Length)]
+        sc0 := Random(0.65, 0.9) * (1 + 0.15 * p) * (center ? 1.15 : 1)   ; misura rispetto all'immagine pronta
+        ; posizione: ai lati (fuori dal riquadro centrale) oppure, nell'ultimo tratto, al centro
+        if center
+            cx := g.x + g.w * Random(0.32, 0.68), cy := g.y + g.h * Random(0.32, 0.68)
+        else
+            loop 30 {
+                cx := g.x + g.w * Random(0.08, 0.92), cy := g.y + g.h * Random(0.08, 0.92)
+                if !(cx > g.x + g.w * 0.27 && cx < g.x + g.w * 0.73 && cy > g.y + g.h * 0.27 && cy < g.y + g.h * 0.73)
+                    break
+            }
+        ; effetto: lo zoom è il principale; gli altri diventano sempre più frequenti
+        fx := "zoom"
+        if (Random(0.0, 1.0) < 0.12 + 0.6 * p)
+            fx := ["spin", "pop", "slide", "spin", "pop", "shake"][Random(1, 6)]
+        sp := {bmp: tb.bmp, bw: tb.w, bh: tb.h, size: sc0, cx: cx, cy: cy, tilt: Random(-28.0, 28.0), fx: fx, t0: A_TickCount
+             , life: Round(Random(2000, 2600) * (1 - 0.55 * p)), amax: center ? Random(0.38, 0.58) : 1.0
+             , dir: Random(0, 1) ? 1 : -1, k: k}
+        ; finestra di misura FISSA per tutta la vita della scritta (la più grande che servirà): cambiare
+        ; misura a ogni fotogramma costa molto a Windows e fa "tremare" la scritta di mezzo pixel
+        mx := sc0 * 1.15 * (fx = "pop" ? 1.2 : 1)
+        if (fx = "spin")
+            sp.cw := sp.ch := Ceil(Sqrt(tb.w ** 2 + tb.h ** 2) * mx) + 6
+        else {
+            rad := (Abs(sp.tilt) + 4) * 0.0174533
+            sp.cw := Ceil((tb.w * Cos(rad) + tb.h * Sin(rad)) * mx) + 6, sp.ch := Ceil((tb.w * Sin(rad) + tb.h * Cos(rad)) * mx) + 6
+        }
+        sp.cw := Min(this.DW, sp.cw), sp.ch := Min(this.DH, sp.ch)
+        sp.win := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000 +E0x20 +E0x08000000")   ; a strati, attraversabile
+        sp.win.Show("NA x" Round(cx) " y" Round(cy) " w1 h1")
+        this.Sprites.Push(sp)
+    }
+
+    ; Uno Shugo sbuca dal bordo, resta un attimo e rientra. Le immagini normali escono da sotto o
+    ; da sopra (capovolte); quelle che si affacciano da una parete (nome con _dx / _sx) solo dal bordo
+    ; destro o sinistro (specchiate se serve), appoggiate in basso. L'immagine viene preparata UNA volta
+    ; (misura, rotazione, specchio) in una superficie sua: a ogni fotogramma si sposta solo la finestra.
+    static SpawnPeek(p) {
+        g := RandomRoll.Geo(), i := Random(1, this.Pics.Length)
+        if (this.Pics.Length > 1 && i = this.LastPic)          ; mai lo stesso Shugo due volte di fila
+            i := Mod(i + Random(0, this.Pics.Length - 2), this.Pics.Length) + 1
+        this.LastPic := i, file := this.Pics[i]
+        wall := RegExMatch(file, "i)_dx\.png$") ? "dx" : RegExMatch(file, "i)_sx\.png$") ? "sx" : ""
+        hs := Round(g.h * Random(0.4, 0.5))                    ; altezza a schermo
+        pic := this.LoadPic(file, hs)
+        if !IsObject(pic)
+            return
+        if (wall != "") {                                      ; dalla parete: bordo destro o sinistro
+            edge := Random(3, 4)                               ; 3 sinistra, 4 destra
+            mirror := (edge = 4) != (wall = "dx"), rot := 0    ; parete a destra nell'immagine = bordo destro
+        } else {
+            edge := Random(1, 2), mirror := Random(0, 1), rot := (edge = 2 ? 180 : 0) + Random(-6.0, 6.0)   ; 1 sotto, 2 sopra
+        }
+        ; superficie propria con l'immagine già girata/specchiata
+        rad := rot * 0.0174533, cw := Ceil(Abs(pic.w * Cos(rad)) + Abs(pic.h * Sin(rad))) + 2
+        ch := Ceil(Abs(pic.w * Sin(rad)) + Abs(pic.h * Cos(rad))) + 2
+        hdc := DllCall("CreateCompatibleDC", "Ptr", 0, "Ptr")
+        bi := Buffer(40, 0)
+        NumPut("UInt", 40, bi, 0), NumPut("Int", cw, bi, 4), NumPut("Int", -ch, bi, 8), NumPut("UShort", 1, bi, 12), NumPut("UShort", 32, bi, 14)
+        hbm := DllCall("CreateDIBSection", "Ptr", hdc, "Ptr", bi, "UInt", 0, "Ptr*", &bits := 0, "Ptr", 0, "UInt", 0, "Ptr")
+        obm := DllCall("SelectObject", "Ptr", hdc, "Ptr", hbm, "Ptr")
+        DllCall("gdiplus\GdipCreateFromHDC", "Ptr", hdc, "Ptr*", &gr := 0)
+        DllCall("gdiplus\GdipSetInterpolationMode", "Ptr", gr, "Int", 7)
+        DllCall("gdiplus\GdipSetPixelOffsetMode", "Ptr", gr, "Int", 4)
+        DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", gr, "Float", cw / 2, "Float", ch / 2, "Int", 0)
+        DllCall("gdiplus\GdipRotateWorldTransform", "Ptr", gr, "Float", rot, "Int", 0)
+        DllCall("gdiplus\GdipScaleWorldTransform", "Ptr", gr, "Float", mirror ? -1 : 1, "Float", 1, "Int", 0)
+        DllCall("gdiplus\GdipDrawImageRect", "Ptr", gr, "Ptr", pic.bmp, "Float", -pic.w / 2, "Float", -pic.h / 2, "Float", pic.w, "Float", pic.h)
+        DllCall("gdiplus\GdipDeleteGraphics", "Ptr", gr), DllCall("gdiplus\GdipDisposeImage", "Ptr", pic.bmp)
+        ; dove sta: posizione "nascosta" (fuori dallo schermo) e quanto entra
+        vis := Random(0.68, 0.82)
+        switch edge {
+            case 1: x0 := g.x + g.w * Random(0.1, 0.9) - cw / 2, y0 := g.y + g.h, dx := 0, dy := -vis * ch
+            case 2: x0 := g.x + g.w * Random(0.1, 0.9) - cw / 2, y0 := g.y - ch, dx := 0, dy := vis * ch
+            case 3: x0 := g.x - cw, y0 := g.y + g.h - ch * Random(0.92, 1.0), dx := vis * cw, dy := 0
+            default: x0 := g.x + g.w, y0 := g.y + g.h - ch * Random(0.92, 1.0), dx := -vis * cw, dy := 0
+        }
+        sp := {pic: {bmp: 0}, peek: true, hdc: hdc, hbm: hbm, obm: obm, cw: cw, ch: ch, x0: x0, y0: y0, dx: dx, dy: dy
+             , t0: A_TickCount, life: Round(Random(2600, 3200) * (1 - 0.25 * p))}
+        sp.win := Gui("+AlwaysOnTop -Caption +ToolWindow -DPIScale +E0x80000 +E0x20 +E0x08000000")
+        sp.win.Show("NA x" Round(x0) " y" Round(y0) " w1 h1")
+        this.Sprites.Push(sp)
+        this.MovePeek(sp, A_TickCount)
+    }
+
+    ; un fotogramma dello Shugo: si sposta solo la finestra (l'immagine è già pronta)
+    static MovePeek(sp, now) {
+        u := (now - sp.t0) / sp.life
+        if (u >= 1)
+            return false
+        ; entra morbida con un piccolo rimbalzo, resta, rientra accelerando (curve senza scatti)
+        if (u < 0.3) {
+            v := u / 0.3, e := 1 + 2.2 * (v - 1) ** 3 + 1.2 * (v - 1) ** 2
+        } else if (u < 0.74)
+            e := 1 + 0.015 * Sin((u - 0.3) / 0.44 * 3.1416)    ; respira appena
+        else {
+            v := (u - 0.74) / 0.26, e := 1 - (0.5 - 0.5 * Cos(v * 3.1416))
+        }
+        pt := Buffer(8), NumPut("Int", Round(sp.x0 + sp.dx * e), "Int", Round(sp.y0 + sp.dy * e), pt)
+        sz := Buffer(8), NumPut("Int", sp.cw, "Int", sp.ch, sz)
+        src := Buffer(8, 0)
+        DllCall("UpdateLayeredWindow", "Ptr", sp.win.Hwnd, "Ptr", 0, "Ptr", pt, "Ptr", sz, "Ptr", sp.hdc
+            , "Ptr", src, "UInt", 0, "UInt*", 0x1FF0000, "UInt", 2)
+        return true
+    }
+
+    static Free(sp) {                                          ; scritte: immagini condivise (liberate in Stop())
+        try sp.win.Destroy()
+        if (sp.HasOwnProp("peek") && sp.hdc) {                 ; Shugo: superficie propria
+            DllCall("SelectObject", "Ptr", sp.hdc, "Ptr", sp.obm)
+            DllCall("DeleteObject", "Ptr", sp.hbm), DllCall("DeleteDC", "Ptr", sp.hdc), sp.hdc := 0
+        }
+    }
+
+    ; carica uno Shugo dal file, già rimpicciolito all'altezza massima a schermo (il file resta libero)
+    static LoadPic(file, maxH) {
+        if (DllCall("gdiplus\GdipCreateBitmapFromFile", "WStr", file, "Ptr*", &src := 0) || !src)
+            return ""
+        DllCall("gdiplus\GdipGetImageWidth", "Ptr", src, "UInt*", &iw := 0)
+        DllCall("gdiplus\GdipGetImageHeight", "Ptr", src, "UInt*", &ih := 0)
+        if !(iw && ih)
+            return (DllCall("gdiplus\GdipDisposeImage", "Ptr", src), "")
+        th := Min(ih, maxH), tw := Round(iw * th / ih)
+        DllCall("gdiplus\GdipCreateBitmapFromScan0", "Int", tw, "Int", th, "Int", 0, "Int", 0xE200B, "Ptr", 0, "Ptr*", &sm := 0)
+        DllCall("gdiplus\GdipGetImageGraphicsContext", "Ptr", sm, "Ptr*", &ig := 0)
+        DllCall("gdiplus\GdipSetInterpolationMode", "Ptr", ig, "Int", 7)
+        DllCall("gdiplus\GdipDrawImageRectI", "Ptr", ig, "Ptr", src, "Int", 0, "Int", 0, "Int", tw, "Int", th)
+        DllCall("gdiplus\GdipDeleteGraphics", "Ptr", ig), DllCall("gdiplus\GdipDisposeImage", "Ptr", src)
+        return {bmp: sm, w: tw, h: th}
+    }
+
+    ; un fotogramma: zoom continuo e regolare per tutta la vita della scritta (da piccola a grande,
+    ; senza pause), con dissolvenza in entrata all'inizio e in uscita alla fine. La durata si accorcia
+    ; man mano che si avvicina la fine dei minuti, quindi anche lo zoom diventa più veloce.
+    static Draw(sp, now) {
+        u := (now - sp.t0) / sp.life
+        if (u >= 1)
+            return false
+        eo(x) => 1 - (1 - x) ** 3                            ; ease-out
+        sc := sp.size * (0.6 + 0.55 * u)                       ; zoom costante: leggibile per tutto il tempo
+        a := u < 0.18 ? eo(u / 0.18) : u > 0.7 ? 1 - ((u - 0.7) / 0.3) ** 1.2 : 1
+        rot := sp.tilt, sx := sc, sy := sc, ox := 0, oy := 0
+        switch sp.fx {
+            case "pop":   sc *= u < 0.3 ? 1 + 0.35 * Sin(u / 0.3 * 3.1416) : 1, sx := sc, sy := sc   ; rimbalzo all'inizio
+            case "spin":  rot := sp.tilt + sp.dir * 360 * (1 - eo(Min(1, u / 0.45)))
+            case "slide": ox := sp.dir * sp.k * 260 * (1 - eo(Min(1, u / 0.35)))
+            case "shake": ox := Random(-7.0, 7.0) * sp.k, oy := Random(-5.0, 5.0) * sp.k, rot := sp.tilt + Random(-3.0, 3.0)
+        }
+        a := Max(0, Min(1, a)) * sp.amax
+        return this.Blit(sp, sp.bmp, sp.cx + ox, sp.cy + oy, rot, sx, sy, a)
+    }
+
+    ; disegna l'immagine bmp (bw x bh) ruotata e scalata, centrata in (cx, cy), sulla finestra della scritta
+    static Blit(sp, bmp, cx, cy, rot, sx, sy, a) {
+        if sp.HasOwnProp("cw")                                 ; scritte: finestra di misura fissa
+            cw := sp.cw, ch := sp.ch
+        else {                                                 ; Shugo: misura e rotazione non cambiano comunque
+            rad := rot * 0.0174533, W := sp.bw * Abs(sx), H := sp.bh * Abs(sy)
+            cw := Min(this.DW, Ceil(Abs(W * Cos(rad)) + Abs(H * Sin(rad))) + 4)
+            ch := Min(this.DH, Ceil(Abs(W * Sin(rad)) + Abs(H * Cos(rad))) + 4)
+        }
+        if (cw < 4 || ch < 4)
+            return true
+        gr := this.G
+        ; prima si azzera la trasformazione della scritta precedente: il ritaglio va calcolato "dritto",
+        ; altrimenti resta ruotato/scalato e taglia via pezzi della scritta (testo spezzato)
+        DllCall("gdiplus\GdipResetWorldTransform", "Ptr", gr)
+        DllCall("gdiplus\GdipSetClipRectI", "Ptr", gr, "Int", 0, "Int", 0, "Int", cw, "Int", ch, "Int", 0)
+        DllCall("gdiplus\GdipGraphicsClear", "Ptr", gr, "UInt", 0)
+        wx := Floor(cx - cw / 2), wy := Floor(cy - ch / 2)    ; finestra su pixel interi, la parte decimale nel disegno
+        DllCall("gdiplus\GdipTranslateWorldTransform", "Ptr", gr, "Float", cx - wx, "Float", cy - wy, "Int", 0)
+        DllCall("gdiplus\GdipRotateWorldTransform", "Ptr", gr, "Float", rot, "Int", 0)
+        DllCall("gdiplus\GdipScaleWorldTransform", "Ptr", gr, "Float", sx = 0 ? 0.001 : sx, "Float", sy, "Int", 0)
+        DllCall("gdiplus\GdipDrawImageRect", "Ptr", gr, "Ptr", bmp, "Float", -sp.bw / 2, "Float", -sp.bh / 2, "Float", sp.bw, "Float", sp.bh)
+        DllCall("gdiplus\GdipFlush", "Ptr", gr, "Int", 1)
+        pt := Buffer(8), NumPut("Int", wx, "Int", wy, pt)
+        sz := Buffer(8), NumPut("Int", cw, "Int", ch, sz)
+        src := Buffer(8, 0)
+        DllCall("UpdateLayeredWindow", "Ptr", sp.win.Hwnd, "Ptr", 0, "Ptr", pt, "Ptr", sz, "Ptr", this.hdc
+            , "Ptr", src, "UInt", 0, "UInt*", (Round(255 * a) << 16) | 0x1000000, "UInt", 2)
+        return true
     }
 }
 

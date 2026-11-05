@@ -4,6 +4,14 @@ Ogni versione ha la sua sezione `## vX.Y` (in inglese e italiano): se la descriz
 è vuota, l'automazione la riempie con questo testo, che Wingman mostra come "Novità".
 A ogni release l'automazione aggiunge anche il link alla scansione VirusTotal del pacchetto.
 
+## v1.12
+
+### 🇬🇧 English
+- 🔔 **Alerts: SHUGO TIME** – At the start of every hour, "SHUGO TIME!!" lights up your screen. Based on your PC clock, for the first 3 minutes of each hour big writings with random colors and tilts grow with a smooth, continuous zoom that gets faster as time goes by and, more and more often, come with spins, bounces, slides and shakes; they stay at the sides at first and reach the center, semi-transparent, in the last stretch. Shugo can also pop out half body from the screen edges and slide back (PNG images in the new SHUGO folder). You find it in Settings > Alerts (duration, text, only in game) and you can try it any time with Ctrl+Shift+F11 or from the tray icon menu.
+
+### 🇮🇹 Italiano
+- 🔔 **Avvisi: SHUGO TIME** – A ogni inizio dell'ora lo schermo si accende con "SHUGO TIME!!". In base all'ora del tuo PC, per i primi 3 minuti di ogni ora compaiono scritte grandi con colori e inclinazioni a caso, che crescono con uno zoom fluido e continuo, sempre più veloce col passare del tempo, e sempre più spesso con spin, rimbalzi, scivolate e tremolii; all'inizio restano ai lati e nell'ultimo tratto arrivano anche al centro, semitrasparenti. Gli Shugo possono anche sbucare a mezzo busto dai bordi dello schermo e rientrare (immagini PNG nella nuova cartella SHUGO). Lo trovi in Impostazioni > Avvisi (durata, testo, solo in gioco) e puoi provarlo quando vuoi con Ctrl+Shift+F11 o dal menu dell'icona.
+
 ## v1.11
 
 ### 🇬🇧 English
